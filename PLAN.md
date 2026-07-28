@@ -2,7 +2,9 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-28 · Bootstrap inicial (antes de scaffold de Next.js)
+> **Última actualización:** 2026-07-28 · App shell completo (sidebar + topbar + dashboard con datos reales)
+>
+> **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
 ---
 
@@ -25,7 +27,7 @@ Sistema de **inventario + ventas + reportes** para la tienda de una persona (la 
 
 | Capa | Tecnología | Razón |
 | --- | --- | --- |
-| Frontend + servidor | **Next.js 15** (App Router) + TypeScript | Estable, soporte maduro de shadcn |
+| Frontend + servidor | **Next.js 16** (App Router) + TypeScript | Última estable; el AGENTS.md de dd-send advierte de breaking changes — revisar `node_modules/next/dist/docs/` antes de código nuevo |
 | Estilos | **Tailwind CSS v4** + **shadcn/ui** | Componentes copy-paste, accesibles, temática por CSS vars |
 | Lógica de servidor | **Server Actions** + **Route Handlers** (`/api`) | Sin backend separado, sin Express |
 | Animaciones | **motion** (motion.dev) | Atractivas pero con disciplina `prefers-reduced-motion` |
@@ -176,18 +178,43 @@ Invensa_web/
 
 | # | Fase | Estado |
 | --- | --- | --- |
-| 1 | Bootstrap: `.gitignore`, `PLAN.md`, `.env.local.example`, README | **En curso** |
-| 2 | Scaffold Next 15 + shadcn + deps | Pendiente |
-| 3 | `design.md` (Hallmark) + tema (colores, tipografía, motion) | Pendiente |
-| 4 | Layout shell (side-nav + top-bar) + landing → dashboard/login | Pendiente |
-| 5 | Auth UI completa (login / register / forgot / reset / confirm) | Pendiente |
-| 6 | DB schema + RLS (migrations versionadas) + seed categorías | Pendiente |
-| 7 | Módulo productos (CRUD + imágenes R2) | Pendiente |
-| 8 | Módulo ventas (POS-like) + recibos | Pendiente |
-| 9 | Módulo clientes (fiados / deuda) | Pendiente |
-| 10 | Reportes (cortes, stock bajo, top productos) | Pendiente |
-| 11 | Deploy a Vercel + vars de entorno + verificación | Pendiente |
-| 12 | Pruebas con hermana + mamá | Pendiente |
+| 1 | Bootstrap: `.gitignore`, `PLAN.md`, `.env.local.example`, README | ✅ Hecho |
+| 2 | Scaffold Next 16 + shadcn + base-nova preset + Geist fonts | ✅ Hecho |
+| 3 | `design.md` (Hallmark) + tokens (color, tipografía, motion) | 🟡 En curso |
+| 4 | `lib/supabase/{server,client,admin}.ts` + `lib/env.ts` (zod) + middleware | ✅ Hecho |
+| 5 | Layout shell (side-nav + top-bar + theme toggle) | ✅ Hecho |
+| 6 | Auth UI completa (login / register / forgot / reset / confirm) + Server Actions | ✅ Hecho |
+| 7 | Migration 0001-0005: profiles + products + sales + customers + RLS + seed | ✅ Hecho |
+| 8 | Módulo productos (CRUD + upload R2) | Pendiente |
+| 9 | Módulo ventas (POS-like) + recibos | Pendiente |
+| 10 | Módulo clientes (fiados / deuda) | Pendiente |
+| 11 | Reportes (cortes, stock bajo, top productos) | Pendiente |
+| 12 | Deploy a Vercel + env vars + verificación | Pendiente |
+| 13 | Pruebas con hermana + mamá | Pendiente |
+
+### Stack realmente instalado (versiones verificadas)
+
+```json
+{
+  "next": "16.2.12",
+  "react": "19.2.4",
+  "tailwindcss": "^4.3.3",
+  "shadcn": "^4.16.0",      // preset "base-nova" (geist font + base-ui primitives)
+  "@supabase/ssr": "^0.12.4",
+  "@supabase/supabase-js": "^2.111.0",
+  "react-hook-form": "^7.83.0",
+  "zod": "^4.4.3",
+  "@hookform/resolvers": "^5.5.7",
+  "motion": "^12.43.0",      // motion.dev (no Framer Motion)
+  "react-day-picker": "^10.0.1",
+  "date-fns": "^4.4.0",
+  "lucide-react": "^1.27.0",
+  "sonner": "^2.0.7",
+  "next-themes": "^0.4.6"
+}
+```
+
+shadcn components instalados: button, input, label, form, select, textarea, checkbox, card, dialog, dropdown-menu, sheet, sidebar, table, tabs, badge, avatar, skeleton, sonner, tooltip, popover, calendar, scroll-area, separator.
 
 ---
 
@@ -205,6 +232,33 @@ Invensa_web/
 
 ---
 
-## 7. Próximo paso inmediato
+## 7. Decisiones del modelo de datos (fase 7, 2026-07-28)
 
-Instalar Node.js (CachyOS no lo trae), scaffoldear Next 15 con TypeScript + Tailwind, instalar shadcn y deps base. Confirmar con el usuario antes de ejecutar `pnpm create next-app`.
+| Decisión | Default elegido | Por qué |
+|---|---|---|
+| Stock | **Derivado** vía vista `vw_product_stock` (SUM de `inventory_movements`) | Preserva auditoría. Sin triggers de sincronización. Sin riesgo de desincronización. Si el rendimiento duele, se materializa en fase futura. |
+| Fiado parcial | **Sí.** `sales.paid_amount` permite abonos | La hermana registra abonos en fiados. `vw_client_balances` deriva la deuda. |
+| Categorías | **Tabla aparte `categories`** (no en `units`) | Limpieza ≠ PZA. Una unidad se reutiliza entre categorías. |
+| Imágenes | Solo `products.image_url` (texto), R2 maneja el resto | Cero metadata en BD. R2 ya tiene el objeto. |
+| Identificador fiscal (RFC) | **NO** | Tienda de barrio, no B2B. Si en el futuro se requiere, se agrega migración. |
+| Multi-tienda | **NO** | Una tienda = dos usuarias. Si se abre 2da tienda, ese día se introduce `stores`. |
+| Multi-moneda | **NO** | Siempre MXN. `numeric(12,2)` directo. |
+| Auth signup | **OFF** en Supabase Auth | La hermana crea la primera cuenta, luego invita por panel admin con `supabase.auth.admin.inviteUserByEmail()`. |
+| Enable confirm email | **OFF** | Sin plantilla HTML de correo todavía. ON cuando se implemente Resend. |
+| Contraseña mínima | 8 caracteres | Matches zod regex en `lib/schemas/auth.ts`. |
+
+## 8. Próximo paso inmediato
+
+**Módulo productos (fase 8).** Lista + alta + edición con upload de imagen a Cloudflare R2 vía presigned URLs. Página `/products` con filtros (categoría + búsqueda), tabla con SKU/Nombre/Stock/Precio, y botón `+ Nuevo`. Página `/products/new` con form + dropzone de imagen.
+
+Antes de empezar la UI de productos, **corre el bootstrap admin** (`pnpm bootstrap:admin <email> <password>`) para poder loguearte y probar el dashboard.
+
+## 9. Lo que ya está hecho en fase 5
+
+- `src/app/(app)/layout.tsx` — SidebarProvider + SideNav + SidebarInset + TopBar + main con paddings responsivos.
+- `src/components/nav/side-nav.tsx` — client component con 5 items primarios + Cuenta, active state con 2px coral border-left + coral text, colapsa a iconos en lg.
+- `src/components/nav/top-bar.tsx` — server component que hace fetch del user + profile (full_name) y renderiza SidebarTrigger + Breadcrumb + PageTitle + ThemeToggle + AccountMenu.
+- `src/components/nav/page-title.tsx` — client component que deriva título + breadcrumb del pathname con un PATH_MAP estático.
+- `src/components/nav/theme-toggle.tsx` — client component con `useTheme` de next-themes (light/dark con ícono sol/luna).
+- `src/components/nav/account-menu.tsx` — client component con DropdownMenu (avatar con iniciales + nombre + email + sign-out).
+- `src/app/(app)/dashboard/page.tsx` — reemplazado el stub con dashboard real: 4 stat tiles (Ventas hoy, Ticket promedio, Stock bajo, Fiados pendientes) + lista de ventas recientes + acciones rápidas. Queries reales (no fake) con empty-states honestos ("—" con « datos reales cuando se registren ventas »).
