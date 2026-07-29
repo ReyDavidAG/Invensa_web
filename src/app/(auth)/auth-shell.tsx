@@ -27,12 +27,7 @@ export function AuthShell({
       <FadeUp className={cn("w-full max-w-[420px] flex flex-col gap-8")}>
         <header className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
-            <span
-              className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm"
-              aria-hidden
-            >
-              <BrandMark className="size-5 text-primary-foreground" />
-            </span>
+            <BrandMark className="size-8" />
             <span className="flex flex-col leading-tight">
               <span className="text-lg font-bold tracking-[-0.02em] text-foreground">
                 Invensa
