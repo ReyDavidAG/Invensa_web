@@ -55,6 +55,10 @@ const serverEnvSchema = clientEnvSchema.extend({
   // Supabase webhook signature (if used)
   SUPABASE_WEBHOOK_SECRET: optionalString,
 
+  // MiniMax (foto → producto)
+  MINIMAX_API_KEY: optionalString,
+  MINIMAX_MODEL: z.string().default("MiniMax-VL-01"),
+
   APP_BASE_URL: optionalString,
 });
 
@@ -88,6 +92,8 @@ export function getServerEnv(): ServerEnv {
     MERCADOPAGO_WEBHOOK_SECRET: process.env.MERCADOPAGO_WEBHOOK_SECRET,
     SUPABASE_WEBHOOK_SECRET: process.env.SUPABASE_WEBHOOK_SECRET,
     APP_BASE_URL: process.env.APP_BASE_URL,
+    MINIMAX_API_KEY: process.env.MINIMAX_API_KEY,
+    MINIMAX_MODEL: process.env.MINIMAX_MODEL,
   });
   if (!parsed.success) throw new Error(formatZodError("Server", parsed.error));
   return parsed.data;
