@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# Cache
+.supabase/
+.turbo/
+
+# Coverage
+coverage/
+
+# Public assets
+public/
+
+# Tests
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Generated / config — never format these
+*.json
+*.lock
+pnpm-lock.yaml
+
+# Database migrations — SQL has its own lint/style conventions
+*.sql
+supabase/migrations/
+supabase/seed.sql
+
+# Documentation is hand-written — keep manual control
+*.md
+PLAN.md
+CONTEXT.md
+design.md
+README.md
+
+# Env files (handled separately, never commit)
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.github/
