@@ -276,3 +276,27 @@
     animation: var(--animate-spin-slow);
   }
 }
+
+/* -------------------------------------------------------------------------
+ * Print ticket (sales/[id])
+ * Hides app chrome and page content; only [data-print-receipt] renders.
+ * ------------------------------------------------------------------------- */
+
+@page {
+  size: auto;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  /* Anchor the receipt at the top of the printable page. */
+  [data-print-receipt] {
+    position: absolute;
+    inset: 0;
+    margin: 0 auto;
+  }
+}

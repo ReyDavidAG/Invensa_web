@@ -30,9 +30,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen>
-      <SideNav userName={userName} appVersion={APP_VERSION} />
+      <div className="print:hidden">
+        <SideNav userName={userName} appVersion={APP_VERSION} />
+      </div>
       <SidebarInset>
-        <TopBar />
+        <div className="print:hidden">
+          <TopBar />
+        </div>
         <main className="mx-auto w-full max-w-screen-2xl px-4 py-4 md:px-8 md:py-6">
           {children}
         </main>
