@@ -2,7 +2,7 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-29 · Fases 14-17 completas (cierre de caja + cron stock bajo + cron resumen + email vía Gmail SMTP)
+> **Última actualización:** 2026-07-29 · Fases 14-18 completas (cierre de caja + email Gmail SMTP + campanita de notificaciones)
 >
 > **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
@@ -195,6 +195,7 @@ Invensa_web/
 | 15 | **Alerta stock bajo proactiva** (cron + Resend) | ✅ Hecho |
 | 16 | **Email diario de resumen** (cron + email) | ✅ Hecho |
 | 17 | **Email backend = Gmail SMTP** (sin Resend, sin dominio) | ✅ Hecho |
+| 18 | **Notificaciones in-app** (campanita + historial per-usuario) | ✅ Hecho |
 
 ### Stack realmente instalado (versiones verificadas)
 
@@ -607,13 +608,90 @@ Vercel te da HTTPS gratis vía Let's Encrypt.
 
 | Servicio | Plan | Costo |
 |---|---|---|
-| Vercel | Hobby | $0 |
+| Vercel | Hobby (2 cron jobs) | $0 |
 | Supabase | Free tier | $0 |
 | Cloudflare R2 | Free tier (10 GB, 0 egress) | $0 |
 | Gmail SMTP | Personal (500 emails/día) | $0 |
+| GitHub Actions | Free tier (2000 min/mes) | $0 |
 | Dominio (opcional) | .com/.app/etc | ~$10-15 USD/año |
 
 **Total mensual: $0.** Único pago opcional: dominio para que el remitente del email sea `noreply@invensa.com` en lugar de tu Gmail personal.
+
+## 21. Notificaciones in-app (campanita)
+
+Plan detallado en `docs/notifications.md`. Resumen:
+
+- **Per-usuario, RLS por `user_id`**: cada usuario ve solo las suyas. Service-role para inserts del sistema (cron sin auth).
+- **UI**: campanita en top-bar entre ThemeToggle y AccountMenu. Badge rojo destructive cuando hay unread. Click → Popover con lista, dedup por día, "Marcar todas como leídas".
+- **Hallmark**: badge destructive (atención), dot cobalt en item (estado), iconos con tinte por tipo (warning low_stock, primary cash_closing). Sin emojis, copy honesta, sin métricas inventadas.
+- **Triggers**:
+  - `low-stock` cron → insert notif por admin (1/día, dedup).
+  - `cash-closing-reminder` cron (11 AM Mexico) → insert notif por admin+employee si `status='open'`.
+- **Out of scope V1**: realtime, push, per-user preferences, grouping, auto-archive.
+
+**Migración a Supabase** cuando despliegues: `pnpm exec supabase db push` aplica `0007_notifications.sql`.
+
+**Cron infra**:
+- `daily-summary` movido a GitHub Actions (`.github/workflows/daily-summary.yml`).
+- Vercel ahora hospeda 2 crons: low-stock (9 AM) + cash-closing-reminder (11 AM). Al límite Hobby.
+
+### Setup de GitHub Actions — paso a paso
+
+El workflow `.github/workflows/daily-summary.yml` está en el repo pero **no funciona hasta que configures dos secrets**. Sin ellos, GitHub no puede autenticarse contra el endpoint de Vercel y los correos de las 9pm no salen.
+
+**Cómo llegar paso a paso** (con click por click):
+
+1. **Abre el repo en GitHub.** En la barra superior de tu repo, busca la fila de tabs: `<> Code` · `Issues` · `Pull requests` · `Actions` · `Projects` · `Security` · **`Settings`**. Click en **Settings**. Es el último tab.
+   - Si no ves Settings, es porque no tienes permisos de admin en el repo. Pídele al dueño (o a ti mismo si es tu repo personal) que te dé acceso.
+2. **En el menú lateral izquierdo**, baja hasta encontrar la sección "Security". Verás:
+   - Code security and analysis
+   - **Secrets and variables**
+   - Deploy keys
+3. **Click en "Secrets and variables"** → se expande con sub-opciones. Click en **"Actions"**.
+4. Te aparece una pantalla con título "Actions secrets and variables" y un botón verde **"New repository secret"** arriba a la derecha. Click ahí.
+5. Se abre un form:
+   - **Name:** escribe `APP_URL` (en mayúsculas, con guión bajo).
+   - **Secret:** pega el valor de tu dominio de Vercel. Ejemplo: `https://invensa-web.vercel.app` (sin slash al final).
+   - Click en el botón verde **"Add secret"** abajo.
+6. Repite los pasos 4-5 para el segundo secret:
+   - **Name:** `CRON_SECRET`
+   - **Secret:** pega el MISMO valor hex de 64 caracteres que generaste con `openssl rand -hex 32` y que ya está en tu `.env.local` y en Vercel. Si no lo recuerdas, ábrelo en Vercel → Settings → Environment Variables → busca `CRON_SECRET` → click en el ojo para ver el valor → cópialo.
+7. Listo. Los dos secrets quedan guardados. Si te equivocas, en la lista de secrets puedes click en el nombre para editarlo o en la papelera para borrarlo.
+
+**Cómo verificar que funciona:**
+
+1. En el repo, ve al tab **Actions** (está entre Projects y Security, arriba).
+2. En el menú lateral izquierdo debería aparecer el workflow "Daily summary email".
+3. Click en él. Verás una lista de runs (puede estar vacía si todavía no se ejecutó).
+4. Para forzar una ejecución de prueba: click en "Run workflow" → botón verde "Run workflow". Espera ~10 segundos.
+5. Click en el run que aparece. Verás dos steps:
+   - "Trigger daily summary endpoint" — debería tener palomita verde ✅
+6. Si falla (X roja), click en el step para ver el error. Lo más común: APP_URL mal escrito (slash al final, http vs https, typo).
+
+**Si todo se ve verde:** a las 21:00 Mexico (03:00 UTC) el workflow corre solo y manda el email diario.
+
+### Resumen visual del flujo
+
+```
+.github/workflows/daily-summary.yml
+        ↓ (lee secrets)
+CRON_SECRET + APP_URL
+        ↓ (curl con Bearer)
+https://invensa-web.vercel.app/api/cron/daily-summary
+        ↓ (route handler valida Bearer)
+Resend sendEmail() → Gmail SMTP
+        ↓
+📧 Gmail del admin y empleado a las 9pm Mexico
+```
+
+### Cuando agregues más crons en el futuro
+
+Si en algún momento necesitas un 3er o 4to cron (ej. recordatorio semanal de inventario), el patrón es el mismo:
+1. Nuevo workflow `.github/workflows/<nombre>.yml` con su `on.schedule.cron`.
+2. Secrets nuevos si los necesita, o reusa `CRON_SECRET` + `APP_URL` que ya están.
+3. El endpoint en Vercel puede ser uno nuevo o uno existente.
+
+Vercel se queda con los crons que necesitan respuesta inmediata (low-stock, cash-closing-reminder — ambos disparan UI in-app). GitHub Actions se queda con los batch (daily-summary, futuros semanales/mensuales).
 
 
 

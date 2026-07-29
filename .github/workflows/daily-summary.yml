@@ -1,0 +1,27 @@
+name: Daily summary email
+
+# Triggers the Vercel /api/cron/daily-summary endpoint at 9 PM Mexico time.
+# Lives here (not in vercel.json) so we don't burn one of Vercel Hobby's 2
+# cron slots. Endpoint still validates the Authorization header against
+# CRON_SECRET — we pass the same secret via GitHub Actions secrets.
+
+on:
+  schedule:
+    # 03:00 UTC = 21:00 Mexico (UTC-6, no DST observed for our use)
+    - cron: "0 3 * * *"
+  workflow_dispatch: {} # manual run from the Actions tab for testing
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger daily summary endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          curl -fsS --max-time 60 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/cron/daily-summary"

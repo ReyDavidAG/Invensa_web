@@ -64,6 +64,11 @@ import {
   type LowStockAlertResult,
   sendLowStockAlertAction,
 } from "@/app/actions/alerts";
+import {
+  markAllAsReadAction,
+  markAsReadAction,
+  type MarkResult,
+} from "@/app/actions/notifications";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -194,5 +199,17 @@ export function useCloseCash() {
 export function useSendLowStockAlert() {
   return useMutation<LowStockAlertResult, Error, void>({
     mutationFn: () => sendLowStockAlertAction(),
+  });
+}
+
+export function useMarkAsRead() {
+  return useMutation<MarkResult, Error, string>({
+    mutationFn: (id) => markAsReadAction(id),
+  });
+}
+
+export function useMarkAllAsRead() {
+  return useMutation<MarkResult, Error, void>({
+    mutationFn: () => markAllAsReadAction(),
   });
 }

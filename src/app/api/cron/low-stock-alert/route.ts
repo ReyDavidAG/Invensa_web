@@ -5,7 +5,8 @@ import {
   lowStockAlertHtml,
   lowStockAlertText,
 } from "@/lib/email/templates/low-stock-alert";
-import { getRecipients } from "@/lib/email/recipients";
+import { getRecipientIds, getRecipients } from "@/lib/email/recipients";
+import { createNotificationsDedupedAction } from "@/app/actions/notifications";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -78,9 +79,30 @@ export async function GET(req: NextRequest) {
     ),
   });
 
+  // Drop a per-admin in-app notification too (deduped per day).
+  const adminIds = await getRecipientIds(["admin"]);
+  let notificationsCreated = 0;
+  if (adminIds.length > 0) {
+    const top = rows
+      .slice(0, 3)
+      .map((r) => r.name)
+      .join(", ");
+    const more = rows.length > 3 ? ` y ${rows.length - 3} más` : "";
+    const notifRes = await createNotificationsDedupedAction({
+      userIds: adminIds,
+      type: "low_stock",
+      title: `${rows.length} producto${rows.length === 1 ? "" : "s"} por agotarse`,
+      body: `${top}${more}.`,
+      link: "/products",
+      metadata: { product_count: rows.length },
+    });
+    if (notifRes.ok) notificationsCreated = notifRes.created;
+  }
+
   return NextResponse.json({
     sent: 1,
     rows: rows.length,
     recipients: recipients.length,
+    notifications: notificationsCreated,
   });
 }
