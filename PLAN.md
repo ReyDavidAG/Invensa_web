@@ -2,7 +2,7 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-29 · Plan: cierre de caja + alertas stock bajo + resumen diario
+> **Última actualización:** 2026-07-29 · Fases 14-16 completas (cierre de caja + alertas stock bajo + resumen diario)
 >
 > **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
@@ -191,9 +191,9 @@ Invensa_web/
 | 11 | Reportes (cortes + chart + top productos + stock bajo + top clientes + métodos) | ✅ Hecho |
 | 12 | Deploy a Vercel + env vars + verificación | Pendiente |
 | 13 | Pruebas con hermana + mamá | Pendiente |
-| 14 | **Cierre de caja** (`cash_closings` + UI `/cash-closing`) | 🟡 En curso |
-| 15 | **Alerta stock bajo proactiva** (cron + Resend) | ⬜ Pendiente |
-| 16 | **Email diario de resumen** (cron + Resend) | ⬜ Pendiente |
+| 14 | **Cierre de caja** (`cash_closings` + UI `/cash-closing`) | ✅ Hecho |
+| 15 | **Alerta stock bajo proactiva** (cron + Resend) | ✅ Hecho |
+| 16 | **Email diario de resumen** (cron + Resend) | ✅ Hecho |
 
 ### Stack realmente instalado (versiones verificadas)
 
@@ -435,7 +435,55 @@ where s.status = 'paid'
 group by 1;
 ```
 
-## 12. Próximo paso inmediato
+## 12. Lo que ya está hecho en fase 14 (cierre de caja)
+
+- `supabase/migrations/0006_cash_closings.sql` — `sales.change_given` (cambio devuelto al cliente), tabla `cash_closings` con `diff` como columna generada, RLS (admin borra, ambos roles insertan/actualizan), vista `vw_cash_sales_by_day` (net cash por día local).
+- `src/lib/schemas/cash-closing.ts` — `cashClosingCloseSchema` + tipos.
+- `src/app/actions/cash-closing.ts` — `getTodayCashClosingAction` (auto-open en primer GET), `closeCashAction` (recomputa expected al cerrar).
+- `src/app/(app)/cash-closing/page.tsx` + `cash-closing-client.tsx` — server component + client con RHF/zod. Banner de estado (verde/ámbar/rojo según diff), 2 stat tiles (esperado/contado), form para cerrar, lectura cuando ya cerrado. Diff tones: success si 0, warning si ±$5, destructive más allá.
+- `src/app/api/cash-closing/today/route.ts` — GET para polling live del expected (cada 30s mientras está abierto).
+- `src/components/nav/side-nav.tsx` — item "Cierre de caja" entre Clientes y Reportes (ícono Banknote).
+- `src/app/(app)/dashboard/page.tsx` — widget "Cierre de caja del día" con badge de estado. Link a `/cash-closing`.
+- `src/app/actions/sales.ts` — server calcula `change_given = max(0, paidAmount - total)` para ventas en efectivo paid.
+- `src/app/(app)/sales/new/pos-client.tsx` — POS ahora envía `paidAmount` real (lo que recibió), no `total`. Server deriva `change_given` y `paid_amount = total`.
+- `src/lib/query/mutations.ts` — hook `useCloseCash`.
+
+→ Mover la migración a Supabase: `pnpm exec supabase db push` (cuando estés listo).
+
+## 13. Próximo paso inmediato
+
+**Fase 17: deploy + verificación end-to-end.** Aplicar migración 0006 a Supabase, configurar `CRON_SECRET` + verificar `RESEND_API_KEY` + `RESEND_FROM_EMAIL` en Vercel, probar el cron manualmente con `curl -H "Authorization: Bearer $CRON_SECRET" https://<deploy>/api/cron/low-stock-alert`. Confirmar email llega. Repetir con `/api/cron/daily-summary`.
+
+## 14. Lo que ya está hecho en fase 15 (alerta stock bajo)
+
+- `resend` npm package añadido.
+- `src/lib/email/send.ts` — wrapper `sendEmail()` server-only, singleton del cliente Resend, lee `RESEND_API_KEY` y `RESEND_FROM_EMAIL` de env.
+- `src/lib/email/templates/low-stock-alert.ts` — HTML inline con tabla de productos críticos (SKU, nombre, stock, umbral). Texto plano como fallback.
+- `src/lib/email/recipients.ts` — helper `getRecipients(['admin'])` que query `profiles` filtrando por role.
+- `src/app/api/cron/low-stock-alert/route.ts` — GET con auth `Bearer $CRON_SECRET`. Query `vw_product_stock` + `products` filtrando `stock_on_hand <= stock_low_threshold AND threshold > 0`. Si no hay filas, 200 OK sin enviar (Vercel no reintenta). Solo recipients = admin.
+- `vercel.json` — cron `0 15 * * *` (9 AM Mexico, UTC-6 sin DST).
+- `src/app/actions/alerts.ts` — `sendLowStockAlertAction()` admin-only (mismo query que el cron, para trigger manual).
+- `src/lib/query/mutations.ts` — `useSendLowStockAlert()` hook.
+- `src/app/(app)/dashboard/low-stock-alert-trigger.tsx` — card client con botón "Enviar ahora", solo visible si `profile.role === 'admin'`. Muestra conteo actual de críticos.
+
+## 15. Lo que ya está hecho en fase 16 (resumen diario)
+
+- `src/lib/email/templates/daily-summary.ts` — HTML con: ventas hoy (count + total + delta % vs ayer, color verde/rojo), top 3 productos, estado del cierre de caja (color por status + diff).
+- `src/app/api/cron/daily-summary/route.ts` — GET con mismo auth. Query paralela: ventas hoy, ventas ayer, sale_items de hoy, cash_closing del día. Calcula delta %, agrega top productos, recipients = admin + employee.
+- `vercel.json` — cron `0 3 * * *` (9 PM Mexico). Total: 2 jobs dentro del límite Hobby.
+- El cierre de caja UI creado en fase 14 provee el `diff` que este email muestra (sin acoplamiento directo: el cron solo lee la tabla).
+
+## 16. Operativa post-deploy (todos)
+
+Variables en Vercel que se deben configurar:
+- `RESEND_API_KEY` (ya estaba en `.env.local.example`, falta poner valor real).
+- `RESEND_FROM_EMAIL` (ej. `Invensa <noreply@invensa.app>`).
+- `CRON_SECRET` — generar con `openssl rand -hex 32`, pegarlo en Vercel env. Vercel lo manda en `Authorization: Bearer …` automáticamente a los cron paths.
+- `SUPABASE_SERVICE_ROLE_KEY` — ya estaba; se usa solo si en el futuro se decide ejecutar el cron como SQL directo desde Postgres en lugar de un GET HTTP.
+
+→ Cuando despliegues, el primer email de las 9am y el de las 9pm saldrán automáticamente. Si quieres probar antes sin esperar, el botón "Enviar ahora" del dashboard dispara el mismo flujo.
+
+
 
 **Fase 14 (cierre de caja).** Empezar por:
 1. Migración `0006_cash_closings.sql` + aplicar a Supabase local.
