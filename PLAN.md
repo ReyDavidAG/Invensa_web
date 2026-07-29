@@ -186,7 +186,7 @@ Invensa_web/
 | 6 | Auth UI completa (login / register / forgot / reset / confirm) + Server Actions | ✅ Hecho |
 | 7 | Migration 0001-0005: profiles + products + sales + customers + RLS + seed | ✅ Hecho |
 | 8 | Módulo productos (CRUD completo — lista + alta + detalle + edición) | ✅ Hecho |
-| 9 | Módulo ventas (POS-like) + recibos | Pendiente |
+| 9 | Módulo ventas (POS-like + lista + recibo) | ✅ Hecho |
 | 10 | Módulo clientes (fiados / deuda) | Pendiente |
 | 11 | Reportes (cortes, stock bajo, top productos) | Pendiente |
 | 12 | Deploy a Vercel + env vars + verificación | Pendiente |

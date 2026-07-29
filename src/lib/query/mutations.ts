@@ -24,6 +24,11 @@ import {
   createCategoryAction,
   createUnitAction,
 } from "@/app/actions/taxonomy";
+import {
+  type SaleActionResult,
+  cancelSaleAction,
+  createSaleAction,
+} from "@/app/actions/sales";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -52,5 +57,17 @@ export function useCreateCategory() {
 export function useCreateUnit() {
   return useMutation<TaxonomyActionResult, Error, string>({
     mutationFn: (name) => createUnitAction(name),
+  });
+}
+
+export function useCreateSale() {
+  return useMutation<SaleActionResult, Error, FormData>({
+    mutationFn: (formData) => createSaleAction(null, formData),
+  });
+}
+
+export function useCancelSale() {
+  return useMutation<SaleActionResult, Error, string>({
+    mutationFn: (saleId) => cancelSaleAction(saleId),
   });
 }
