@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   const [{ data: products }, { data: stocks }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, code, name, stock_low_threshold")
+      .select("id, code, name, stock_low_threshold, image_url")
       .eq("status", "active")
       .gt("stock_low_threshold", 0),
     supabase.from("vw_product_stock").select("product_id, stock_on_hand"),
@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
     .map((p) => ({
       code: p.code as string,
       name: p.name as string,
+      imageUrl: (p.image_url as string | null) ?? null,
       stock: stockById.get(p.id as string) ?? 0,
       threshold: Number(p.stock_low_threshold),
     }))
@@ -66,8 +67,15 @@ export async function GET(req: NextRequest) {
   await sendEmail({
     to: recipients,
     subject: `${rows.length} producto${rows.length === 1 ? "" : "s"} por agotarse`,
-    html: lowStockAlertHtml(rows, new Date()),
-    text: lowStockAlertText(rows),
+    html: lowStockAlertHtml(
+      rows,
+      new Date(),
+      process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "",
+    ),
+    text: lowStockAlertText(
+      rows,
+      process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "",
+    ),
   });
 
   return NextResponse.json({

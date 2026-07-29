@@ -110,8 +110,12 @@ export async function GET(req: NextRequest) {
     agg.set(id, cur);
   }
 
-  let topProducts: Array<{ name: string; quantity: number; total: number }> =
-    [];
+  let topProducts: Array<{
+    name: string;
+    imageUrl: string | null;
+    quantity: number;
+    total: number;
+  }> = [];
   if (agg.size > 0) {
     const topIds = [...agg.entries()]
       .sort((a, b) => b[1].total - a[1].total)
@@ -119,13 +123,17 @@ export async function GET(req: NextRequest) {
       .map(([id]) => id);
     const { data: prods } = await supabase
       .from("products")
-      .select("id, name")
+      .select("id, name, image_url")
       .in("id", topIds);
     const nameById = new Map(
-      (prods ?? []).map((p) => [p.id as string, p.name as string]),
+      (prods ?? []).map((p) => [
+        p.id as string,
+        p as { name: string; image_url: string | null },
+      ]),
     );
     topProducts = topIds.map((id) => ({
-      name: nameById.get(id) ?? "(producto)",
+      name: nameById.get(id)?.name ?? "(producto)",
+      imageUrl: nameById.get(id)?.image_url ?? null,
       quantity: agg.get(id)?.quantity ?? 0,
       total: agg.get(id)?.total ?? 0,
     }));
@@ -136,6 +144,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sent: 0, salesCount });
   }
 
+  const appUrl =
+    process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
   await sendEmail({
     to: recipients,
     subject: `Resumen ${date} — ${salesCount} ${salesCount === 1 ? "venta" : "ventas"}`,
@@ -147,6 +157,7 @@ export async function GET(req: NextRequest) {
       yesterdayDeltaPct,
       cashClosingStatus: (closing?.status as "open" | "closed") ?? "open",
       cashClosingDiff: closing?.diff != null ? Number(closing.diff) : null,
+      appUrl,
     }),
     text: dailySummaryText({
       date,
@@ -156,6 +167,7 @@ export async function GET(req: NextRequest) {
       yesterdayDeltaPct,
       cashClosingStatus: (closing?.status as "open" | "closed") ?? "open",
       cashClosingDiff: closing?.diff != null ? Number(closing.diff) : null,
+      appUrl,
     }),
   });
 
