@@ -4,6 +4,7 @@
  */
 
 import Link from "next/link";
+import type { Route } from "next";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -46,7 +47,7 @@ export function ProductsSortableTh({
       )}
     >
       <Link
-        href={href}
+        href={href as Route}
         scroll={false}
         aria-label={`Ordenar por ${typeof children === "string" ? children : column} (${
           isActive
