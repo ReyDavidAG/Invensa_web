@@ -1,19 +1,8 @@
 "use server";
 
-/* Hallmark · locked system applied · src/app/actions/storage.ts
- * Server Actions for product image uploads to Cloudflare R2. The browser
- * calls `requestProductImageUploadAction` to get a presigned PUT URL, then
- * uploads the file directly to R2. Once the PUT succeeds, the form save
- * persists the public URL via `createProductAction` / `updateProductAction`.
- *
- * The action only issues the URL — it does NOT touch the database. That keeps
- * this file independent of the products module while reusing the admin guard.
- */
-
 import { requireAdmin } from "@/app/actions/_guards";
 import { getServerEnv } from "@/lib/env";
-import { buildProductKey, publicUrlFor } from "@/lib/r2/keys";
-import { buildPutObjectUrl } from "@/lib/r2/presign";
+import { buildProductKey, buildPutObjectUrl } from "@/lib/r2";
 import { presignRequestSchema } from "@/lib/schemas/upload";
 
 export type PresignActionResult =
@@ -66,7 +55,7 @@ export async function requestProductImageUploadAction(
   return {
     ok: true,
     uploadUrl: presigned.url,
-    publicUrl: publicUrlFor(key, env.NEXT_PUBLIC_R2_PUBLIC_URL),
+    publicUrl: `${env.NEXT_PUBLIC_R2_PUBLIC_URL.replace(/\/$/, "")}/${key}`,
     key,
     expiresIn: presigned.expiresIn,
   };

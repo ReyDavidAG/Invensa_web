@@ -1,10 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/customers/[id]/edit/customers-edit-form.tsx
- * Edit-customer form. RHF + zodResolver + useUpdateCustomer mutation.
- * Pre-populated with the client's current values. Disabled while submitting.
- */
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
@@ -65,138 +60,138 @@ export function EditCustomerForm({
 
   return (
     <FadeUp>
-    <form
-      onSubmit={onSubmit}
-      className="flex flex-col gap-6"
-      noValidate
-      aria-busy={isBusy}
-    >
-      <div>
-        <Link
-          href={`/customers/${customerId}`}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft aria-hidden className="size-3.5" />
-          Detalle del cliente
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
-          Editar cliente
-        </h1>
-      </div>
-
-      <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
-
-      {submitError ? (
-        <div
-          role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-        >
-          {submitError}
+      <form
+        onSubmit={onSubmit}
+        className="flex flex-col gap-6"
+        noValidate
+        aria-busy={isBusy}
+      >
+        <div>
+          <Link
+            href={`/customers/${customerId}`}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft aria-hidden className="size-3.5" />
+            Detalle del cliente
+          </Link>
+          <h1 className="mt-2 text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
+            Editar cliente
+          </h1>
         </div>
-      ) : null}
 
-      <fieldset disabled={isBusy} className="contents">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold tracking-tight">
-              Datos del cliente
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Field
-              label="Nombre"
-              required
-              error={errors.name?.message ?? fieldErrors?.name?.[0]}
-            >
-              <input
-                type="text"
-                inputMode="text"
-                autoComplete="name"
-                {...register("name")}
-                className={inputClass}
-              />
-            </Field>
+        <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
 
-            <div className="grid gap-4 sm:grid-cols-2">
+        {submitError ? (
+          <div
+            role="alert"
+            className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+          >
+            {submitError}
+          </div>
+        ) : null}
+
+        <fieldset disabled={isBusy} className="contents">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold tracking-tight">
+                Datos del cliente
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
               <Field
-                label="Teléfono"
-                error={errors.phone?.message ?? fieldErrors?.phone?.[0]}
+                label="Nombre"
+                required
+                error={errors.name?.message ?? fieldErrors?.name?.[0]}
               >
                 <input
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  {...register("phone")}
-                  className={cn(inputClass, "font-mono tabular-nums")}
-                />
-              </Field>
-
-              <Field
-                label="Email"
-                error={errors.email?.message ?? fieldErrors?.email?.[0]}
-              >
-                <input
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  {...register("email")}
+                  type="text"
+                  inputMode="text"
+                  autoComplete="name"
+                  {...register("name")}
                   className={inputClass}
                 />
               </Field>
-            </div>
 
-            <Field
-              label="Dirección"
-              error={errors.address?.message ?? fieldErrors?.address?.[0]}
-            >
-              <input
-                type="text"
-                inputMode="text"
-                autoComplete="street-address"
-                {...register("address")}
-                className={inputClass}
-              />
-            </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Teléfono"
+                  error={errors.phone?.message ?? fieldErrors?.phone?.[0]}
+                >
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    {...register("phone")}
+                    className={cn(inputClass, "font-mono tabular-nums")}
+                  />
+                </Field>
 
-            <Field
-              label="Notas"
-              error={errors.notes?.message ?? fieldErrors?.notes?.[0]}
-            >
-              <textarea
-                rows={3}
-                autoComplete="off"
-                {...register("notes")}
-                className={cn(inputClass, "min-h-24 py-2 leading-relaxed")}
-              />
-            </Field>
+                <Field
+                  label="Email"
+                  error={errors.email?.message ?? fieldErrors?.email?.[0]}
+                >
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    {...register("email")}
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
 
-            <div className="mt-2 flex items-center justify-end gap-2">
-              <Button
-                render={<Link href={`/customers/${customerId}`} />}
-                nativeButton={false}
-                type="button"
-                variant="outline"
+              <Field
+                label="Dirección"
+                error={errors.address?.message ?? fieldErrors?.address?.[0]}
               >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isBusy}>
-                {isBusy ? (
-                  <>
-                    <Loader2 aria-hidden className="size-4 animate-spin" />
-                    Guardando…
-                  </>
-                ) : (
-                  <>
-                    <Save aria-hidden className="size-4" />
-                    Guardar
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </fieldset>
-    </form>
+                <input
+                  type="text"
+                  inputMode="text"
+                  autoComplete="street-address"
+                  {...register("address")}
+                  className={inputClass}
+                />
+              </Field>
+
+              <Field
+                label="Notas"
+                error={errors.notes?.message ?? fieldErrors?.notes?.[0]}
+              >
+                <textarea
+                  rows={3}
+                  autoComplete="off"
+                  {...register("notes")}
+                  className={cn(inputClass, "min-h-24 py-2 leading-relaxed")}
+                />
+              </Field>
+
+              <div className="mt-2 flex items-center justify-end gap-2">
+                <Button
+                  render={<Link href={`/customers/${customerId}`} />}
+                  nativeButton={false}
+                  type="button"
+                  variant="outline"
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isBusy}>
+                  {isBusy ? (
+                    <>
+                      <Loader2 aria-hidden className="size-4 animate-spin" />
+                      Guardando…
+                    </>
+                  ) : (
+                    <>
+                      <Save aria-hidden className="size-4" />
+                      Guardar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </fieldset>
+      </form>
     </FadeUp>
   );
 }

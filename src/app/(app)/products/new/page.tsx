@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied · src/app/(app)/products/new/page.tsx
- * /products/new — server component. Fetches categories + units, checks the
- * caller is admin (renders 404 otherwise — don't leak the existence of the
- * route to non-admins), and renders the client form.
- */
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

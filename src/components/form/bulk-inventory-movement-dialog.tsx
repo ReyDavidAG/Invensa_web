@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/components/form/bulk-inventory-movement-dialog.tsx
- * Apply the same inventory movement to N selected products. Reuses the
- * existing schema, RHF, and Combobox pattern from the single-product
- * version. Submits via bulkCreateInventoryMovementsAction.
- */
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Save } from "lucide-react";
 import { useEffect } from "react";
@@ -24,10 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Combobox,
-  type ComboboxOption,
-} from "@/components/form/combobox";
+import { Combobox, type ComboboxOption } from "@/components/form/combobox";
 import { useBulkCreateInventoryMovements } from "@/lib/query/mutations";
 import {
   type InventoryMovementCreateFormValues,
@@ -133,11 +124,9 @@ export function BulkInventoryMovementDialog({
                 ariaLabel="Tipo de movimiento"
                 value={movementType}
                 onChange={(v) =>
-                  setValue(
-                    "movementType",
-                    v as "in" | "out" | "adjustment",
-                    { shouldValidate: true },
-                  )
+                  setValue("movementType", v as "in" | "out" | "adjustment", {
+                    shouldValidate: true,
+                  })
                 }
                 options={MOVEMENT_TYPE_OPTIONS}
                 placeholder="Selecciona un tipo…"

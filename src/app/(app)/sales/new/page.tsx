@@ -1,10 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/sales/new/page.tsx
- * POS entry — server component. Fetches the catalog (active products
- * with current stock) and recent-sales aggregates (top 5 most-sold
- * products in the last 30 days) for the quick-add row. Active clients
- * are also fetched so the fiado flow has them ready.
- */
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

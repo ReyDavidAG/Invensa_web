@@ -1,19 +1,6 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/form/ai-photo-import.tsx
- * Side sheet that lets the sister take/select a product photo, send it
- * to MiniMax vision, and pre-fill the product form. Sister always
- * reviews + saves manually — the AI just removes the typing.
- */
-
-import {
-  Camera,
-  ImageIcon,
-  Loader2,
-  Save,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { Camera, ImageIcon, Loader2, Save, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -74,7 +61,8 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [parsed, setParsed] = useState<AiProductParsed | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   // Reset transient state when the sheet closes.
   useEffect(() => {
@@ -102,6 +90,8 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
   function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
+    // Reset both inputs so picking the same file twice fires onChange.
+    e.target.value = "";
   }
 
   async function analyze() {
@@ -115,6 +105,13 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
     } else {
       toast.error(res.error);
     }
+  }
+
+  function clearImage() {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setParsed(null);
   }
 
   function applyToForm() {
@@ -137,8 +134,8 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
             Importar con foto
           </SheetTitle>
           <SheetDescription>
-            Toma o sube una foto del empaque. La IA intentará llenar los
-            campos para que solo los revises.
+            Toma o sube una foto del empaque. La IA intentará llenar los campos
+            para que solo los revises.
           </SheetDescription>
         </SheetHeader>
 
@@ -155,13 +152,7 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    setImageFile(null);
-                    if (imagePreview) URL.revokeObjectURL(imagePreview);
-                    setImagePreview(null);
-                    setParsed(null);
-                    if (inputRef.current) inputRef.current.value = "";
-                  }}
+                  onClick={clearImage}
                   className="absolute right-2 top-2 grid size-7 place-items-center rounded-full bg-background/90 text-foreground shadow-sm transition-colors hover:bg-background"
                   aria-label="Quitar imagen"
                 >
@@ -169,39 +160,54 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
                 </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                disabled={isPending}
-                className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 text-sm text-muted-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
+              <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 px-4 text-center text-sm text-muted-foreground">
                 <ImageIcon
                   aria-hidden
                   className="size-8 text-muted-foreground/60"
                 />
                 <span className="font-medium text-foreground">
-                  Subir o tomar foto
+                  Sube una foto del empaque
                 </span>
                 <span className="text-xs">JPG, PNG o WebP — hasta 5 MB</span>
-              </button>
+              </div>
             )}
+            {/* Two file inputs: gallery (no capture) and camera (capture=environment).
+                Same handler — they only differ in which OS picker they open. */}
             <input
-              ref={inputRef}
+              ref={galleryInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={onInputChange}
               className="sr-only"
             />
-            <div className="flex items-center gap-2">
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="environment"
+              onChange={onInputChange}
+              className="sr-only"
+            />
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => inputRef.current?.click()}
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={isPending}
+              >
+                <ImageIcon aria-hidden className="size-3.5" />
+                {imageFile ? "Cambiar foto" : "Elegir foto"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => cameraInputRef.current?.click()}
                 disabled={isPending}
               >
                 <Camera aria-hidden className="size-3.5" />
-                {imageFile ? "Cambiar foto" : "Elegir foto"}
+                Tomar foto
               </Button>
               <Button
                 type="button"

@@ -1,10 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/nav/page-title.tsx
- * Derives page title + breadcrumb from the current pathname using a static map.
- * Pages outside the map show no title (the page itself is expected to render one).
- */
-
 import { usePathname } from "next/navigation";
 
 type Crumb = { label: string; href?: string };

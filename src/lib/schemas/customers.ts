@@ -1,12 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/lib/schemas/customers.ts
- * Zod schemas for the customers module. Same schema validates on both the
- * client (zodResolver) and the server (safeParse inside the action).
- *
- * The customers module is intentionally simple right now — name is
- * required, everything else is optional (a fiado client may not have an
- * email yet). Validation runs per-field with Spanish copy.
- */
-
 import { z } from "zod";
 
 export const customerCreateSchema = z.object({

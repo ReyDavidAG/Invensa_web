@@ -1,25 +1,6 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/form/product-image-dropzone.tsx
- * Drag/drop or click to upload a product image directly to Cloudflare R2.
- *
- * Flow:
- *   1. Client validates file (MIME, size, dimensions) and shows a local preview.
- *   2. Calls requestProductImageUploadAction to get a presigned PUT URL.
- *   3. PUTs the file straight to R2 with XMLHttpRequest (for upload progress).
- *   4. Calls onUploaded(publicUrl, key) so the parent form can persist it.
- *
- * The component never talks to Supabase. The parent decides when to save the
- * imageUrl into products.image_url (typically on form submit).
- */
-
-import {
-  ImageIcon,
-  Loader2,
-  RefreshCw,
-  Upload,
-  X,
-} from "lucide-react";
+import { ImageIcon, Loader2, RefreshCw, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -74,8 +55,7 @@ export function ProductImageDropzone({
   }, [onUploaded]);
 
   const displayedUrl = previewUrl ?? committedUrl;
-  const isBusy =
-    status === "requesting" || status === "uploading" || disabled;
+  const isBusy = status === "requesting" || status === "uploading" || disabled;
 
   function clearLocalPreview() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -155,8 +135,11 @@ export function ProductImageDropzone({
       }
 
       setStatus("uploading");
-      await uploadWithProgress(presignRes.uploadUrl, toUpload, toUpload.type, (pct) =>
-        setProgress(pct),
+      await uploadWithProgress(
+        presignRes.uploadUrl,
+        toUpload,
+        toUpload.type,
+        (pct) => setProgress(pct),
       );
 
       // Promote blob preview to committed URL.
@@ -315,10 +298,7 @@ export function ProductImageDropzone({
           </Button>
         ) : null}
         {errorMsg ? (
-          <span
-            role="alert"
-            className="text-xs text-destructive"
-          >
+          <span role="alert" className="text-xs text-destructive">
             {errorMsg}
           </span>
         ) : null}

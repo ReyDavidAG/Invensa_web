@@ -1,15 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/sales/[id]/print-receipt.tsx
- * Print-only ticket layout. Hidden on screen, shown on @media print.
- *
- * Sized for 80mm thermal printers; works fine on letter/A4 too (renders as
- * a narrow centred column). Uses ─/═ characters instead of CSS borders so
- * every line aligns perfectly in monospace.
- *
- * The page-side chrome (sidebar, topbar, products card, etc.) is hidden
- * via `print:hidden` so only this receipt renders when the user hits
- * Imprimir → window.print().
- */
-
 type PrintReceiptProps = {
   ticketNumber: number;
   dateAt: string;
@@ -70,7 +58,15 @@ function SepLight() {
   return <p className="my-1 text-center">--------------------------------</p>;
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({
+  label,
+  value,
+  bold,
+}: {
+  label: string;
+  value: string;
+  bold?: boolean;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-2">
       <span>{label}</span>
@@ -102,9 +98,7 @@ export function PrintReceipt({
       {/* ─── Brand header ─── */}
       <div className="text-center">
         <p className="text-[18pt] font-bold tracking-[0.12em]">INVensa</p>
-        <p className="text-[9pt] tracking-[0.04em]">
-          Tienda de barrio
-        </p>
+        <p className="text-[9pt] tracking-[0.04em]">Tienda de barrio</p>
       </div>
 
       <SepHeavy />

@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/customers/customers-search.tsx
- * Search input that pushes the query into the URL via useRouter.replace.
- * Debounced 250ms so we don't spam history on every keystroke. Clears
- * page=1 reset on submit so the user lands on page 1 of a new search.
- */
-
 import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";

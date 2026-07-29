@@ -1,7 +1,3 @@
-/* Hallmark · locked system applied · src/lib/supabase/client.ts
- * Browser-only Supabase client. Uses NEXT_PUBLIC_ vars; no service role.
- */
-
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";

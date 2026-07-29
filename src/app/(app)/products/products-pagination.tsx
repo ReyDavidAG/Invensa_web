@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/app/(app)/products/products-pagination.tsx
- * Pagination footer with prev / next + page indicator. URL-driven — server
- * re-fetches on every page change. Windowed to ±2 pages around the current.
- */
-
 import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, ChevronRight } from "lucide-react";

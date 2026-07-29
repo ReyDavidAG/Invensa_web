@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/account/page.tsx
- * /account — current user's profile + security. Server component fetches
- * the row from public.profiles (RLS-gated to own row OR admin). The
- * profile-form + security-card are client components.
- */
-
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";

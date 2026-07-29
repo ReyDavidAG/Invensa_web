@@ -1,7 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/customers/[id]/edit/page.tsx
- * Edit-customer page. Server component: admin check + fetch + render pre-populated form.
- */
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

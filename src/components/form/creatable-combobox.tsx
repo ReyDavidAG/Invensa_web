@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/form/creatable-combobox.tsx
- * Generic creatable combobox. Search-as-you-type list + "Create X" footer
- * when the search has no exact match. Used for categories and units in the
- * product form so the sister can spin up new ones without leaving the page.
- */
-
 import { Check, ChevronDown, Loader2, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 

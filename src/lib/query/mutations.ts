@@ -1,16 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/lib/query/mutations.ts
- * React Query mutation hooks for Server Actions. Each hook wraps one
- * server action and exposes isPending / error / data so forms can
- * disable controls and surface messages without useState gymnastics.
- *
- * Pattern: mutationFn returns the full discriminated union from the
- * action (no throw). The caller reads `mutation.data?.ok` to decide
- * between success and error. This preserves field-level errors that
- * a throw would lose.
- */
-
 import { useMutation } from "@tanstack/react-query";
 
 import {
@@ -67,6 +56,14 @@ import {
   bulkSetProductImageAction,
   type BulkSetProductImageResult,
 } from "@/app/actions/products";
+import {
+  type CashClosingActionResult,
+  closeCashAction,
+} from "@/app/actions/cash-closing";
+import {
+  type LowStockAlertResult,
+  sendLowStockAlertAction,
+} from "@/app/actions/alerts";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -160,24 +157,42 @@ export function useBulkCreateProducts() {
 
 export function usePreviewBulkTaxonomy() {
   return useMutation<PreviewTaxonomyResult, Error, FormData>({
-    mutationFn: (formData) => previewBulkTaxonomyAction(
-      JSON.parse(String(formData.get("rows") ?? "[]")) as Array<{
-        categoryName?: string;
-        unitCode?: string;
-      }>,
-    ),
+    mutationFn: (formData) =>
+      previewBulkTaxonomyAction(
+        JSON.parse(String(formData.get("rows") ?? "[]")) as Array<{
+          categoryName?: string;
+          unitCode?: string;
+        }>,
+      ),
   });
 }
 
 export function useBulkCreateInventoryMovements() {
   return useMutation<BulkInventoryMovementResult, Error, FormData>({
-    mutationFn: (formData) => bulkCreateInventoryMovementsAction(null, formData),
+    mutationFn: (formData) =>
+      bulkCreateInventoryMovementsAction(null, formData),
   });
 }
 
 export function useBulkSetProductImage() {
-  return useMutation<BulkSetProductImageResult, Error, { productIds: string[]; publicUrl: string }>({
+  return useMutation<
+    BulkSetProductImageResult,
+    Error,
+    { productIds: string[]; publicUrl: string }
+  >({
     mutationFn: ({ productIds, publicUrl }) =>
       bulkSetProductImageAction(productIds, publicUrl),
+  });
+}
+
+export function useCloseCash() {
+  return useMutation<CashClosingActionResult, Error, FormData>({
+    mutationFn: (formData) => closeCashAction(null, formData),
+  });
+}
+
+export function useSendLowStockAlert() {
+  return useMutation<LowStockAlertResult, Error, void>({
+    mutationFn: () => sendLowStockAlertAction(),
   });
 }

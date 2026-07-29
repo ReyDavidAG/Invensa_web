@@ -1,12 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/lib/image/resize.ts
- * Client-side image resize before upload. Keeps Server Action bodies under
- * the 1 MB default limit by downsizing oversized photos on the browser.
- *
- * Strategy: keep iterating (smaller dimensions, lower quality) until the
- * result is under `maxBytes`. Most phone photos of product packaging fit
- * under 800 KB after one pass at 1600 px / JPEG q=0.85.
- */
-
 const DEFAULT_MAX_SIDE = 1600;
 const DEFAULT_QUALITY = 0.85;
 const DEFAULT_MAX_BYTES = 900_000; // stay safely under 1 MB
@@ -72,7 +63,10 @@ export async function resizeImage(
     const img = await loadImage(url);
     // Iterate: try a few (maxSide, quality) combos until the result fits.
     const presets: Array<{ maxSide: number; quality: number }> = [
-      { maxSide: options.maxSide ?? DEFAULT_MAX_SIDE, quality: options.quality ?? DEFAULT_QUALITY },
+      {
+        maxSide: options.maxSide ?? DEFAULT_MAX_SIDE,
+        quality: options.quality ?? DEFAULT_QUALITY,
+      },
       { maxSide: 1280, quality: 0.8 },
       { maxSide: 1024, quality: 0.75 },
       { maxSide: 800, quality: 0.7 },
@@ -92,11 +86,7 @@ export async function resizeImage(
       if (!ctx) continue;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, width, height);
-      const blob = await canvasToBlob(
-        canvas,
-        "image/jpeg",
-        preset.quality,
-      );
+      const blob = await canvasToBlob(canvas, "image/jpeg", preset.quality);
       if (!blob) continue;
       if (blob.size <= maxBytes) {
         bestBlob = blob;
@@ -110,11 +100,10 @@ export async function resizeImage(
 
     if (!bestBlob) return file; // Could not compress — return original.
 
-    return new File(
-      [bestBlob],
-      replaceExt(file.name, "jpg"),
-      { type: "image/jpeg", lastModified: Date.now() },
-    );
+    return new File([bestBlob], replaceExt(file.name, "jpg"), {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
   } finally {
     URL.revokeObjectURL(url);
   }

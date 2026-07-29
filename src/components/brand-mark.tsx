@@ -1,20 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/components/brand-mark.tsx
- * Brand mark — receipt with folded corner.
- *
- * Design: a stylized POS receipt with the top-right corner folded back
- * (showing the underside), one item line, and one thicker total bar.
- * Single path with fill-rule="evenodd" so the receipt body fills with
- * currentColor and the fold + lines are transparent cutouts.
- *
- * The folded corner is the signature move: it signals "freshly printed"
- * rather than a generic stock receipt icon. The single item line + total
- * bar are enough texture to read as "transaction" at any size without
- * becoming visual noise.
- *
- * Tokens: fill=currentColor (theme-aware). Works over the cobalt sidebar
- * tile (white) and as a browser favicon (page text colour).
- */
-
 import type { SVGProps } from "react";
 
 export function BrandMark(props: SVGProps<SVGSVGElement>) {

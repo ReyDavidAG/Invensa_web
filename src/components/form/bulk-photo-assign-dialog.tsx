@@ -1,18 +1,6 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/components/form/bulk-photo-assign-dialog.tsx
- * Assign the same uploaded image to N selected products. Reuses the R2
- * presigned-URL flow from the single-product dropzone (no per-product
- * preview, no per-product remove — the same file applies to all).
- */
-
-import {
-  Image as ImageIcon,
-  ImagePlus,
-  Loader2,
-  Save,
-  X,
-} from "lucide-react";
+import { Image as ImageIcon, ImagePlus, Loader2, Save, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -41,7 +29,9 @@ type Props = {
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-function readDimensions(file: File): Promise<{ width: number; height: number } | null> {
+function readDimensions(
+  file: File,
+): Promise<{ width: number; height: number } | null> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -144,9 +134,8 @@ export function BulkPhotoAssignDialog({
       // single-image presign URL and call a small inline batch via the
       // bulk server action exposed through the same `useBulkSetProductImage`
       // hook. The cleanest path: import the action directly.
-      const { bulkSetProductImageAction } = await import(
-        "@/app/actions/products"
-      );
+      const { bulkSetProductImageAction } =
+        await import("@/app/actions/products");
       const res = await bulkSetProductImageAction(
         productIds,
         presign.publicUrl,

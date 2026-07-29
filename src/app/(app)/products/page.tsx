@@ -1,15 +1,3 @@
-/* Hallmark · locked system applied · src/app/(app)/products/page.tsx
- * Products list page (Filter rail + table per design.md §6.4).
- *
- * Server component. Filters live in the URL via useSearchParams() on the
- * client and `searchParams` prop here — Server Components re-fetch on
- * every URL change. No client-side data fetching, no useEffect for
- * derived state.
- *
- * RLS: products read by anyone (admin + employee + anon). + Nuevo button
- * is admin-only; we fetch profiles.role to gate it server-side.
- */
-
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
@@ -174,7 +162,10 @@ export default async function ProductsPage({
           {isAdmin ? (
             <>
               <BulkImportTrigger />
-              <Button render={<Link href="/products/new" />} nativeButton={false}>
+              <Button
+                render={<Link href="/products/new" />}
+                nativeButton={false}
+              >
                 <Plus aria-hidden />
                 <span>Nuevo</span>
               </Button>
