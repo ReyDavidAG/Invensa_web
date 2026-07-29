@@ -31,24 +31,25 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 2,
 });
 
-const esMXDateTime = new Intl.DateTimeFormat("es-MX", {
+const esMXCurrencyNoCents = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  maximumFractionDigits: 0,
+});
+
+const esMXDate = new Intl.DateTimeFormat("es-MX", {
   dateStyle: "long",
-  timeStyle: "short",
+});
+
+const esMXTime = new Intl.DateTimeFormat("es-MX", {
+  hour: "2-digit",
+  minute: "2-digit",
 });
 
 const STATUS_META = {
-  paid: {
-    label: "Pagado",
-    className: "bg-success/10 text-success",
-  },
-  credit: {
-    label: "Fiado",
-    className: "bg-warning/15 text-warning",
-  },
-  cancelled: {
-    label: "Cancelado",
-    className: "bg-secondary text-secondary-foreground",
-  },
+  paid: { label: "Pagado", tone: "success" },
+  credit: { label: "Fiado", tone: "warning" },
+  cancelled: { label: "Cancelado", tone: "muted" },
 } as const;
 
 const PAYMENT_METHOD_LABEL = {
@@ -56,6 +57,14 @@ const PAYMENT_METHOD_LABEL = {
   transfer: "Transferencia",
   mixed: "Mixto",
 } as const;
+
+type StatusTone = "success" | "warning" | "muted";
+
+const STATUS_BADGE_CLASS: Record<StatusTone, string> = {
+  success: "bg-success/10 text-success ring-1 ring-inset ring-success/20",
+  warning: "bg-warning/15 text-warning ring-1 ring-inset ring-warning/20",
+  muted: "bg-secondary text-secondary-foreground ring-1 ring-inset ring-border",
+};
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -99,8 +108,7 @@ export default async function SaleDetailPage({ params }: PageProps) {
       .select(
         "id, quantity, unit_price, subtotal, products(id, code, name, image_url, units(code, name))",
       )
-      .eq("sale_id", id)
-      .order("created_at", { ascending: true }),
+      .eq("sale_id", id),
     supabase
       .from("inventory_movements")
       .select(
@@ -371,11 +379,13 @@ function DetailRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
         {label}
       </span>
-      <span className="text-right">{children}</span>
+      <span className="text-right text-sm font-medium text-foreground">
+        {children}
+      </span>
     </div>
   );
 }
