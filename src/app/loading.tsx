@@ -1,5 +1,7 @@
 import { Loader2 } from "lucide-react";
 
+import { BrandMark } from "@/components/brand-mark";
+
 export default function GlobalLoading() {
   return (
     <div
@@ -9,12 +11,7 @@ export default function GlobalLoading() {
       className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background px-6"
     >
       <div className="flex items-center gap-3">
-        <span
-          aria-hidden
-          className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground text-base font-bold"
-        >
-          I
-        </span>
+        <BrandMark className="size-10" />
         <span className="text-xl font-semibold tracking-tight text-foreground">
           Invensa
         </span>

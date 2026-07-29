@@ -69,9 +69,7 @@ export function SideNav({
           aria-label="Invensa · inicio"
           className="flex items-center gap-2.5 rounded-md px-3 py-3 text-base font-semibold tracking-tight text-foreground transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0"
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm group-data-[collapsible=icon]:size-7">
-            <BrandMark className="size-5 group-data-[collapsible=icon]:size-3.5" />
-          </span>
+          <BrandMark className="group-data-[collapsible=icon]:size-7" />
           <span className="flex min-w-0 flex-col truncate group-data-[collapsible=icon]:hidden">
             <span className="truncate">Invensa</span>
             <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
