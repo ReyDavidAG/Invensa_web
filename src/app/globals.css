@@ -1,5 +1,8 @@
-/* Hallmark · locked system applied (Coral · Workbench · es-MX) · light + dark
- * Source of truth: design.md §12.1. Append-only relative to the shadcn base-nova init.
+/* Hallmark · locked system applied (Taller · Workbench · es-MX) · light + dark
+ * Custom theme — Taller replaces Mostrador replaces Coral. NOT catalog,
+ * NOT dd-send. Taller: warm cream paper + cobalt blue (oklch H250) primary +
+ * warm amber (H65) highlight. Source of truth: design.md §4 (Taller variant).
+ * Append-only relative to the shadcn base-nova init.
  */
 
 @import "tailwindcss";
@@ -54,61 +57,106 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   --animate-accordion-down: accordion-down 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-accordion-up: accordion-up 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Mostrador-specific motion durations (design.md §9) */
+  --animate-fade-up: fade-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-spin-slow: spin 1.4s linear infinite;
+}
+
+/* ----------------------------------------------------------------
+ * Taller sidebar gradient — light: cream paper → warm tan (top → bottom,
+ * like sunlight on a workshop counter). Dark: cobalt-tinted deep → warm
+ * deep (top → bottom, like an enamel sign catching the overhead light).
+ * Applied via attribute selector so it overrides the bg-sidebar utility
+ * cleanly without breaking the Tailwind colour token.
+ * ---------------------------------------------------------------- */
+@layer base {
+  [data-slot="sidebar-inner"] {
+    background-image: linear-gradient(
+      180deg,
+      var(--sidebar-gradient-from) 0%,
+      var(--sidebar-gradient-to) 100%
+    );
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 :root {
-  /* paper */
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.18 0 0);
+  /* paper — warm cream, like an off-white workshop counter */
+  --background: oklch(0.97 0.012 80);
+  --foreground: oklch(0.22 0.008 70);
 
   /* surface */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0 0);
+  --card: oklch(0.995 0.005 80);
+  --card-foreground: oklch(0.22 0.008 70);
+  --popover: oklch(0.995 0.005 80);
+  --popover-foreground: oklch(0.22 0.008 70);
 
-  /* brand coral — used only on primary actions and active states (see design.md §3) */
-  --primary: oklch(0.65 0.18 28);
-  --primary-foreground: oklch(0.99 0 0);
+  /* brand cobalt — Taller accent. Used only on primary actions and active states (design.md §3). */
+  --primary: oklch(0.55 0.16 250);
+  --primary-foreground: oklch(0.99 0.005 80);
 
-  /* subtle fills */
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.18 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.50 0 0);
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.18 0 0);
+  /* subtle warm fills */
+  --secondary: oklch(0.95 0.018 75);
+  --secondary-foreground: oklch(0.28 0.012 70);
+  --muted: oklch(0.94 0.015 75);
+  --muted-foreground: oklch(0.52 0.008 75);
+  --accent: oklch(0.94 0.022 75);
+  --accent-foreground: oklch(0.28 0.012 70);
 
   /* status */
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.62 0.16 145);
-  --warning: oklch(0.78 0.15 75);
+  --destructive: oklch(0.55 0.215 28);
+  --destructive-foreground: oklch(0.99 0.005 80);
+  --success: oklch(0.62 0.155 145);
+  --warning: oklch(0.70 0.18 65);
 
   /* hairline + focus */
-  --border: oklch(0.91 0 0);
-  --input: oklch(0.91 0 0);
-  --ring: oklch(0.65 0.18 28);
+  --border: oklch(0.90 0.012 75);
+  --input: oklch(0.90 0.012 75);
+  --ring: oklch(0.55 0.16 250);
 
-  /* chart series (reports) */
-  --chart-1: oklch(0.65 0.18 28);
-  --chart-2: oklch(0.62 0.16 145);
-  --chart-3: oklch(0.78 0.15 75);
-  --chart-4: oklch(0.55 0.22 25);
-  --chart-5: oklch(0.55 0.10 250);
+  /* chart series — cobalt first (Taller), then amber/green/red/teal */
+  --chart-1: oklch(0.55 0.16 250);
+  --chart-2: oklch(0.70 0.18 65);
+  --chart-3: oklch(0.62 0.155 145);
+  --chart-4: oklch(0.62 0.215 28);
+  --chart-5: oklch(0.55 0.13 180);
 
   /* radius scale */
   --radius: 0.625rem;
 
-  /* sidebar tokens (kept aligned with the design system; shadcn reads these) */
-  --sidebar: oklch(0.99 0 0);
-  --sidebar-foreground: oklch(0.18 0 0);
-  --sidebar-primary: oklch(0.65 0.18 28);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.18 0 0);
-  --sidebar-border: oklch(0.91 0 0);
-  --sidebar-ring: oklch(0.65 0.18 28);
+  /* sidebar tokens — aligned to Taller surface */
+  --sidebar: oklch(0.97 0.012 80);
+  --sidebar-foreground: oklch(0.22 0.008 70);
+  --sidebar-primary: oklch(0.55 0.16 250);
+  --sidebar-primary-foreground: oklch(0.99 0.005 80);
+  --sidebar-accent: oklch(0.94 0.022 75);
+  --sidebar-accent-foreground: oklch(0.28 0.012 70);
+  --sidebar-border: oklch(0.90 0.012 75);
+  --sidebar-ring: oklch(0.55 0.16 250);
+
+  /* sidebar gradient stops — Taller light: cream paper → warm tan (top to bottom) */
+  --sidebar-gradient-from: oklch(0.97 0.014 80);
+  --sidebar-gradient-to: oklch(0.94 0.024 70);
 
   /* font bindings (Geist from next/font/google in layout.tsx) */
   --font-sans: var(--font-geist-sans);
@@ -116,48 +164,52 @@
 }
 
 .dark {
-  --background: oklch(0.13 0 0);
-  --foreground: oklch(0.95 0 0);
+  --background: oklch(0.16 0.008 70);
+  --foreground: oklch(0.94 0.012 80);
 
-  --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.17 0 0);
-  --popover-foreground: oklch(0.95 0 0);
+  --card: oklch(0.20 0.010 70);
+  --card-foreground: oklch(0.94 0.012 80);
+  --popover: oklch(0.20 0.010 70);
+  --popover-foreground: oklch(0.94 0.012 80);
 
-  /* coral in dark mode: brighter so it stays the brightest hue, foreground stays dark for AA */
-  --primary: oklch(0.70 0.17 28);
-  --primary-foreground: oklch(0.13 0 0);
+  /* cobalt in dark mode: brighter so it stays the brightest hue, foreground stays dark for AA */
+  --primary: oklch(0.68 0.15 250);
+  --primary-foreground: oklch(0.99 0.005 80);
 
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.22 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.22 0 0);
-  --accent-foreground: oklch(0.95 0 0);
+  --secondary: oklch(0.26 0.012 70);
+  --secondary-foreground: oklch(0.94 0.012 80);
+  --muted: oklch(0.26 0.012 70);
+  --muted-foreground: oklch(0.65 0.012 75);
+  --accent: oklch(0.26 0.014 70);
+  --accent-foreground: oklch(0.94 0.012 80);
 
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.62 0.16 145);
-  --warning: oklch(0.78 0.15 75);
+  --destructive: oklch(0.62 0.21 28);
+  --destructive-foreground: oklch(0.99 0.005 80);
+  --success: oklch(0.68 0.16 145);
+  --warning: oklch(0.78 0.18 65);
 
-  --border: oklch(0.27 0 0);
-  --input: oklch(0.27 0 0);
-  --ring: oklch(0.70 0.17 28);
+  --border: oklch(0.30 0.012 70);
+  --input: oklch(0.30 0.012 70);
+  --ring: oklch(0.68 0.15 250);
 
-  --chart-1: oklch(0.70 0.17 28);
-  --chart-2: oklch(0.62 0.16 145);
-  --chart-3: oklch(0.78 0.15 75);
-  --chart-4: oklch(0.55 0.22 25);
-  --chart-5: oklch(0.65 0.12 250);
+  --chart-1: oklch(0.68 0.15 250);
+  --chart-2: oklch(0.78 0.18 65);
+  --chart-3: oklch(0.68 0.16 145);
+  --chart-4: oklch(0.65 0.21 28);
+  --chart-5: oklch(0.65 0.14 180);
 
-  --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.70 0.17 28);
-  --sidebar-primary-foreground: oklch(0.13 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.27 0 0);
-  --sidebar-ring: oklch(0.70 0.17 28);
+  --sidebar: oklch(0.18 0.010 70);
+  --sidebar-foreground: oklch(0.94 0.012 80);
+  --sidebar-primary: oklch(0.68 0.15 250);
+  --sidebar-primary-foreground: oklch(0.99 0.005 80);
+  --sidebar-accent: oklch(0.26 0.014 70);
+  --sidebar-accent-foreground: oklch(0.94 0.012 80);
+  --sidebar-border: oklch(0.30 0.012 70);
+  --sidebar-ring: oklch(0.68 0.15 250);
+
+  /* sidebar gradient stops — Taller dark: cobalt-tinted deep → warm deep (top to bottom) */
+  --sidebar-gradient-from: oklch(0.18 0.025 250);
+  --sidebar-gradient-to: oklch(0.21 0.014 70);
 }
 
 @layer base {
@@ -190,5 +242,33 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/* ----------------------------------------------------------------
+ * Mostrador motion utilities — used sparingly by components.
+ * Always pair with prefers-reduced-motion overrides.
+ * ---------------------------------------------------------------- */
+@layer utilities {
+  /* Fade-up entrance — stagger via inline style="animation-delay: 60ms" etc. */
+  .animate-fade-up {
+    animation: var(--animate-fade-up);
+  }
+  .animate-fade-in {
+    animation: var(--animate-fade-in);
+  }
+  /* Card hover lift — translateY(-2px) + shadow */
+  .card-hover-lift {
+    transition:
+      transform var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+      box-shadow var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  }
+  .card-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -2px oklch(0.22 0.008 70 / 0.08);
+  }
+  /* Pulse used in the global loading indicator */
+  .animate-spin-slow {
+    animation: var(--animate-spin-slow);
   }
 }
