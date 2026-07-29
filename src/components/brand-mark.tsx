@@ -1,19 +1,28 @@
-import type { SVGProps } from "react";
+import type { HTMLAttributes } from "react";
 
-export function BrandMark(props: SVGProps<SVGSVGElement>) {
+import { cn } from "@/lib/utils";
+
+// Cobalt rounded square + bold "I" in the body font (Inter via Geist).
+// Matches the icon used in loading.tsx, the sidebar header, and the login
+// shell. The favicon (src/app/icon.svg) and PWA icon (public/icon.svg)
+// bake the same visual as paths so they render without a font dependency.
+//
+// Default size is size-9 (36px) to fit the sidebar header. Pass `size-N`
+// via className to scale (loading uses size-10, login uses size-8).
+export function BrandMark({
+  className,
+  ...props
+}: HTMLAttributes<HTMLSpanElement>) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <span
       aria-hidden
+      className={cn(
+        "grid size-9 shrink-0 place-items-center rounded-lg bg-primary font-bold text-primary-foreground shadow-sm",
+        className,
+      )}
       {...props}
     >
-      <path
-        d="M5 4 H22 L28 10 V25 a2 2 0 0 1-2 2 H7 a2 2 0 0 1-2-2 Z M22 4 L28 10 L22 10 Z M9 14 h11 v1.5 h-11 z M9 22 h15 v2 h-15 z"
-        fill="currentColor"
-        fillRule="evenodd"
-      />
-    </svg>
+      I
+    </span>
   );
 }
