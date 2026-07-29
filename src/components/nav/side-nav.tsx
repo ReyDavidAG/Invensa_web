@@ -43,9 +43,8 @@ const PRIMARY_NAV: NavItem[] = [
   { href: "/reports", label: "Reportes", icon: BarChart3 },
 ];
 
-const ACCOUNT_NAV: NavItem = {
+const ACCOUNT_NAV_BASE: Omit<NavItem, "label"> = {
   href: "/account",
-  label: "Cuenta",
   icon: UserCircle,
 };
 
@@ -54,8 +53,10 @@ function isActive(pathname: string | null, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SideNav() {
+export function SideNav({ userName }: { userName: string }) {
   const pathname = usePathname();
+  const accountLabel = userName.trim() || "Cuenta";
+  const accountNav: NavItem = { ...ACCOUNT_NAV_BASE, label: accountLabel };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -96,13 +97,13 @@ export function SideNav() {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={<Link href={ACCOUNT_NAV.href} />}
-              isActive={isActive(pathname, ACCOUNT_NAV.href)}
-              tooltip={ACCOUNT_NAV.label}
+              render={<Link href={accountNav.href} />}
+              isActive={isActive(pathname, accountNav.href)}
+              tooltip={accountNav.label}
               className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary [&_svg]:size-5"
             >
-              <ACCOUNT_NAV.icon aria-hidden />
-              <span className="text-sm">{ACCOUNT_NAV.label}</span>
+              <accountNav.icon aria-hidden />
+              <span className="text-sm">{accountNav.label}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
