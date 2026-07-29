@@ -12,18 +12,18 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MoreHorizontal, Plus } from "lucide-react";
-import { ImageIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import { BulkImportTrigger } from "./bulk-import-trigger";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { ProductsFilterChip } from "./products-filter-chip";
 import { ProductsPagination } from "./products-pagination";
 import { ProductsSearch } from "./products-search";
-import { ProductsSortableTh } from "./products-sortable-th";
+import { ProductsTable } from "./products-table";
 
 export const metadata: Metadata = {
   title: "Productos",
@@ -143,14 +143,32 @@ export default async function ProductsPage({
 
   const hasActiveFilters = q.length > 0 || cat !== "all";
 
+  // Map server rows to the shape the client ProductsTable expects.
+  const productRows = (products ?? []).map((p) => {
+    const category = Array.isArray(p.categories)
+      ? p.categories[0]
+      : p.categories;
+    return {
+      id: p.id as string,
+      code: p.code as string,
+      name: p.name as string,
+      category: (category?.name as string | null) ?? "—",
+      categoryCode: (category?.code as string | null) ?? "",
+      stock: stockByProduct.get(p.id as string) ?? 0,
+      stockLowThreshold: Number(p.stock_low_threshold),
+      priceSale: Number(p.price_sale),
+      imageUrl: (p.image_url as string | null) ?? null,
+    };
+  });
+
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       {/* Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
           Productos
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
           <ProductsSearch defaultValue={q} />
           {isAdmin ? (
             <>
@@ -217,122 +235,7 @@ export default async function ProductsPage({
           ) : null}
         </Card>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <ProductsSortableTh
-                  column="code"
-                  sort={sort}
-                  dir={dir}
-                  buildUrl={buildUrl}
-                >
-                  SKU
-                </ProductsSortableTh>
-                <th scope="col" className="w-12 px-1 py-2.5 font-medium">
-                  <span className="sr-only">Imagen</span>
-                </th>
-                <ProductsSortableTh
-                  column="name"
-                  sort={sort}
-                  dir={dir}
-                  buildUrl={buildUrl}
-                >
-                  Nombre
-                </ProductsSortableTh>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  Categoría
-                </th>
-                <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                  Stock
-                </th>
-                <ProductsSortableTh
-                  column="price"
-                  sort={sort}
-                  dir={dir}
-                  buildUrl={buildUrl}
-                  align="right"
-                >
-                  Precio
-                </ProductsSortableTh>
-                <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                  <span className="sr-only">Acciones</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {(products ?? []).map((p) => {
-                const stock = stockByProduct.get(p.id as string) ?? 0;
-                const lowStock = stock <= Number(p.stock_low_threshold);
-                const outOfStock = stock <= 0;
-                const category = Array.isArray(p.categories)
-                  ? p.categories[0]
-                  : p.categories;
-                return (
-                  <tr key={p.id} className="bg-background hover:bg-muted/30">
-                    <td className="px-4 py-2.5 font-mono text-xs tabular-nums text-muted-foreground">
-                      {p.code}
-                    </td>
-                    <td className="px-1 py-2">
-                      {p.image_url ? (
-                        <img
-                          src={p.image_url as string}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="size-9 rounded-md border border-border bg-muted object-cover"
-                        />
-                      ) : (
-                        <span
-                          aria-hidden
-                          className="grid size-9 place-items-center rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground"
-                        >
-                          <ImageIcon className="size-4" />
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <Link
-                        href={`/products/${p.id}`}
-                        className="font-medium text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded"
-                      >
-                        {p.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5 text-muted-foreground">
-                      {category?.name ?? "—"}
-                    </td>
-                    <td
-                      className={
-                        outOfStock
-                          ? "px-4 py-2.5 text-right font-mono text-sm tabular-nums text-destructive"
-                          : lowStock
-                            ? "px-4 py-2.5 text-right font-mono text-sm tabular-nums text-warning"
-                            : "px-4 py-2.5 text-right font-mono text-sm tabular-nums text-foreground"
-                      }
-                    >
-                      {stock}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-sm tabular-nums text-foreground">
-                      {esMXCurrency.format(Number(p.price_sale))}
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <Button
-                        render={<Link href={`/products/${p.id}`} />}
-                        nativeButton={false}
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Acciones para ${p.name}`}
-                      >
-                        <MoreHorizontal aria-hidden className="size-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ProductsTable products={productRows} />
       )}
 
       {/* Pagination */}
