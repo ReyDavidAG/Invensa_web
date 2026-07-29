@@ -53,7 +53,11 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false, address: false, email: false },
   // Next.js App Router picks this up automatically as /icon.svg → favicon
-  icons: { icon: "/icon.svg" },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
