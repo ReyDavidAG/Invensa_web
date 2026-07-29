@@ -3,6 +3,7 @@
 
 import * as React from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { FadeUp } from "@/components/motion/fade-up";
 import { APP_VERSION } from "@/lib/version";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +23,8 @@ export function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center px-4 py-16 sm:py-24">
-      <div className={cn("w-full max-w-[420px] flex flex-col gap-8")}>
+    <main className="flex min-h-svh flex-col items-center justify-center px-4 py-8 sm:py-24">
+      <FadeUp className={cn("w-full max-w-[420px] flex flex-col gap-8")}>
         <header className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
             <span
@@ -62,7 +63,7 @@ export function AuthShell({
             {footer}
           </footer>
         ) : null}
-      </div>
+      </FadeUp>
     </main>
   );
 }

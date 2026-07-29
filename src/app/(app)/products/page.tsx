@@ -246,6 +246,6 @@ export default async function ProductsPage({
         pageSize={PAGE_SIZE}
         buildUrl={buildUrl}
       />
-    </div>
+    </FadeUp>
   );
 }

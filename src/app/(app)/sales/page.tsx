@@ -9,6 +9,7 @@ import { ChevronRight, Plus, Receipt } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -89,8 +90,8 @@ export default async function SalesPage({
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <FadeUp className="flex flex-col gap-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
           Ventas
         </h1>
@@ -263,6 +264,6 @@ export default async function SalesPage({
           ) : null}
         </>
       )}
-    </div>
+    </FadeUp>
   );
 }

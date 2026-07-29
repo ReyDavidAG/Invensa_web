@@ -17,6 +17,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { useCreateCustomer } from "@/lib/query/mutations";
 import {
   type CustomerCreateFormValues,
@@ -66,6 +67,7 @@ export function NewCustomerForm() {
   });
 
   return (
+    <FadeUp>
     <form
       onSubmit={onSubmit}
       className="flex flex-col gap-6"
@@ -204,6 +206,7 @@ export function NewCustomerForm() {
         </Card>
       </fieldset>
     </form>
+    </FadeUp>
   );
 }
 

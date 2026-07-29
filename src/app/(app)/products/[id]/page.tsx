@@ -11,6 +11,7 @@ import { ChevronLeft, ImageIcon, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { ArchiveButton } from "./archive-button";
@@ -93,7 +94,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const stock = Number(stockRow?.stock_on_hand ?? 0);
 
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -277,7 +278,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           )}
         </CardContent>
       </Card>
-    </div>
+    </FadeUp>
   );
 }
 

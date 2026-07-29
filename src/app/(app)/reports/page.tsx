@@ -41,6 +41,7 @@ import {
 import { BarChart, type BarDatum } from "./bar-chart";
 import { KpiTile } from "./kpi-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 
 export const metadata: Metadata = {
   title: "Reportes",
@@ -340,7 +341,7 @@ export default async function ReportsPage({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -627,7 +628,7 @@ export default async function ReportsPage({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </FadeUp>
   );
 }
 
