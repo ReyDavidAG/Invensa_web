@@ -24,6 +24,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -202,7 +203,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       {/* Greeting */}
       <header
         className="animate-fade-up flex flex-col gap-1"
@@ -381,7 +382,7 @@ export default async function DashboardPage() {
           </Card>
         </div>
       </section>
-    </div>
+    </FadeUp>
   );
 }
 

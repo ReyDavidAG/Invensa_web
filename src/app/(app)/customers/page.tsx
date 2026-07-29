@@ -9,6 +9,7 @@ import { ChevronRight, Mail, Phone, Plus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { CustomersSearch } from "./customers-search";
@@ -110,12 +111,12 @@ export default async function CustomersPage({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
           Clientes
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
           <CustomersSearch defaultValue={q} />
           <Button render={<Link href="/customers/new" />} nativeButton={false}>
             <Plus aria-hidden className="size-4" />
@@ -144,7 +145,7 @@ export default async function CustomersPage({
             })}
             aria-current={active === f.value ? "page" : undefined}
             className={
-              "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+              "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
               (active === f.value
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")
@@ -282,7 +283,7 @@ export default async function CustomersPage({
                       <td className="px-4 py-2.5 text-right">
                         <Link
                           href={`/customers/${c.id}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                          className="inline-flex h-10 w-10 min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                           aria-label={`Ver ${c.name}`}
                         >
                           <ChevronRight aria-hidden className="size-4" />
@@ -320,6 +321,6 @@ export default async function CustomersPage({
           </p>
         </>
       )}
-    </div>
+    </FadeUp>
   );
 }

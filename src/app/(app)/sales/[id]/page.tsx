@@ -27,6 +27,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { NewSaleLink } from "./new-sale-link";
@@ -154,8 +155,10 @@ export default async function SaleDetailPage({ params }: PageProps) {
   const saleDate = new Date(sale.date_at);
 
   return (
-    <div className="flex flex-col gap-8">
+    <>
       {/* ─── Print-only receipt ─────────────────────────────────── */}
+      {/* Rendered outside the FadeUp so the print path is not affected
+          by the entrance animation. */}
       <PrintReceipt
         ticketNumber={Number(sale.ticket_number)}
         dateAt={sale.date_at}
@@ -179,7 +182,8 @@ export default async function SaleDetailPage({ params }: PageProps) {
         }))}
       />
 
-      {/* ─── Hero header (hidden on print) ──────────────────────── */}
+      <FadeUp className="flex flex-col gap-8">
+        {/* ─── Hero header (hidden on print) ──────────────────────── */}
       <header className="flex flex-col gap-4 print:hidden sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-3">
           <Link
@@ -481,7 +485,8 @@ export default async function SaleDetailPage({ params }: PageProps) {
         </Link>
         <NewSaleLink />
       </div>
-    </div>
+      </FadeUp>
+    </>
   );
 }
 

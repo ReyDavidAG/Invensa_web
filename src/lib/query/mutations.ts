@@ -55,6 +55,18 @@ import {
   type BulkCreateProductsResult,
   bulkCreateProductsAction,
 } from "@/app/actions/bulk-products";
+import {
+  type PreviewTaxonomyResult,
+  previewBulkTaxonomyAction,
+} from "@/app/actions/bulk-products-preview";
+import {
+  type BulkInventoryMovementResult,
+  bulkCreateInventoryMovementsAction,
+} from "@/app/actions/inventory";
+import {
+  bulkSetProductImageAction,
+  type BulkSetProductImageResult,
+} from "@/app/actions/products";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -143,5 +155,29 @@ export function useParseProductPhoto() {
 export function useBulkCreateProducts() {
   return useMutation<BulkCreateProductsResult, Error, FormData>({
     mutationFn: (formData) => bulkCreateProductsAction(null, formData),
+  });
+}
+
+export function usePreviewBulkTaxonomy() {
+  return useMutation<PreviewTaxonomyResult, Error, FormData>({
+    mutationFn: (formData) => previewBulkTaxonomyAction(
+      JSON.parse(String(formData.get("rows") ?? "[]")) as Array<{
+        categoryName?: string;
+        unitCode?: string;
+      }>,
+    ),
+  });
+}
+
+export function useBulkCreateInventoryMovements() {
+  return useMutation<BulkInventoryMovementResult, Error, FormData>({
+    mutationFn: (formData) => bulkCreateInventoryMovementsAction(null, formData),
+  });
+}
+
+export function useBulkSetProductImage() {
+  return useMutation<BulkSetProductImageResult, Error, { productIds: string[]; publicUrl: string }>({
+    mutationFn: ({ productIds, publicUrl }) =>
+      bulkSetProductImageAction(productIds, publicUrl),
   });
 }

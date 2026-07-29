@@ -18,6 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { ArchiveCustomerButton } from "./archive-button";
@@ -102,7 +103,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
     .join("");
 
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
@@ -290,6 +291,6 @@ export default async function CustomerDetailPage({ params }: PageProps) {
           ) : null}
         </div>
       </div>
-    </div>
+    </FadeUp>
   );
 }

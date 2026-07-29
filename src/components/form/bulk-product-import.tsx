@@ -35,7 +35,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useBulkCreateProducts } from "@/lib/query/mutations";
+import { BulkTemplateButton } from "@/components/form/bulk-template-button";
+import { useBulkCreateProducts, usePreviewBulkTaxonomy } from "@/lib/query/mutations";
 import { parseCsv } from "@/lib/csv/parser";
 import {
   BULK_CSV_COLUMNS,
@@ -63,12 +64,17 @@ PZA-002,Pinol 1L,Limpieza,L,35,75,8,5`;
 export function BulkProductImport({ open, onOpenChange }: Props) {
   const router = useRouter();
   const bulkCreate = useBulkCreateProducts();
+  const previewTaxonomy = usePreviewBulkTaxonomy();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [step, setStep] = useState<Step>("paste");
   const [csvText, setCsvText] = useState("");
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
   const [result, setResult] = useState<BulkCreateProductsResult | null>(null);
+  const [taxonomyPreview, setTaxonomyPreview] = useState<{
+    newCategories: Set<string>;
+    newUnits: Set<string>;
+  } | null>(null);
 
   // Re-derive parsed rows whenever the user edits the CSV text.
   const liveParsed = useMemo(() => parsePreview(csvText), [csvText]);
@@ -100,9 +106,37 @@ export function BulkProductImport({ open, onOpenChange }: Props) {
     });
   }
 
-  function goPreview() {
+  async function goPreview() {
     setParsedRows(liveParsed);
     setStep("preview");
+    // Ask the server which categories/units already exist so the preview
+    // can flag new ones. Non-blocking — fall back to empty on error.
+    try {
+      const fd = new FormData();
+      fd.set(
+        "rows",
+        JSON.stringify(
+          liveParsed.flatMap((r) =>
+            r.ok
+              ? [{ categoryName: r.row.categoryName, unitCode: r.row.unitCode }]
+              : [],
+          ),
+        ),
+      );
+      const res = await previewTaxonomy.mutateAsync(fd);
+      if (res.ok) {
+        setTaxonomyPreview({
+          newCategories: new Set(
+            res.categories.new.map((n) => n.toLowerCase()),
+          ),
+          newUnits: new Set(
+            res.units.new.map((u) => u.toLowerCase()),
+          ),
+        });
+      }
+    } catch {
+      setTaxonomyPreview(null);
+    }
   }
 
   async function submit() {
@@ -130,20 +164,23 @@ export function BulkProductImport({ open, onOpenChange }: Props) {
 
         {step === "paste" ? (
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <Label htmlFor="bulk-csv">
                 Filas CSV (incluye encabezado)
               </Label>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={bulkCreate.isPending}
-              >
-                <FileUp aria-hidden className="size-3.5" />
+              <div className="flex items-center gap-1">
+                <BulkTemplateButton />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={bulkCreate.isPending}
+                >
+                  <FileUp aria-hidden className="size-3.5" />
                 Subir .csv
-              </Button>
+                </Button>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -232,12 +269,31 @@ export function BulkProductImport({ open, onOpenChange }: Props) {
                         >
                           {BULK_CSV_COLUMNS.map((col) => {
                             const key = colKey(col);
+                            const isNewTaxonomy =
+                              (key === "categoryName" &&
+                                taxonomyPreview?.newCategories.has(
+                                  String(row[key] ?? "").toLowerCase(),
+                                )) ||
+                              (key === "unitCode" &&
+                                taxonomyPreview?.newUnits.has(
+                                  String(row[key] ?? "").toLowerCase(),
+                                ));
                             return (
                               <td
                                 key={col}
                                 className="px-2 py-1.5 font-mono tabular-nums"
                               >
-                                {formatCell(key, row[key])}
+                                <span className="inline-flex items-center gap-1.5">
+                                  {formatCell(key, row[key])}
+                                  {isNewTaxonomy ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="rounded-full bg-warning/15 px-1.5 py-0 text-[9px] font-medium uppercase tracking-wide text-warning ring-1 ring-inset ring-warning/20"
+                                    >
+                                      + nueva
+                                    </Badge>
+                                  ) : null}
+                                </span>
                               </td>
                             );
                           })}

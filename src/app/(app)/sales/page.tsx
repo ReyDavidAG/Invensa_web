@@ -9,6 +9,7 @@ import { ChevronRight, Plus, Receipt } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -89,8 +90,8 @@ export default async function SalesPage({
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <FadeUp className="flex flex-col gap-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
           Ventas
         </h1>
@@ -120,7 +121,7 @@ export default async function SalesPage({
             })}
             aria-current={statusFilter === f.value ? "page" : undefined}
             className={
-              "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+              "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
               (statusFilter === f.value
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")
@@ -223,7 +224,7 @@ export default async function SalesPage({
                       <td className="px-4 py-2.5 text-right">
                         <Link
                           href={`/sales/${s.id}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                          className="inline-flex h-10 w-10 min-h-11 min-w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                           aria-label={`Ver venta #${s.ticket_number}`}
                         >
                           <ChevronRight aria-hidden className="size-4" />
@@ -263,6 +264,6 @@ export default async function SalesPage({
           ) : null}
         </>
       )}
-    </div>
+    </FadeUp>
   );
 }

@@ -25,6 +25,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useRequestProductImageUpload } from "@/lib/query/mutations";
+import { resizeImage } from "@/lib/image/resize";
 import { cn } from "@/lib/utils";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -104,14 +105,25 @@ export function ProductImageDropzone({
       toast.error(msg);
       return;
     }
-    if (file.size > MAX_BYTES) {
-      const msg = "La imagen pesa más de 5 MB.";
+
+    // Resize first so the request body stays under the Server Action
+    // 1 MB limit. `resizeImage` is a no-op for already-small files.
+    let toUpload = file;
+    try {
+      toUpload = await resizeImage(file);
+    } catch (e) {
+      console.warn("[product-image-dropzone] resize failed", e);
+      // Fall through with the original file; the size check below will
+      // catch anything that would breach the 5 MB hard limit.
+    }
+    if (toUpload.size > MAX_BYTES) {
+      const msg = "La imagen pesa más de 5 MB incluso después de comprimir.";
       setErrorMsg(msg);
       toast.error(msg);
       return;
     }
 
-    const dims = await readImageDimensions(file);
+    const dims = await readImageDimensions(toUpload);
     if (!dims || dims.width < MIN_DIMENSION || dims.height < MIN_DIMENSION) {
       const msg = `La imagen es demasiado pequeña (mínimo ${MIN_DIMENSION}×${MIN_DIMENSION}).`;
       setErrorMsg(msg);
@@ -120,7 +132,7 @@ export function ProductImageDropzone({
     }
 
     // Show preview immediately while we request the presigned URL.
-    const objectUrl = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(toUpload);
     clearLocalPreview();
     setPreviewUrl(objectUrl);
     setStatus("requesting");
@@ -128,9 +140,9 @@ export function ProductImageDropzone({
 
     try {
       const fd = new FormData();
-      fd.set("contentType", file.type);
-      fd.set("contentLength", String(file.size));
-      fd.set("filename", file.name);
+      fd.set("contentType", toUpload.type);
+      fd.set("contentLength", String(toUpload.size));
+      fd.set("filename", toUpload.name);
       if (productId) fd.set("productId", productId);
 
       const presignRes = await presign.mutateAsync(fd);
@@ -143,7 +155,7 @@ export function ProductImageDropzone({
       }
 
       setStatus("uploading");
-      await uploadWithProgress(presignRes.uploadUrl, file, file.type, (pct) =>
+      await uploadWithProgress(presignRes.uploadUrl, toUpload, toUpload.type, (pct) =>
         setProgress(pct),
       );
 

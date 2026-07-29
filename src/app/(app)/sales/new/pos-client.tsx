@@ -9,7 +9,7 @@
  * (or a network hiccup) doesn't drop the cart.
  */
 
-import { motion } from "motion/react";
+import { FadeUp } from "@/components/motion/fade-up";
 import {
   ChevronLeft,
   Loader2,
@@ -246,16 +246,11 @@ export function PosClient({
   const quickAmounts = [50, 100, 200, 500, 1000];
 
   return (
-    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6">
+    <FadeUp className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6">
       {/* ─── LEFT: Customer + Search + Products ─────────────────────── */}
       <div className="flex flex-col gap-4">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
               href="/sales"
@@ -268,7 +263,7 @@ export function PosClient({
               Nueva venta
             </h1>
           </div>
-        </motion.div>
+        </div>
 
         {/* Cliente */}
         <Card className="p-4">
@@ -610,7 +605,7 @@ export function PosClient({
           </div>
         </Card>
       </div>
-    </div>
+    </FadeUp>
   );
 }
 

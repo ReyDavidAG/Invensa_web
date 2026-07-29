@@ -12,6 +12,7 @@ import { ChevronLeft, Mail, ShieldCheck, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { ProfileForm } from "./profile-form";
@@ -73,7 +74,7 @@ export default async function AccountPage() {
   const roleMeta = ROLE_META[role];
 
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       {/* Header */}
       <div>
         <Link
@@ -146,6 +147,6 @@ export default async function AccountPage() {
         <span className="font-mono tabular-nums">{profile.id.slice(0, 8)}</span>
         .
       </p>
-    </div>
+    </FadeUp>
   );
 }

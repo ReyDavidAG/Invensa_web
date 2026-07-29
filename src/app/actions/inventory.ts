@@ -116,3 +116,81 @@ export async function createInventoryMovementAction(
 
   return { ok: true, id: data.id as string };
 }
+
+export type BulkInventoryMovementResult = {
+  ok: boolean;
+  results: Array<
+    | { productId: string; ok: true; id: string }
+    | { productId: string; ok: false; error: string }
+  >;
+};
+
+export async function bulkCreateInventoryMovementsAction(
+  _state: unknown,
+  formData: FormData,
+): Promise<BulkInventoryMovementResult> {
+  const auth = await requireUser();
+  if ("ok" in auth) {
+    return { ok: false, results: [] };
+  }
+
+  const productIdsRaw = formData.get("productIds");
+  const productIds: string[] = Array.isArray(
+    typeof productIdsRaw === "string" ? JSON.parse(productIdsRaw) : [],
+  )
+    ? (JSON.parse(productIdsRaw as string) as string[])
+    : [];
+  if (productIds.length === 0) {
+    return { ok: false, results: [] };
+  }
+
+  const parsed = inventoryMovementCreateSchema.safeParse(
+    fromFormData(formData, ["movementType", "quantity", "note"]),
+  );
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    return {
+      ok: false,
+      results: productIds.map((id) => ({
+        productId: id,
+        ok: false,
+        error: first?.message ?? "Datos inválidos",
+      })),
+    };
+  }
+
+  const supabase = await getSupabaseServer();
+  const baseRow = {
+    note: parsed.data.note?.trim() || null,
+    created_by: auth.userId,
+  };
+  const movementFields =
+    parsed.data.movementType === "adjustment"
+      ? { movement_type: "adjustment" as const, quantity_adj: parsed.data.quantity }
+      : { movement_type: parsed.data.movementType, quantity: parsed.data.quantity };
+
+  const results: BulkInventoryMovementResult["results"] = [];
+  for (const productId of productIds) {
+    const { data, error } = await supabase
+      .from("inventory_movements")
+      .insert({ ...baseRow, ...movementFields, product_id: productId })
+      .select("id")
+      .single();
+    if (error || !data) {
+      results.push({
+        productId,
+        ok: false,
+        error: error?.message ?? "Error desconocido",
+      });
+    } else {
+      results.push({ productId, ok: true, id: data.id as string });
+    }
+  }
+
+  if (results.some((r) => r.ok)) {
+    revalidatePath("/products");
+    revalidatePath("/reports");
+    revalidatePath("/dashboard");
+  }
+  return { ok: results.every((r) => r.ok), results };
+}
