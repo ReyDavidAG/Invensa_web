@@ -1,14 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/error.tsx
- * Root error boundary. Catches runtime errors thrown inside the root
- * layout (Providers/Toaster) — for everything inside (app), the
- * (app)/error.tsx boundary kicks in instead.
- *
- * Two CTAs: reintentar (calls reset() to re-render the segment) and
- * volver al inicio (links to /dashboard, which is auth-gated by proxy.ts).
- */
-
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";

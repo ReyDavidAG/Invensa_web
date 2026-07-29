@@ -1,15 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/reports/bar-chart.tsx
- * Daily sales bar chart. Pure SVG bars + HTML labels overlay.
- *
- * Why HTML labels: an earlier version used <text> inside the SVG with
- * preserveAspectRatio="none", which stretched the labels horizontally
- * (e.g. 3.2 unit fontSize rendered as 3.2px tall x ~19px wide when the
- * SVG was scaled 6x to fill the card). HTML labels stay crisp at any
- * container width.
- */
-
 import { motion } from "motion/react";
 import { useState } from "react";
 

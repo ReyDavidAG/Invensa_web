@@ -1,12 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/lib/schemas/sales.ts
- * Zod schemas for the sales module. The same schema validates on both the
- * client (zodResolver) and the server (safeParse inside createSaleAction).
- *
- * Numeric inputs come from <input type="number"> which always sends strings,
- * so coerce is used everywhere. The output type matches what the server
- * inserts (decimal columns).
- */
-
 import { z } from "zod";
 
 export const saleItemSchema = z.object({

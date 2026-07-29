@@ -1,10 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/customers/[id]/archive-button.tsx
- * Soft-delete trigger for a customer. Dialog confirmation. Soft delete via
- * active=false (preserves sale history). Toast + redirect on success.
- */
-
 import { Archive, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

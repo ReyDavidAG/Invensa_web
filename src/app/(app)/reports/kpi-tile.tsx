@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/reports/kpi-tile.tsx
- * Client-side KPI tile for the reports page. Lives in its own file so the
- * server-rendered page.tsx can stay server-only. Animates in via motion
- * (stagger fade-up) and supports the card-hover-lift utility.
- */
-
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 

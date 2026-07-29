@@ -1,12 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/products/products-table.tsx
- * Client island that owns bulk selection for the products table. Renders a
- * checkbox column + the bulk action bar, and a small popup dialog set
- * (BulkInventoryMovementDialog, BulkPhotoAssignDialog). The page-level
- * server fetch and pagination stay in products/page.tsx.
- */
-
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -43,9 +36,7 @@ type Props = {
 
 export function ProductsTable({ products }: Props) {
   const router = useRouter();
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
 
@@ -117,16 +108,10 @@ export function ProductsTable({ products }: Props) {
               <th scope="col" className="px-4 py-2.5 font-medium">
                 Categoría
               </th>
-              <th
-                scope="col"
-                className="px-4 py-2.5 text-right font-medium"
-              >
+              <th scope="col" className="px-4 py-2.5 text-right font-medium">
                 Stock
               </th>
-              <th
-                scope="col"
-                className="px-4 py-2.5 text-right font-medium"
-              >
+              <th scope="col" className="px-4 py-2.5 text-right font-medium">
                 Precio
               </th>
               <th scope="col" className="px-4 py-2.5 text-right">
@@ -246,11 +231,7 @@ export function ProductsTable({ products }: Props) {
             >
               Registrar movimiento
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setPhotoOpen(true)}
-            >
+            <Button type="button" size="sm" onClick={() => setPhotoOpen(true)}>
               Asignar foto
             </Button>
           </div>

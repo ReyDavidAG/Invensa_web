@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied · src/lib/schemas/ai-product.ts
- * Zod schema for the structured output the AI returns when extracting
- * product fields from a photo. Every field is nullable — the AI may not
- * be confident in all of them.
- */
-
 import { z } from "zod";
 
 export const aiProductParsedSchema = z.object({

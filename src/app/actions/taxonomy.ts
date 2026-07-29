@@ -1,14 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied · src/app/actions/taxonomy.ts
- * Server Actions for inline creation of categories + units (and any other
- * lookup table that follows the same pattern).
- *
- * Called from the CreatableCombobox when the user types a value that doesn't
- * exist and clicks "Crear X". After success, the form optimistically appends
- * the new row to its local options and auto-selects it.
- */
-
 import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";

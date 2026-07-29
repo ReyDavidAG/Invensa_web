@@ -1,14 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/nav/account-menu.tsx
- * Avatar + name + email dropdown with a sign-out action. The sign-out posts
- * to a server action that hits supabase.auth.signOut() and redirects to /login.
- *
- * Note: DropdownMenuTrigger already renders a <button>, so we DON'T wrap it
- * in another <Button> — that produces nested buttons (invalid HTML + hydration
- * mismatch). Instead we pass the button styling directly via className.
- */
-
 import { LogOut, UserCircle2 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

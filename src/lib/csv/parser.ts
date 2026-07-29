@@ -1,13 +1,3 @@
-/* Hallmark · locked system applied · src/lib/csv/parser.ts
- * Minimal RFC-4180-ish CSV parser. Handles:
- *   - quoted fields with embedded commas ("foo, bar")
- *   - escaped double-quotes ("" inside quoted field)
- *   - CRLF and LF line endings
- *   - leading UTF-8 BOM (common when pasting from Excel)
- *
- * No external dep. Returns string[][] — caller does header mapping.
- */
-
 export function parseCsv(input: string): string[][] {
   // Strip BOM if present.
   const text = input.replace(/^﻿/, "");

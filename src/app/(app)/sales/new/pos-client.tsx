@@ -1,14 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/sales/new/pos-client.tsx
- * POS — point of sale. Search-first product picker with "recientes" quick-add,
- * cart with +/- quantity controls, payment toggle (cash / transfer / fiado),
- * cash received auto-change calculation, and a single submit button.
- *
- * Cart state is persisted to localStorage so an accidental page refresh
- * (or a network hiccup) doesn't drop the cart.
- */
-
 import { FadeUp } from "@/components/motion/fade-up";
 import {
   ChevronLeft,

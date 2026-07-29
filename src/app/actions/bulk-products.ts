@@ -1,18 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied · src/app/actions/bulk-products.ts
- * Server Action for bulk product creation from a CSV. Per-row soft
- * success — partial failures are returned so the sister can fix the bad
- * rows and resubmit just those.
- *
- * Per row:
- *   1. Validate with bulkCsvRowSchema
- *   2. Look up or auto-create category (case-insensitive match)
- *   3. Look up or auto-create unit (case-insensitive match)
- *   4. Insert product
- *   5. If initialStock > 0, insert inventory_movement (in, "Inventario inicial")
- */
-
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/app/actions/_guards";
@@ -66,7 +53,10 @@ export async function bulkCreateProductsAction(
         : "Datos inválidos";
       results.push({
         ok: false,
-        code: typeof raw === "object" && raw && "code" in raw ? String(raw.code) : `Fila ${rowNum}`,
+        code:
+          typeof raw === "object" && raw && "code" in raw
+            ? String(raw.code)
+            : `Fila ${rowNum}`,
         error: `Fila ${rowNum}: ${msg}`,
       });
       failed += 1;
@@ -86,13 +76,14 @@ export async function bulkCreateProductsAction(
       if (existing) {
         categoryId = existing.id as string;
       } else {
-        const codeBase = row.categoryName
-          .normalize("NFD")
-          .replace(/[̀-ͯ]/g, "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "")
-          .slice(0, 16) || `cat-${rowNum}`;
+        const codeBase =
+          row.categoryName
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 16) || `cat-${rowNum}`;
         const { data: createdCat, error: catErr } = await supabase
           .from("categories")
           .insert({ code: codeBase, name: row.categoryName })

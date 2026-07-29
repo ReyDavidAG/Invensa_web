@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied · src/components/nav/top-bar.tsx
- * Server component for the app shell topbar. Fetches the current user + profile
- * and renders SidebarTrigger + Breadcrumb + PageTitle (client) + ThemeToggle (client)
- * + AccountMenu (client). Sticky on top.
- */
-
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { getSupabaseServer } from "@/lib/supabase/server";

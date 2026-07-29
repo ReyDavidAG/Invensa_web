@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/lib/supabase/server.ts
- * Server-side Supabase client that reads/writes the auth session via cookies().
- * Use in Server Components, Route Handlers, and Server Actions.
- */
-
 import "server-only";
 
 import { cookies } from "next/headers";

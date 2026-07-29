@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied (Mostrador) · src/app/loading.tsx
- * Global loading screen. Shows while Next.js suspends the root segment during
- * route transitions / data fetches. Brand wordmark + tangerine spinner
- * on the warm cream paper.
- */
-
 import { Loader2 } from "lucide-react";
 
 export default function GlobalLoading() {

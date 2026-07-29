@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/app/(app)/products/products-sortable-th.tsx
- * Sortable column header. Toggles asc/desc on click, pushes the sort + dir
- * (and resets page=1) into the URL.
- */
-
 import Link from "next/link";
 import type { Route } from "next";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";

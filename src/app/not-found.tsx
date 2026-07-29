@@ -1,12 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/not-found.tsx
- * Root 404. Catches every URL that doesn't match any route, including
- * unknown slugs that look like /products/abc but abc isn't a uuid.
- *
- * No shell — full-screen, mobile-first. Single CTA back to /dashboard
- * (or /login if there's no session, but we don't know that server-side
- * without a cookie check; the link works for both).
- */
-
 import { Compass, Home } from "lucide-react";
 import Link from "next/link";
 

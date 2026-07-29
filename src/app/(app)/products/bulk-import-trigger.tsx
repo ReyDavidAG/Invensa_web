@@ -1,10 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/app/(app)/products/bulk-import-trigger.tsx
- * Client wrapper that owns the open state of the bulk-import dialog. Lives
- * in the products list header next to "+ Nuevo" (admin only).
- */
-
 import { Upload } from "lucide-react";
 import { useState } from "react";
 

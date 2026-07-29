@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/lib/schemas/upload.ts
- * Zod schema for presigned upload requests. Mirrors the client-side checks in
- * the dropzone so a tampered request can't sneak past validation.
- */
-
 import { z } from "zod";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);

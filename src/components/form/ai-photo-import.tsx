@@ -1,19 +1,6 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/form/ai-photo-import.tsx
- * Side sheet that lets the sister take/select a product photo, send it
- * to MiniMax vision, and pre-fill the product form. Sister always
- * reviews + saves manually — the AI just removes the typing.
- */
-
-import {
-  Camera,
-  ImageIcon,
-  Loader2,
-  Save,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { Camera, ImageIcon, Loader2, Save, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -137,8 +124,8 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
             Importar con foto
           </SheetTitle>
           <SheetDescription>
-            Toma o sube una foto del empaque. La IA intentará llenar los
-            campos para que solo los revises.
+            Toma o sube una foto del empaque. La IA intentará llenar los campos
+            para que solo los revises.
           </SheetDescription>
         </SheetHeader>
 

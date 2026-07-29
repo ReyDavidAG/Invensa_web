@@ -1,17 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/form/inventory-movement-dialog.tsx
- * Dialog for registering a manual inventory movement (entrada / salida /
- * ajuste). Lives behind the "+ Movimiento" button on the product detail page.
- *
- * Single quantity field — the action interprets it semantically:
- *   in / out    → positive magnitude (row.quantity)
- *   adjustment  → signed delta (row.quantity_adj)
- *
- * The parent owns the open state. On success the parent should close the
- * dialog and the Server Action revalidates the relevant routes.
- */
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Save } from "lucide-react";
 import { useEffect } from "react";
@@ -29,10 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Combobox,
-  type ComboboxOption,
-} from "@/components/form/combobox";
+import { Combobox, type ComboboxOption } from "@/components/form/combobox";
 import { useCreateInventoryMovement } from "@/lib/query/mutations";
 import {
   type InventoryMovementCreateFormValues,
@@ -124,11 +109,9 @@ export function InventoryMovementDialog({
                 ariaLabel="Tipo de movimiento"
                 value={movementType}
                 onChange={(v) =>
-                  setValue(
-                    "movementType",
-                    v as "in" | "out" | "adjustment",
-                    { shouldValidate: true },
-                  )
+                  setValue("movementType", v as "in" | "out" | "adjustment", {
+                    shouldValidate: true,
+                  })
                 }
                 options={MOVEMENT_TYPE_OPTIONS}
                 placeholder="Selecciona un tipo…"

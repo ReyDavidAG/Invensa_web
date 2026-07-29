@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied (Mostrador) · src/app/(app)/loading.tsx
- * App-shell loading screen. Shown while a child segment of the (app) group
- * suspends. Sidebar skeleton + topbar skeleton + main skeleton. Same
- * geometry as the real layout so the transition feels continuous.
- */
-
 import { Loader2 } from "lucide-react";
 
 export default function AppShellLoading() {

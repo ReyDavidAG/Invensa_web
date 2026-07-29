@@ -1,18 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied (Taller) · src/app/actions/sales.ts
- * Server Actions for the sales module. The POS submits a cart + payment
- * here; we validate with zod, compute the authoritative total server-side
- * (never trust the client's subtotal), insert the sale + items + inventory
- * movements, and return the result.
- *
- * Inventory movements are inserted sequentially after sale_items. If the
- * third insert fails the sale is still saved — the user can re-run the
- * mutation after we add a Postgres RPC that wraps the whole thing in a
- * transaction. For the MVP this is acceptable; the sister can re-register
- * the movement manually if needed.
- */
-
 import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";

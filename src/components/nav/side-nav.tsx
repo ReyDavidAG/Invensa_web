@@ -1,13 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/components/nav/side-nav.tsx
- * Sidebar with the app's primary nav. Active item gets a 2px cobalt border-left
- * + cobalt text via shadcn `SidebarMenuButton`'s isActive prop.
- *
- * Taller iteration: large button size (size="lg") + size-5 icons so the nav
- * has more tap target on mobile and feels weightier on desktop.
- */
-
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";

@@ -1,14 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied · src/app/actions/inventory.ts
- * Server Action for manual inventory movements (entradas, salidas,
- * ajustes). Used by the "+ Movimiento" dialog on the product detail page.
- *
- * Role gate: any authenticated user (admin + employee). RLS enforces that
- * `created_by = auth.uid()` so users can only log movements under their own
- * name.
- */
-
 import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -166,8 +157,14 @@ export async function bulkCreateInventoryMovementsAction(
   };
   const movementFields =
     parsed.data.movementType === "adjustment"
-      ? { movement_type: "adjustment" as const, quantity_adj: parsed.data.quantity }
-      : { movement_type: parsed.data.movementType, quantity: parsed.data.quantity };
+      ? {
+          movement_type: "adjustment" as const,
+          quantity_adj: parsed.data.quantity,
+        }
+      : {
+          movement_type: parsed.data.movementType,
+          quantity: parsed.data.quantity,
+        };
 
   const results: BulkInventoryMovementResult["results"] = [];
   for (const productId of productIds) {

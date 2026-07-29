@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/lib/schemas/bulk-product.ts
- * CSV column header + per-row zod schema for bulk product import.
- * The column order is what the sister sees in the textarea placeholder.
- */
-
 import { z } from "zod";
 
 export const BULK_CSV_COLUMNS = [

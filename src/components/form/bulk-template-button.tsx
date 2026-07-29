@@ -1,10 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/components/form/bulk-template-button.tsx
- * Generates and downloads a CSV template with the canonical header row + 2
- * example rows. Pure client — no route handler needed.
- */
-
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

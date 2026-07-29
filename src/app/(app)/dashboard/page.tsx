@@ -1,18 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/dashboard/page.tsx
- * Dashboard home. Server component. Fetches live data:
- *  - Own profile (for greeting + role)
- *  - Sales today + yesterday (for KPIs + ticket comparison)
- *  - Top 5 recent sales
- *  - Low stock count (joined via products + vw_product_stock)
- *
- * Animation: stagger fade-up via CSS `animate-fade-up` utility with
- * inline `animationDelay` for the stagger. Respects
- * prefers-reduced-motion via the global CSS override.
- *
- * Empty-data rule: tiles show `—` with « datos reales cuando se registren
- * ventas » until real numbers exist. Never invent metrics.
- */
-
 import {
   ChevronRight,
   Receipt,
@@ -142,7 +127,8 @@ export default async function DashboardPage() {
   ]);
 
   if (profileError) console.error("[dashboard] profile", profileError);
-  if (salesTodayError) console.error("[dashboard] sales today", salesTodayError);
+  if (salesTodayError)
+    console.error("[dashboard] sales today", salesTodayError);
   if (salesYesterdayError)
     console.error("[dashboard] sales yesterday", salesYesterdayError);
   if (recentSalesError)

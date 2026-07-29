@@ -1,21 +1,12 @@
 "use server";
 
-/* Hallmark · locked system applied · src/app/actions/ai-product.ts
- * Server Action that calls MiniMax vision to extract product fields from
- * an uploaded photo. Returns a structured object the form pre-fills.
- *
- * Pipeline:
- *   1. requireAdmin (parity with createProductAction)
- *   2. validate image (≤5MB, jpeg/png/webp)
- *   3. convert to base64 data URL
- *   4. send to MiniMax-VL-01 with json_object response_format
- *   5. validate AI response with aiProductParsedSchema
- *   6. return { ok, parsed } or { ok: false, error }
- */
-
 import { requireAdmin } from "@/app/actions/_guards";
 import { aiProductParsedSchema } from "@/lib/schemas/ai-product";
-import { miniMaxChat, MiniMaxError, type MiniMaxMessage } from "@/lib/minimax/client";
+import {
+  miniMaxChat,
+  MiniMaxError,
+  type MiniMaxMessage,
+} from "@/lib/minimax/client";
 
 export type ParseProductPhotoResult =
   | { ok: true; parsed: import("@/lib/schemas/ai-product").AiProductParsed }
@@ -154,10 +145,7 @@ export async function parseProductPhotoAction(
 
   const validated = aiProductParsedSchema.safeParse(parsedJson);
   if (!validated.success) {
-    console.error(
-      "[ai-product] schema mismatch",
-      validated.error.issues,
-    );
+    console.error("[ai-product] schema mismatch", validated.error.issues);
     return {
       ok: false,
       error: "La IA devolvió datos con formato inesperado.",

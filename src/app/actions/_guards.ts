@@ -1,12 +1,3 @@
-/* Hallmark · locked system applied · src/app/actions/_guards.ts
- * Shared admin-role guard for Server Actions. Returns the auth user id when
- * the caller is an admin, or a discriminated `{ ok: false, error }` when they
- * aren't (or the session expired). Callers surface the error verbatim.
- *
- * RLS is still the final gate — this helper is just a nicer UX so employees
- * get a 403-style message before the database rejects the write.
- */
-
 import "server-only";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -17,8 +8,7 @@ export type RequireAdminOptions = {
 };
 
 export type RequireAdminResult =
-  | { userId: string }
-  | { ok: false; error: string };
+  { userId: string } | { ok: false; error: string };
 
 export async function requireAdmin(
   options: RequireAdminOptions = {},

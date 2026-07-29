@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/lib/schemas/products.ts
- * Zod schemas for the products module. Server Actions re-validate with the
- * same schema; client forms use zodResolver via @hookform/resolvers.
- */
-
 import { z } from "zod";
 
 export const productCreateSchema = z.object({

@@ -1,11 +1,3 @@
-/* Hallmark · locked system applied · src/proxy.ts
- * Refreshes the Supabase auth session on every request so Server Components and
- * Server Actions see a current user. Also a single chokepoint to gate app routes.
- *
- * Note: Next 16 renamed `middleware` → `proxy`. The file lives at src/proxy.ts
- * and exports `proxy` instead of `middleware`.
- */
-
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";

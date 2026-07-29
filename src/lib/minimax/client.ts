@@ -1,24 +1,3 @@
-/* Hallmark · locked system applied · src/lib/minimax/client.ts
- * Server-only MiniMax API client. Thin wrapper over the OpenAI-compatible
- * chat completions endpoint that backs MiniMax's M-series models
- * (including vision via MiniMax-M3).
- *
- * SECURITY:
- *   - `import "server-only"` guarantees the bundle is never sent to the
- *     browser. Importing this from a Client Component fails the build.
- *   - The API key never leaves the server: it's read once via
- *     getServerEnv() and only attached as `Authorization: Bearer …` in
- *     the outbound fetch.
- *   - Console logging is redacted via redactSecrets() so a malformed
- *     MiniMax response cannot accidentally echo the key.
- *   - Errors returned to the client are sanitised: only the HTTP status
- *     and the MiniMax `status_msg` (a server-controlled string) are
- *     surfaced; the raw response body is logged server-side only.
- *
- * Endpoint: POST https://api.minimax.io/v1/chat/completions
- * Auth:     Authorization: Bearer <MINIMAX_API_KEY>
- */
-
 import "server-only";
 
 import { getServerEnv } from "@/lib/env";
@@ -67,7 +46,10 @@ function redactSecrets(input: unknown): string {
   return text
     .replace(/(sk-[A-Za-z0-9_\-]{16,})/g, "[REDACTED:api_key]")
     .replace(/(Bearer\s+)[A-Za-z0-9_\-./=]+/gi, "$1[REDACTED:bearer]")
-    .replace(/(x-api-key["']?\s*:\s*["']?)[A-Za-z0-9_\-]+/gi, "$1[REDACTED:api_key]");
+    .replace(
+      /(x-api-key["']?\s*:\s*["']?)[A-Za-z0-9_\-]+/gi,
+      "$1[REDACTED:api_key]",
+    );
 }
 
 export async function miniMaxChat(opts: MiniMaxChatOptions): Promise<string> {
@@ -83,7 +65,9 @@ export async function miniMaxChat(opts: MiniMaxChatOptions): Promise<string> {
     model: opts.model ?? env.MINIMAX_MODEL,
     messages: opts.messages,
     ...(opts.responseFormat ? { response_format: opts.responseFormat } : {}),
-    ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
+    ...(opts.temperature !== undefined
+      ? { temperature: opts.temperature }
+      : {}),
     ...(opts.maxTokens !== undefined ? { max_tokens: opts.maxTokens } : {}),
     ...(opts.reasoningSplit !== undefined
       ? { reasoning_split: opts.reasoningSplit }

@@ -1,7 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/customers/new/page.tsx
- * New customer entry. Server component: admin check + renders form.
- */
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

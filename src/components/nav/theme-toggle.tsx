@@ -1,10 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/nav/theme-toggle.tsx
- * Light / dark / system theme toggle. Uses next-themes. No layout shift on
- * mount thanks to the `suppressHydrationWarning` on <html> in the root layout.
- */
-
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";

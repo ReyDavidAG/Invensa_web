@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/customers/[id]/page.tsx
- * Customer detail. Header (avatar + name + contact) + stats (total compras,
- * última compra) + recent purchases table + actions (edit / archive).
- */
-
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";

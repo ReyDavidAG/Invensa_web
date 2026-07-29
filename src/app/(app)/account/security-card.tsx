@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/account/security-card.tsx
- * Password-change + sign-out actions. The password change sends a Supabase
- * recovery email to the user's own inbox — they click the link and pick
- * a new password on the reset-password page.
- */
-
 import { KeyRound, Loader2, LogOut, Mail } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
