@@ -36,14 +36,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCreateSale } from "@/lib/query/mutations";
+import {
+  CreatableCombobox,
+  type CreatableOption,
+} from "@/components/form/creatable-combobox";
+import { useCreateCustomer } from "@/lib/query/mutations";
 import { cn } from "@/lib/utils";
 
 export type PosProduct = {
@@ -69,7 +67,7 @@ type CartLine = {
   stock: number;
 };
 
-type PaymentMode = "cash" | "transfer" | "credit";
+type PaymentMode = "cash"; // Fiado y transferencia deshabilitados por ahora
 type PaymentMethod = "cash" | "transfer" | "mixed";
 type SaleStatus = "paid" | "credit";
 
@@ -83,7 +81,7 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
 export function PosClient({
   products,
   recentProducts,
-  clients,
+  clients: initialClients,
 }: {
   products: PosProduct[];
   recentProducts: PosProduct[];
@@ -91,6 +89,8 @@ export function PosClient({
 }) {
   const router = useRouter();
   const createSale = useCreateSale();
+  const createCustomer = useCreateCustomer();
+  const [clients, setClients] = useState<PosClient[]>(initialClients);
 
   // ─── State ──────────────────────────────────────────────────────────
   const [search, setSearch] = useState("");
@@ -101,6 +101,22 @@ export function PosClient({
   const [paidAmountInput, setPaidAmountInput] = useState("");
   const [notes, setNotes] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // Close the search dropdown on outside click.
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setSearchFocused(false);
+      }
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
 
   // ─── Effects ────────────────────────────────────────────────────────
   // Debounce search input (200ms)
@@ -146,14 +162,9 @@ export function PosClient({
   const totalQuantity = cart.reduce((sum, l) => sum + l.quantity, 0);
 
   const paidAmount = Number(paidAmountInput) || 0;
-  const showCashReceived = paymentMode === "cash" || paymentMode === "transfer";
-  const showChange = showCashReceived && paidAmount > total;
+  const showChange = paidAmount > total;
   const change = showChange ? paidAmount - total : 0;
-  const isFiado = paymentMode === "credit";
-  const canSubmit =
-    cart.length > 0 &&
-    !createSale.isPending &&
-    (!isFiado || clientId);
+  const canSubmit = cart.length > 0 && !createSale.isPending;
 
   // ─── Handlers ──────────────────────────────────────────────────────
   const addToCart = useCallback((p: PosProduct) => {
@@ -219,18 +230,11 @@ export function PosClient({
 
   const onSubmit = async () => {
     if (!canSubmit) return;
-    const status: SaleStatus = isFiado ? "credit" : "paid";
-    // For fiado, default paymentMethod to "cash" if none specified; the
-    // sale can be settled later via /sales/[id] in a future phase.
-    const paymentMethod: PaymentMethod = isFiado ? "cash" : paymentMode;
     const fd = new FormData();
     fd.set("clientId", clientId);
-    fd.set("paymentMethod", paymentMethod);
-    fd.set("status", status);
-    fd.set(
-      "paidAmount",
-      isFiado ? String(paidAmount) : String(total),
-    );
+    fd.set("paymentMethod", "cash");
+    fd.set("status", "paid");
+    fd.set("paidAmount", String(total));
     fd.set("notes", notes);
     fd.set("items", JSON.stringify(cart));
     const result = await createSale.mutateAsync(fd);
@@ -276,93 +280,170 @@ export function PosClient({
         {/* Cliente */}
         <Card className="p-4">
           <div className="flex flex-col gap-2">
-            <label
-              htmlFor="pos-client"
-              className="flex items-center gap-2 text-xs font-medium text-foreground"
-            >
+            <span className="flex items-center gap-2 text-xs font-medium text-foreground">
               <User aria-hidden className="size-3.5" />
               Cliente
-            </label>
-            <Select
+            </span>
+            <CreatableCombobox
               value={clientId || "anonymous"}
-              onValueChange={(v) => setClientId(v && v !== "anonymous" ? v : "")}
-            >
-              <SelectTrigger id="pos-client" className="h-12 w-full">
-                <SelectValue placeholder="Anónimo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="anonymous">Anónimo (cliente ocasional)</SelectItem>
-                {clients.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(v) => setClientId(v === "anonymous" ? "" : v)}
+              options={[
+                {
+                  id: "anonymous",
+                  code: "—",
+                  name: "Anónimo (cliente ocasional)",
+                },
+                ...clients.map(
+                  (c): CreatableOption => ({
+                    id: c.id,
+                    code: "·",
+                    name: c.name,
+                  }),
+                ),
+              ]}
+              onCreate={async (name) => {
+                try {
+                  const fd = new FormData();
+                  fd.set("name", name);
+                  fd.set("phone", "");
+                  fd.set("email", "");
+                  fd.set("address", "");
+                  fd.set("notes", "");
+                  const res = await createCustomer.mutateAsync(fd);
+                  if (res.ok) {
+                    setClients((prev) => [
+                      ...prev,
+                      {
+                        id: res.id,
+                        name,
+                        phone: null,
+                      },
+                    ]);
+                    setClientId(res.id);
+                    toast.success(`Cliente "${name}" creado`);
+                    return { ok: true, option: { id: res.id, code: "·", name } };
+                  }
+                  return { ok: false, error: res.error };
+                } catch (err) {
+                  return {
+                    ok: false,
+                    error: err instanceof Error ? err.message : "Error desconocido",
+                  };
+                }
+              }}
+              placeholder="Buscar cliente…"
+              createNoun="cliente"
+              className="h-12"
+            />
           </div>
         </Card>
 
-        {/* Search */}
-        <div className="relative">
+        {/* Search — autocomplete dropdown */}
+        <div className="relative" ref={searchContainerRef}>
           <Search
             aria-hidden
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground"
           />
           <Input
             ref={searchRef}
-            type="search"
+            type="text"
             inputMode="search"
             autoComplete="off"
             placeholder="Buscar por nombre o SKU…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-12 pl-9 pr-4 text-base"
+            onFocus={() => setSearchFocused(true)}
+            className="h-12 pl-9 pr-10 text-base"
           />
-        </div>
+          {search ? (
+            <button
+              type="button"
+              aria-label="Limpiar búsqueda"
+              onClick={() => {
+                setSearch("");
+                searchRef.current?.focus();
+              }}
+              className="absolute right-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <X aria-hidden className="size-4" />
+            </button>
+          ) : null}
 
-        {/* Search results OR recientes */}
-        {debouncedSearch ? (
-          <section aria-label="Resultados de búsqueda">
-            {filteredProducts.length === 0 ? (
-              <Card className="border-dashed p-6 text-center text-sm text-muted-foreground">
-                Sin resultados para "{debouncedSearch}".
-              </Card>
-            ) : (
-              <ul
-                role="list"
-                className="grid grid-cols-2 gap-2 md:grid-cols-3"
-              >
-                {filteredProducts.map((p) => (
-                  <li key={p.id}>
-                    <ProductCard product={p} onAdd={addToCart} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        ) : (
-          <section aria-label="Productos recientes" className="flex flex-col gap-2">
-            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Recientes
-            </h2>
-            {recentProducts.length === 0 ? (
-              <Card className="border-dashed p-6 text-center text-sm text-muted-foreground">
-                Empieza a vender para ver tus productos más usados aquí.
-              </Card>
-            ) : (
-              <ul
-                role="list"
-                className="grid grid-cols-2 gap-2 md:grid-cols-3"
-              >
-                {recentProducts.map((p) => (
-                  <li key={p.id}>
-                    <ProductCard product={p} onAdd={addToCart} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+          {/* Dropdown: shows on focus. Recientes when empty, results when typing. */}
+          {searchFocused ? (
+            <div className="absolute top-full left-0 right-0 z-40 mt-1 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-lg">
+              {(() => {
+                const items = debouncedSearch
+                  ? filteredProducts.slice(0, 8)
+                  : recentProducts.slice(0, 3);
+                const isSearch = Boolean(debouncedSearch);
+                const headerLabel = isSearch
+                  ? `${filteredProducts.length} resultado${filteredProducts.length === 1 ? "" : "s"}`
+                  : "Recientes";
+                return (
+                  <>
+                    <p className="sticky top-0 border-b border-border bg-card px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {headerLabel}
+                    </p>
+                    {items.length === 0 ? (
+                      <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                        {isSearch
+                          ? `Sin resultados para "${debouncedSearch}".`
+                          : "Empieza a vender para ver tus productos más usados aquí."}
+                      </p>
+                    ) : (
+                      <ul role="list" className="divide-y divide-border">
+                        {items.map((p) => {
+                          const outOfStock = p.stock <= 0;
+                          return (
+                            <li key={p.id}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (outOfStock) {
+                                    toast.error(`"${p.name}" sin stock`);
+                                    return;
+                                  }
+                                  addToCart(p);
+                                  setSearchFocused(false);
+                                }}
+                                disabled={outOfStock}
+                                className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <span className="grid size-9 shrink-0 place-items-center rounded-md bg-secondary text-secondary-foreground">
+                                  <PackageSearch
+                                    aria-hidden
+                                    className="size-4"
+                                  />
+                                </span>
+                                <span className="flex min-w-0 flex-1 flex-col">
+                                  <span className="truncate text-sm font-medium text-foreground">
+                                    {p.name}
+                                  </span>
+                                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                                    {p.code}
+                                    {p.stock <= 0 ? (
+                                      <span className="ml-2 rounded-sm bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
+                                        Sin stock
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                </span>
+                                <span className="ml-auto font-mono text-sm font-semibold tabular-nums text-foreground">
+                                  {esMXCurrency.format(p.priceSale)}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* ─── RIGHT: Cart + Payment + Submit ─────────────────────────── */}
@@ -429,97 +510,65 @@ export function PosClient({
               </div>
             ) : null}
 
-            {/* Payment mode toggle */}
-            <fieldset disabled={createSale.isPending}>
-              <legend className="mb-1.5 text-xs font-medium text-foreground">
+            {/* Payment method (currently cash-only; toggle hidden until transfer/fiado land) */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-foreground">
                 Pago
-              </legend>
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { value: "cash" as const, label: "Efectivo" },
-                    { value: "transfer" as const, label: "Transfer." },
-                    { value: "credit" as const, label: "Fiado" },
-                  ]
-                ).map((p) => (
+              </span>
+              <span className="inline-flex h-7 items-center rounded-full bg-primary/10 px-2.5 text-xs font-medium text-primary">
+                Efectivo
+              </span>
+            </div>
+
+            {/* Cash received — always shown for cash-only POS */}
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="pos-paid"
+                className="text-xs font-medium text-foreground"
+              >
+                Recibido
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  $
+                </span>
+                <Input
+                  id="pos-paid"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={paidAmountInput}
+                  onChange={(e) => setPaidAmountInput(e.target.value)}
+                  disabled={createSale.isPending}
+                  className="h-12 pl-7 pr-4 font-mono tabular-nums text-base"
+                />
+              </div>
+              <div className="grid grid-cols-5 gap-1.5">
+                {quickAmounts.map((amt) => (
                   <button
-                    key={p.value}
+                    key={amt}
                     type="button"
-                    onClick={() => setPaymentMode(p.value)}
-                    className={cn(
-                      "h-12 rounded-md border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50",
-                      paymentMode === p.value
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
+                    onClick={() => setPaidAmountInput(String(amt))}
+                    disabled={createSale.isPending}
+                    className="h-9 rounded-md border border-border bg-background text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
                   >
-                    {p.label}
+                    ${amt}
                   </button>
                 ))}
               </div>
-            </fieldset>
-
-            {/* Cash received */}
-            {showCashReceived ? (
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="pos-paid"
-                  className="text-xs font-medium text-foreground"
-                >
-                  Recibido
-                </label>
-                <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    $
+              {paidAmount > 0 && change > 0 ? (
+                <div className="flex items-center justify-between rounded-md bg-success/10 px-3 py-2">
+                  <span className="text-xs font-medium text-success">
+                    Cambio
                   </span>
-                  <Input
-                    id="pos-paid"
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    value={paidAmountInput}
-                    onChange={(e) => setPaidAmountInput(e.target.value)}
-                    disabled={createSale.isPending}
-                    className="h-12 pl-7 pr-4 font-mono tabular-nums text-base"
-                  />
+                  <span className="font-mono text-base font-semibold tabular-nums text-success">
+                    {esMXCurrency.format(change)}
+                  </span>
                 </div>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {quickAmounts.map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setPaidAmountInput(String(amt))}
-                      disabled={createSale.isPending}
-                      className="h-9 rounded-md border border-border bg-background text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-                    >
-                      ${amt}
-                    </button>
-                  ))}
-                </div>
-                {paidAmount > 0 && change > 0 ? (
-                  <div className="flex items-center justify-between rounded-md bg-success/10 px-3 py-2">
-                    <span className="text-xs font-medium text-success">
-                      Cambio
-                    </span>
-                    <span className="font-mono text-base font-semibold tabular-nums text-success">
-                      {esMXCurrency.format(change)}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {/* Fiado notice */}
-            {isFiado && !clientId ? (
-              <div
-                role="alert"
-                className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning"
-              >
-                Selecciona un cliente para registrar un fiado.
-              </div>
-            ) : null}
+              ) : null}
+            </div>
 
             {/* Total + Submit */}
             <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
@@ -559,53 +608,6 @@ export function PosClient({
         </Card>
       </div>
     </div>
-  );
-}
-
-function ProductCard({
-  product,
-  onAdd,
-}: {
-  product: PosProduct;
-  onAdd: (p: PosProduct) => void;
-}) {
-  const outOfStock = product.stock <= 0;
-  return (
-    <button
-      type="button"
-      onClick={() => onAdd(product)}
-      disabled={outOfStock}
-      className={cn(
-        "group flex h-full flex-col items-start gap-1 rounded-lg border bg-card p-3 text-left transition-all",
-        "hover:-translate-y-0.5 hover:border-primary hover:shadow-sm",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-        "active:translate-y-0",
-        outOfStock
-          ? "cursor-not-allowed border-border opacity-60"
-          : "border-border",
-      )}
-    >
-      <span className="line-clamp-2 text-sm font-medium text-foreground">
-        {product.name}
-      </span>
-      <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-        {product.code}
-      </span>
-      <span className="mt-auto flex w-full items-center justify-between pt-1">
-        <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
-          {esMXCurrency.format(product.priceSale)}
-        </span>
-        {outOfStock ? (
-          <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
-            Sin stock
-          </span>
-        ) : (
-          <span className="grid size-7 place-items-center rounded-md bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-            <Plus aria-hidden className="size-4" />
-          </span>
-        )}
-      </span>
-    </button>
   );
 }
 

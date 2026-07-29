@@ -187,7 +187,7 @@ Invensa_web/
 | 7 | Migration 0001-0005: profiles + products + sales + customers + RLS + seed | ✅ Hecho |
 | 8 | Módulo productos (CRUD completo — lista + alta + detalle + edición) | ✅ Hecho |
 | 9 | Módulo ventas (POS-like + lista + recibo) | ✅ Hecho |
-| 10 | Módulo clientes (fiados / deuda) | Pendiente |
+| 10 | Módulo clientes (lista + alta + detalle + edición + archivo) | ✅ Hecho |
 | 11 | Reportes (cortes, stock bajo, top productos) | Pendiente |
 | 12 | Deploy a Vercel + env vars + verificación | Pendiente |
 | 13 | Pruebas con hermana + mamá | Pendiente |

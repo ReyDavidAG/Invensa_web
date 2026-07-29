@@ -117,7 +117,6 @@ export default async function SalesPage({
         {[
           { value: "all", label: "Todas" },
           { value: "paid", label: "Pagadas" },
-          { value: "credit", label: "Fiados" },
           { value: "cancelled", label: "Canceladas" },
         ].map((f) => (
           <Link

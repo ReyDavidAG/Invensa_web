@@ -29,6 +29,12 @@ import {
   cancelSaleAction,
   createSaleAction,
 } from "@/app/actions/sales";
+import {
+  type CustomerActionResult,
+  archiveCustomerAction,
+  createCustomerAction,
+  updateCustomerAction,
+} from "@/app/actions/customers";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -69,5 +75,24 @@ export function useCreateSale() {
 export function useCancelSale() {
   return useMutation<SaleActionResult, Error, string>({
     mutationFn: (saleId) => cancelSaleAction(saleId),
+  });
+}
+
+export function useCreateCustomer() {
+  return useMutation<CustomerActionResult, Error, FormData>({
+    mutationFn: (formData) => createCustomerAction(null, formData),
+  });
+}
+
+export function useUpdateCustomer(customerId: string) {
+  return useMutation<CustomerActionResult, Error, FormData>({
+    mutationFn: (formData) =>
+      updateCustomerAction(customerId, null, formData),
+  });
+}
+
+export function useArchiveCustomer() {
+  return useMutation<CustomerActionResult, Error, string>({
+    mutationFn: (customerId) => archiveCustomerAction(customerId),
   });
 }
