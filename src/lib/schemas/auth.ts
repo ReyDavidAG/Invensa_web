@@ -63,3 +63,14 @@ export const resetPasswordSchema = z
   });
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+// /account: edit own profile (full_name only — email + role are system-managed).
+export const profileUpdateSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, { message: es.required })
+    .max(120, { message: es.maxChars(120) }),
+});
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+export type ProfileUpdateFormValues = z.input<typeof profileUpdateSchema>;
