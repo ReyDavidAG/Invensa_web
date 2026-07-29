@@ -1,8 +1,11 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/nav/side-nav.tsx
- * Sidebar with the app's primary nav. Active item gets a 2px coral border-left
- * + coral text via shadcn `SidebarMenuButton`'s isActive prop.
+/* Hallmark · locked system applied (Taller) · src/components/nav/side-nav.tsx
+ * Sidebar with the app's primary nav. Active item gets a 2px cobalt border-left
+ * + cobalt text via shadcn `SidebarMenuButton`'s isActive prop.
+ *
+ * Taller iteration: large button size (size="lg") + size-5 icons so the nav
+ * has more tap target on mobile and feels weightier on desktop.
  */
 
 import Link from "next/link";
@@ -55,45 +58,47 @@ export function SideNav() {
       <SidebarHeader>
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-2 py-1.5 text-base font-semibold tracking-tight"
+          className="flex items-center gap-2.5 px-3 py-3 text-base font-semibold tracking-tight text-foreground"
         >
-          <span className="grid h-6 w-6 place-items-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
+          <span className="grid h-9 w-9 place-items-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm">
             I
           </span>
           <span className="group-data-[collapsible=icon]:hidden">Invensa</span>
         </Link>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-2 pt-2">
         <SidebarGroup>
-          <SidebarMenu>
+          <SidebarMenu className="gap-1">
             {PRIMARY_NAV.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
+                  size="lg"
                   render={<Link href={item.href} />}
                   isActive={isActive(pathname, item.href)}
                   tooltip={item.label}
-                  className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:text-primary"
+                  className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary [&_svg]:size-5"
                 >
                   <item.icon aria-hidden />
-                  <span>{item.label}</span>
+                  <span className="text-sm">{item.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarSeparator />
-        <SidebarMenu>
+      <SidebarFooter className="px-2 pb-3">
+        <SidebarSeparator className="mb-2" />
+        <SidebarMenu className="gap-1">
           <SidebarMenuItem>
             <SidebarMenuButton
+              size="lg"
               render={<Link href={ACCOUNT_NAV.href} />}
               isActive={isActive(pathname, ACCOUNT_NAV.href)}
               tooltip={ACCOUNT_NAV.label}
-              className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:text-primary"
+              className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary [&_svg]:size-5"
             >
               <ACCOUNT_NAV.icon aria-hidden />
-              <span>{ACCOUNT_NAV.label}</span>
+              <span className="text-sm">{ACCOUNT_NAV.label}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
