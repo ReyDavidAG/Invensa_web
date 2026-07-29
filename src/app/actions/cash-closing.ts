@@ -36,7 +36,10 @@ function todayMexico(): string {
   return fmt.format(new Date());
 }
 
-async function computeExpectedCash(supabase: Awaited<ReturnType<typeof getSupabaseServer>>, date: string): Promise<number> {
+async function computeExpectedCash(
+  supabase: Awaited<ReturnType<typeof getSupabaseServer>>,
+  date: string,
+): Promise<number> {
   const { data, error } = await supabase
     .from("vw_cash_sales_by_day")
     .select("net_cash")

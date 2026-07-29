@@ -62,7 +62,9 @@ export function CashClosingClient({
     if (row?.status === "closed") return;
     const tick = async () => {
       try {
-        const res = await fetch(`/api/cash-closing/today`, { cache: "no-store" });
+        const res = await fetch(`/api/cash-closing/today`, {
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const data = (await res.json()) as { expected: number };
         setExpected(data.expected);
