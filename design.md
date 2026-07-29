@@ -1,15 +1,15 @@
-/* Hallmark · pre-emit critique: P5 H5 E4 S4 R5 V5
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V5
  * macrostructure: Workbench (app shell) + Letter (auth narrow column) · mode: project-wide lock-in
- * theme: Coral · audience: sister (admin) + mom (employee) · use: POS+inventory · tone: utilitarian
+ * theme: Taller (custom) · audience: sister (admin) + mom (employee) · use: POS+inventory · tone: utilitarian
  * tokens already exist at: src/app/globals.css :root (OKLCH) — extended, not overwritten
- * locked into: design.md at repo root · first Hallmark run on this project
+ * locked into: design.md at repo root · Hallmark run #3 (override: Taller replaces Mostrador replaces Coral)
  */
 
 # design.md — Invensa_web
 
 > **Locked design system** for the Invensa_web Next 16 + shadcn app.
 > Hallmark reads this file first on every run; subsequent picks defer to it.
-> Last updated: 2026-07-28 (initial lock-in, design pass #1).
+> Last updated: 2026-07-28 (override — Taller replaces Mostrador replaces Coral, design pass #3).
 
 ---
 
@@ -58,17 +58,21 @@ The dominant structural identity is **admin-tool workbench**: side-rail nav, top
 
 ---
 
-## 3. Theme: `Coral` — modern-minimal
+## 3. Theme: `Taller` — modern-minimal
 
-Three diversification axes:
+Custom theme (NOT catalog, NOT dd-send, NOT Coral, NOT Mostrador). Built for a tienda de limpieza + refacciones de motos — the cobalt-enamel-mechanic-shop aesthetic (azul esmalte de señalización vintage de taller mecánico, contraste con papel cream cálido).
 
-| Axis | Value |
+Three diversification axes (vs Mostrador's axes):
+
+| Axis | Mostrador → Taller |
 | --- | --- |
-| Paper band | **Light** (`L = 99%` paper; dark mode `L = 13%`) |
-| Display style | **Grotesk-sans** — Geist (display + body + Geist Mono for numerics/code) |
-| Accent hue | **Warm coral** — `oklch(0.65 0.18 28)` (~hue 28°, warm) |
+| Paper band | Light (warm cream) — **same** |
+| Display style | Grotesk-sans (Geist) — **same** |
+| Accent hue | Tangerine H42 (warm) → **Cobalt H250 (cool)** + amber highlight H65 (warm) |
 
-**Genre rule that scopes Coral**: accent colour is *reserved for primary actions and active states*. It does not appear on chrome, borders, or background fills. This is what keeps "coral" from reading playful in a small-business tool — the accent speaks only when the user is being asked to do something.
+**Genre rule that scopes Taller**: the cobalt accent is *reserved for primary actions and active states* (primary buttons, focus rings, active sidebar item). The amber highlight appears only on secondary decorative moments (chart series 2, warning). The contrast between the **cool cobalt primary** and the **warm cream paper** is intentional — cool industrial tool on a warm local counter. This is what differentiates Taller from Mostrador (which was warm-on-warm).
+
+**Sidebar gradient** — the sidebar carries a subtle vertical gradient (light: cream paper → warm tan; dark: cobalt-tinted deep → warm deep) so it reads as a distinct surface, not a flat strip. The top of the gradient picks up the brand colour subtly (cool cobalt tint in dark mode, cream highlight in light mode). Applied via `[data-slot="sidebar-inner"]` so it overrides the `bg-sidebar` Tailwind utility cleanly.
 
 ---
 
@@ -76,36 +80,36 @@ Three diversification axes:
 
 All tokens reference CSS custom properties. No raw OKLCH/hex inside component code. All tokens live in `src/app/globals.css` `:root` and `&.dark` blocks (already wired through `src/app/theme-init.ts` via `next-themes`).
 
-### 4.1 Color tokens
+### 4.1 Color tokens (Taller)
 
 | Token | Light (OKLCH) | Dark (OKLCH) | Use |
 | --- | --- | --- | --- |
-| `--background` | `0.99 0 0` | `0.13 0 0` | App canvas |
-| `--foreground` | `0.18 0 0` | `0.95 0 0` | Default text |
-| `--card` | `1 0 0` | `0.17 0 0` | Card / panel surface |
-| `--card-foreground` | `0.18 0 0` | `0.95 0 0` | Card text |
-| `--popover` | `1 0 0` | `0.17 0 0` | Popover background |
-| `--popover-foreground` | `0.18 0 0` | `0.95 0 0` | Popover text |
-| `--primary` | `0.65 0.18 28` | `0.70 0.17 28` | Coral — primary action fill |
-| `--primary-foreground` | `0.99 0 0` | `0.13 0 0` | Text on primary fill |
-| `--secondary` | `0.96 0 0` | `0.22 0 0` | Subtle buttons, badges |
-| `--secondary-foreground` | `0.18 0 0` | `0.95 0 0` | Text on secondary |
-| `--muted` | `0.96 0 0` | `0.22 0 0` | Muted backgrounds (hover, faint fills) |
-| `--muted-foreground` | `0.50 0 0` | `0.65 0 0` | Helper text, captions |
-| `--accent` | `0.96 0 0` | `0.22 0 0` | Same as muted; reserved for hover wash |
-| `--accent-foreground` | `0.18 0 0` | `0.95 0 0` | Text on accent fill |
-| `--destructive` | `0.55 0.22 25` | `0.55 0.22 25` | Errors, destructive actions |
-| `--destructive-foreground` | `0.99 0 0` | `0.99 0 0` | Text on destructive |
-| `--success` | `0.62 0.16 145` | `0.62 0.16 145` | Confirmed sales, paid fiados |
-| `--warning` | `0.78 0.15 75` | `0.78 0.15 75` | Low stock alert |
-| `--border` | `0.91 0 0` | `0.27 0 0` | Hairlines, dividers, input borders |
-| `--input` | `0.91 0 0` | `0.27 0 0` | Input border |
-| `--ring` | `0.65 0.18 28` | `0.70 0.17 28` | Focus ring (3:1 contrast against surface) |
-| `--chart-1` | `0.65 0.18 28` | `0.70 0.17 28` | Coral — sales today |
-| `--chart-2` | `0.62 0.16 145` | `0.62 0.16 145` | Green — net profit |
-| `--chart-3` | `0.78 0.15 75` | `0.78 0.15 75` | Amber — low stock |
-| `--chart-4` | `0.55 0.22 25` | `0.55 0.22 25` | Red — pending fiados |
-| `--chart-5` | `0.55 0.10 250` | `0.65 0.12 250` | Cool grey-blue — neutral series |
+| `--background` | `0.97 0.012 80` | `0.16 0.008 70` | Warm cream app canvas / warm charcoal dark |
+| `--foreground` | `0.22 0.008 70` | `0.94 0.012 80` | Warm charcoal text / cream text |
+| `--card` | `0.995 0.005 80` | `0.20 0.010 70` | Bright cream card surface |
+| `--card-foreground` | `0.22 0.008 70` | `0.94 0.012 80` | Card text |
+| `--popover` | `0.995 0.005 80` | `0.20 0.010 70` | Popover background |
+| `--popover-foreground` | `0.22 0.008 70` | `0.94 0.012 80` | Popover text |
+| `--primary` | `0.55 0.16 250` | `0.68 0.15 250` | **Cobalt azul** — primary action fill |
+| `--primary-foreground` | `0.99 0.005 80` | `0.99 0.005 80` | Cream text on cobalt |
+| `--secondary` | `0.95 0.018 75` | `0.26 0.012 70` | Warm secondary fill |
+| `--secondary-foreground` | `0.28 0.012 70` | `0.94 0.012 80` | Warm text on secondary |
+| `--muted` | `0.94 0.015 75` | `0.26 0.012 70` | Muted backgrounds (hover, faint fills) |
+| `--muted-foreground` | `0.52 0.008 75` | `0.65 0.012 75` | Helper text, captions |
+| `--accent` | `0.94 0.022 75` | `0.26 0.014 70` | Hover wash (warm) |
+| `--accent-foreground` | `0.28 0.012 70` | `0.94 0.012 80` | Text on accent fill |
+| `--destructive` | `0.55 0.215 28` | `0.62 0.21 28` | Errors, destructive actions (warm red) |
+| `--destructive-foreground` | `0.99 0.005 80` | `0.99 0.005 80` | Text on destructive |
+| `--success` | `0.62 0.155 145` | `0.68 0.16 145` | Confirmed sales, paid fiados |
+| `--warning` | `0.70 0.18 65` | `0.78 0.18 65` | Low stock alert (amber, replaces warm) |
+| `--border` | `0.90 0.012 75` | `0.30 0.012 70` | Hairlines, dividers, input borders (warm) |
+| `--input` | `0.90 0.012 75` | `0.30 0.012 70` | Input border |
+| `--ring` | `0.55 0.16 250` | `0.68 0.15 250` | Cobalt focus ring |
+| `--chart-1` | `0.55 0.16 250` | `0.68 0.15 250` | Cobalt — primary series |
+| `--chart-2` | `0.70 0.18 65` | `0.78 0.18 65` | **Amber** — warm secondary series |
+| `--chart-3` | `0.62 0.155 145` | `0.68 0.16 145` | Green — net profit |
+| `--chart-4` | `0.62 0.215 28` | `0.65 0.21 28` | Red — pending fiados |
+| `--chart-5` | `0.55 0.13 180` | `0.65 0.14 180` | Teal — neutral series |
 
 ### 4.2 Typography
 
@@ -212,7 +216,9 @@ No card around the form. The form lives directly on `--background`. Borders and 
 └─────────────────┴────────────────────────────────────────────┘
 ```
 
-**Sidebar (shadcn `Sidebar`)**: collapsible to icons-only at `≤ 1024px`, drawer-overlay at `≤ 768px`. Active item: 2px coral underline + coral text. Inactive: muted text. Icon + label, never icon-only by default.
+**Sidebar (shadcn `Sidebar`)**: collapsible to icons-only at `≤ 1024px`, drawer-overlay at `≤ 768px`. Active item: 2px cobalt underline + cobalt text + 10% cobalt wash. Inactive: muted text. Icon (size-5) + label (text-sm). Nav buttons use `size="lg"` (h-12, 48px tap target — bigger than the shadcn default h-8 because the sister uses the laptop and phone with thicker fingers, and bigger targets feel less cramped on the warm cream paper). Brand monogram in header is `h-9 w-9` with text-base wordmark — a step up from the default small monogram so the brand area feels deliberate.
+
+The sidebar carries a **vertical gradient** (`--sidebar-gradient-from` → `--sidebar-gradient-to`, both defined per-theme). Light: cream paper → warm tan (sunlight on a workshop counter). Dark: cobalt-tinted deep → warm deep (overhead enamel sign catching the light). Applied via `[data-slot="sidebar-inner"]` so it overrides the `bg-sidebar` Tailwind utility cleanly.
 
 **Topbar**: `[breadcrumb · H2 page title]` left · `[theme toggle · account dropdown — avatar + name + email · ⎋ sign out]` right. Sticky.
 
