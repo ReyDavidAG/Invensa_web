@@ -9,23 +9,14 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ChevronLeft,
-  Loader2,
-  Save,
-} from "lucide-react";
+import { ChevronLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateCustomer } from "@/lib/query/mutations";
 import {
   type CustomerCreateFormValues,
@@ -75,7 +66,12 @@ export function NewCustomerForm() {
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate aria-busy={isBusy}>
+    <form
+      onSubmit={onSubmit}
+      className="flex flex-col gap-6"
+      noValidate
+      aria-busy={isBusy}
+    >
       <div>
         <Link
           href="/customers"
@@ -238,9 +234,7 @@ function Field({
       {hint && !error ? (
         <span className="text-xs text-muted-foreground">{hint}</span>
       ) : null}
-      {error ? (
-        <span className="text-xs text-destructive">{error}</span>
-      ) : null}
+      {error ? <span className="text-xs text-destructive">{error}</span> : null}
     </label>
   );
 }

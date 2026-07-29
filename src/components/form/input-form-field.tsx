@@ -43,7 +43,9 @@ export function InputFormField({
           <FormControl>
             <Input type={type} {...field} {...props} />
           </FormControl>
-          {description ? <FormDescription>{description}</FormDescription> : null}
+          {description ? (
+            <FormDescription>{description}</FormDescription>
+          ) : null}
           <FormMessage />
         </FormItem>
       )}

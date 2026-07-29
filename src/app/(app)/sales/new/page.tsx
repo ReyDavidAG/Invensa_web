@@ -50,7 +50,10 @@ export default async function NewSalePage() {
     supabase
       .from("sale_items")
       .select("product_id, sale_id, sales(date_at)")
-      .gte("sales.date_at", new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString())
+      .gte(
+        "sales.date_at",
+        new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
+      )
       .limit(500),
     supabase
       .from("clients")

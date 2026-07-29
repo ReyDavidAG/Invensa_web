@@ -5,11 +5,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ChevronRight,
-  Plus,
-  Receipt,
-} from "lucide-react";
+import { ChevronRight, Plus, Receipt } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -98,10 +94,7 @@ export default async function SalesPage({
         <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
           Ventas
         </h1>
-        <Button
-          render={<Link href="/sales/new" />}
-          nativeButton={false}
-        >
+        <Button render={<Link href="/sales/new" />} nativeButton={false}>
           <Plus aria-hidden className="size-4" />
           Nueva venta
         </Button>
@@ -121,7 +114,10 @@ export default async function SalesPage({
         ].map((f) => (
           <Link
             key={f.value}
-            href={buildUrl({ status: f.value === "all" ? undefined : f.value, page: undefined })}
+            href={buildUrl({
+              status: f.value === "all" ? undefined : f.value,
+              page: undefined,
+            })}
             aria-current={statusFilter === f.value ? "page" : undefined}
             className={
               "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
@@ -137,7 +133,10 @@ export default async function SalesPage({
 
       {totalCount === 0 ? (
         <Card className="border-dashed p-10 text-center">
-          <Receipt aria-hidden className="mx-auto size-8 text-muted-foreground/60" />
+          <Receipt
+            aria-hidden
+            className="mx-auto size-8 text-muted-foreground/60"
+          />
           <p className="mt-3 text-sm font-medium text-foreground">
             Aún no tienes ventas registradas
           </p>
@@ -199,9 +198,7 @@ export default async function SalesPage({
                         #{s.ticket_number}
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
-                        <time>
-                          {esMXDateTime.format(new Date(s.date_at))}
-                        </time>
+                        <time>{esMXDateTime.format(new Date(s.date_at))}</time>
                       </td>
                       <td className="px-4 py-2.5">
                         {client?.name ?? (
@@ -241,13 +238,25 @@ export default async function SalesPage({
 
           {totalCount > 0 ? (
             <p className="text-xs text-muted-foreground">
-              Mostrando <span className="font-medium tabular-nums text-foreground">{Math.min(offset + 1, totalCount)}–{Math.min(offset + PAGE_SIZE, totalCount)}</span> de{" "}
-              <span className="font-medium tabular-nums text-foreground">{totalCount}</span>
+              Mostrando{" "}
+              <span className="font-medium tabular-nums text-foreground">
+                {Math.min(offset + 1, totalCount)}–
+                {Math.min(offset + PAGE_SIZE, totalCount)}
+              </span>{" "}
+              de{" "}
+              <span className="font-medium tabular-nums text-foreground">
+                {totalCount}
+              </span>
               {totalPages > 1 ? (
                 <>
                   {" · Página "}
-                  <span className="font-medium tabular-nums text-foreground">{page}</span> de{" "}
-                  <span className="font-medium tabular-nums text-foreground">{totalPages}</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {page}
+                  </span>{" "}
+                  de{" "}
+                  <span className="font-medium tabular-nums text-foreground">
+                    {totalPages}
+                  </span>
                 </>
               ) : null}
             </p>

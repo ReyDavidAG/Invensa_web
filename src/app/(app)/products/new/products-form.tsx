@@ -7,12 +7,7 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ChevronLeft,
-  ImageIcon,
-  Loader2,
-  Save,
-} from "lucide-react";
+import { ChevronLeft, ImageIcon, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,12 +15,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CreatableCombobox,
   type CreatableOption,
@@ -83,8 +73,7 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   // top-level error banner and per-field errors. Once ok=true we navigate
   // away and the form unmounts, so the effect below handles the transition.
   const result = createProduct.data;
-  const fieldErrors =
-    result && !result.ok ? result.fieldErrors : undefined;
+  const fieldErrors = result && !result.ok ? result.fieldErrors : undefined;
   const submitError = result && !result.ok ? result.error : null;
 
   const categoryId = watch("categoryId") ?? "";
@@ -108,7 +97,12 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate aria-busy={isBusy}>
+    <form
+      onSubmit={onSubmit}
+      className="flex flex-col gap-6"
+      noValidate
+      aria-busy={isBusy}
+    >
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Link
@@ -150,7 +144,10 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
                 aria-label="Arrastra una imagen o pega una URL"
                 className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 text-center text-sm text-muted-foreground"
               >
-                <ImageIcon aria-hidden className="size-8 text-muted-foreground/60" />
+                <ImageIcon
+                  aria-hidden
+                  className="size-8 text-muted-foreground/60"
+                />
                 <span>Subida a R2</span>
                 <span className="text-xs">disponible en una fase futura</span>
               </div>
@@ -231,7 +228,9 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
                             ...prev,
                             result.option,
                           ]);
-                          toast.success(`Categoría "${result.option.name}" creada`);
+                          toast.success(
+                            `Categoría "${result.option.name}" creada`,
+                          );
                         }
                         return result;
                       } catch (err) {
@@ -263,11 +262,10 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
                       try {
                         const result = await createUnit.mutateAsync(name);
                         if (result.ok) {
-                          setUnitOptions((prev) => [
-                            ...prev,
-                            result.option,
-                          ]);
-                          toast.success(`Unidad "${result.option.name}" creada`);
+                          setUnitOptions((prev) => [...prev, result.option]);
+                          toast.success(
+                            `Unidad "${result.option.name}" creada`,
+                          );
                         }
                         return result;
                       } catch (err) {
@@ -319,7 +317,9 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
 
                 <Field
                   label="Precio venta (MXN)"
-                  error={errors.priceSale?.message ?? fieldErrors?.priceSale?.[0]}
+                  error={
+                    errors.priceSale?.message ?? fieldErrors?.priceSale?.[0]
+                  }
                 >
                   <input
                     type="number"

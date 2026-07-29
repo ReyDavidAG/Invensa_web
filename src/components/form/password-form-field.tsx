@@ -64,7 +64,9 @@ export function PasswordFormField({
               </Button>
             </div>
           </FormControl>
-          {description ? <FormDescription>{description}</FormDescription> : null}
+          {description ? (
+            <FormDescription>{description}</FormDescription>
+          ) : null}
           <FormMessage />
         </FormItem>
       )}

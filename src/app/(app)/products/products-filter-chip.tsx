@@ -14,7 +14,11 @@ type FilterChipProps = {
   children: ReactNode;
 };
 
-export function ProductsFilterChip({ href, active, children }: FilterChipProps) {
+export function ProductsFilterChip({
+  href,
+  active,
+  children,
+}: FilterChipProps) {
   return (
     <Link
       href={href}

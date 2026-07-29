@@ -18,7 +18,10 @@ export default function LoginPage() {
       footer={
         <span>
           ¿Olvidaste tu contraseña?{" "}
-          <Link href="/forgot-password" className="text-primary underline-offset-4 hover:underline font-medium">
+          <Link
+            href="/forgot-password"
+            className="text-primary underline-offset-4 hover:underline font-medium"
+          >
             Recuperar acceso
           </Link>
         </span>

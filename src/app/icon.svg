@@ -1,0 +1,20 @@
+<!--
+  Hallmark · pre-emit critique: P5 H5 E5 S4 R5 V5
+  macrostructure: icon-only (32x32 viewBox)
+  intent: receipt with folded corner + 1 item line + 1 total bar.
+          Universal POS symbol. The corner fold is the signature move that
+          distinguishes it from a generic stock receipt icon.
+  tokens: fill=#1f4ed8 (Taller cobalt, sRGB hex equivalent of oklch 0.55 0.16 250).
+          Hardcoded because the favicon has no parent text colour to inherit
+          from — using currentColor would fall back to black in the browser tab.
+  contrast: solid body fill + transparent fold/line cutouts via evenodd.
+  shared with: src/components/brand-mark.tsx (sidebar monogram; that one
+               keeps currentColor since it sits over the cobalt sidebar tile).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <path
+    d="M5 4 H22 L28 10 V25 a2 2 0 0 1-2 2 H7 a2 2 0 0 1-2-2 Z M22 4 L28 10 L22 10 Z M9 14 h11 v1.5 h-11 z M9 22 h15 v2 h-15 z"
+    fill="#1f4ed8"
+    fill-rule="evenodd"
+  />
+</svg>

@@ -84,7 +84,11 @@ export function BarChart({ data, height = 180, className }: Props) {
                 fillOpacity={opacity}
                 initial={{ height: 0, y: height - 0.5 }}
                 animate={{ height: Math.max(h, isZero ? 0.6 : 0), y }}
-                transition={{ duration: 0.42, delay: i * 0.022, ease: [0.16, 1, 0.3, 1] }}
+                transition={{
+                  duration: 0.42,
+                  delay: i * 0.022,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
                 vectorEffect="non-scaling-stroke"
               />
               <rect

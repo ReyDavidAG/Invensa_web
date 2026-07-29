@@ -22,7 +22,9 @@ export type SaleActionResult =
   | { ok: true; id: string; ticketNumber: number }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
-async function requireUser(): Promise<{ userId: string } | { ok: false; error: string }> {
+async function requireUser(): Promise<
+  { userId: string } | { ok: false; error: string }
+> {
   const supabase = await getSupabaseServer();
   const {
     data: { user },
@@ -74,7 +76,10 @@ export async function createSaleAction(
     return {
       ok: false,
       error: "Datos inválidos",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 

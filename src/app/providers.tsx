@@ -24,7 +24,8 @@ export function Providers({ children }: { children: ReactNode }) {
           duration={4000}
           toastOptions={{
             classNames: {
-              toast: "border border-border bg-card text-card-foreground rounded-lg shadow-sm",
+              toast:
+                "border border-border bg-card text-card-foreground rounded-lg shadow-sm",
               title: "text-sm font-medium",
               description: "text-xs text-muted-foreground",
               success: "border-success/40",

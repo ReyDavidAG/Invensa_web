@@ -5,13 +5,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ChevronRight,
-  Mail,
-  Phone,
-  Plus,
-  Users,
-} from "lucide-react";
+import { ChevronRight, Mail, Phone, Plus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -56,19 +50,16 @@ export default async function CustomersPage({
   // (a view can replace this later).
   let query = supabase
     .from("clients")
-    .select(
-      "id, name, phone, email, address, notes, active, created_at",
-      { count: "exact" },
-    )
+    .select("id, name, phone, email, address, notes, active, created_at", {
+      count: "exact",
+    })
     .order("name", { ascending: true });
 
   if (active !== "all") {
     query = query.eq("active", active === "active");
   }
   if (q) {
-    query = query.or(
-      `name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
-    );
+    query = query.or(`name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`);
   }
 
   const offset = (page - 1) * PAGE_SIZE;
@@ -126,10 +117,7 @@ export default async function CustomersPage({
         </h1>
         <div className="flex items-center gap-3">
           <CustomersSearch defaultValue={q} />
-          <Button
-            render={<Link href="/customers/new" />}
-            nativeButton={false}
-          >
+          <Button render={<Link href="/customers/new" />} nativeButton={false}>
             <Plus aria-hidden className="size-4" />
             <span>Nuevo</span>
           </Button>
@@ -169,7 +157,10 @@ export default async function CustomersPage({
 
       {totalCount === 0 ? (
         <Card className="border-dashed p-10 text-center">
-          <Users aria-hidden className="mx-auto size-8 text-muted-foreground/60" />
+          <Users
+            aria-hidden
+            className="mx-auto size-8 text-muted-foreground/60"
+          />
           <p className="mt-3 text-sm font-medium text-foreground">
             {q
               ? "Sin resultados para esta búsqueda"

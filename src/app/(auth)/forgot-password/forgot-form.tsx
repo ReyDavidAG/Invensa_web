@@ -10,7 +10,10 @@ import { SubmitButton } from "@/components/form/submit-button";
 import { ErrorBanner } from "../auth-shell";
 
 import { forgotPasswordAction } from "@/app/actions/auth";
-import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/schemas/auth";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordInput,
+} from "@/lib/schemas/auth";
 
 export function ForgotForm() {
   const [serverError, setServerError] = React.useState<string | null>(null);

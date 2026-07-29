@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       const dest = new URL("/login", url.origin);
-      dest.searchParams.set("error", mapSupabaseError(error.code, error.message));
+      dest.searchParams.set(
+        "error",
+        mapSupabaseError(error.code, error.message),
+      );
       return NextResponse.redirect(dest);
     }
     return NextResponse.redirect(new URL(safeNext ?? "/dashboard", url.origin));
@@ -41,16 +44,15 @@ export async function GET(request: NextRequest) {
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({
       type: type as
-        | "signup"
-        | "invite"
-        | "recovery"
-        | "magiclink"
-        | "email_change",
+        "signup" | "invite" | "recovery" | "magiclink" | "email_change",
       token_hash: tokenHash,
     });
     if (error) {
       const dest = new URL("/login", url.origin);
-      dest.searchParams.set("error", mapSupabaseError(error.code, error.message));
+      dest.searchParams.set(
+        "error",
+        mapSupabaseError(error.code, error.message),
+      );
       return NextResponse.redirect(dest);
     }
     const dest =
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
         ? "/register"
         : type === "recovery"
           ? "/reset-password"
-          : safeNext ?? "/dashboard";
+          : (safeNext ?? "/dashboard");
     return NextResponse.redirect(new URL(dest, url.origin));
   }
 

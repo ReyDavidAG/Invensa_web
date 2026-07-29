@@ -31,7 +31,10 @@ export async function TopBar() {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-sidebar-border bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:gap-4 sm:px-4">
-      <SidebarTrigger className="-ml-1" aria-label="Alternar navegación lateral" />
+      <SidebarTrigger
+        className="-ml-1"
+        aria-label="Alternar navegación lateral"
+      />
       <Separator orientation="vertical" className="h-5" />
       <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
         <Breadcrumb />

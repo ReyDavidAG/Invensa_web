@@ -143,7 +143,9 @@ export default async function ReportsPage({
   ] = await Promise.all([
     supabase
       .from("sales")
-      .select("id, total, paid_amount, status, payment_method, client_id, date_at")
+      .select(
+        "id, total, paid_amount, status, payment_method, client_id, date_at",
+      )
       .gte("date_at", range.from.toISOString())
       .lte("date_at", range.to.toISOString())
       .neq("status", "cancelled"),
@@ -171,13 +173,17 @@ export default async function ReportsPage({
     // Top products: pull recent sale_items in the period, aggregate client-side.
     supabase
       .from("sale_items")
-      .select("quantity, unit_price, subtotal, sales!inner(date_at, status), products(id, code, name)")
+      .select(
+        "quantity, unit_price, subtotal, sales!inner(date_at, status), products(id, code, name)",
+      )
       .gte("sales.date_at", range.from.toISOString())
       .lte("sales.date_at", range.to.toISOString())
       .neq("sales.status", "cancelled"),
     supabase
       .from("products")
-      .select("id, code, name, stock_low_threshold, vw_product_stock(stock_on_hand)")
+      .select(
+        "id, code, name, stock_low_threshold, vw_product_stock(stock_on_hand)",
+      )
       .eq("status", "active"),
     supabase
       .from("sales")
@@ -332,10 +338,7 @@ export default async function ReportsPage({
           </p>
         </div>
         {/* Period selector */}
-        <nav
-          aria-label="Período"
-          className="flex flex-wrap items-center gap-2"
-        >
+        <nav aria-label="Período" className="flex flex-wrap items-center gap-2">
           {(["today", "week", "month"] as const).map((p) => (
             <Link
               key={p}
@@ -420,7 +423,12 @@ export default async function ReportsPage({
 
       {/* ── Top productos + Stock bajo ─────────────────────────── */}
       <section className="grid gap-4 lg:grid-cols-2">
-        <ReportCard title="Productos más vendidos" icon={<Package aria-hidden className="size-4 text-muted-foreground" />}>
+        <ReportCard
+          title="Productos más vendidos"
+          icon={
+            <Package aria-hidden className="size-4 text-muted-foreground" />
+          }
+        >
           {topProducts.length === 0 ? (
             <Empty message="Sin ventas en este período." />
           ) : (
@@ -440,7 +448,9 @@ export default async function ReportsPage({
                     <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full bg-primary"
-                        style={{ width: `${(p.revenue / topProductsMax) * 100}%` }}
+                        style={{
+                          width: `${(p.revenue / topProductsMax) * 100}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -543,7 +553,9 @@ export default async function ReportsPage({
 
         <ReportCard
           title="Métodos de pago"
-          icon={<CreditCard aria-hidden className="size-4 text-muted-foreground" />}
+          icon={
+            <CreditCard aria-hidden className="size-4 text-muted-foreground" />
+          }
         >
           {methodEntries.length === 0 ? (
             <Empty message="Sin pagos registrados." />
@@ -561,7 +573,9 @@ export default async function ReportsPage({
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground">
-                        {PAYMENT_METHOD_LABEL[m as keyof typeof PAYMENT_METHOD_LABEL] ?? m}
+                        {PAYMENT_METHOD_LABEL[
+                          m as keyof typeof PAYMENT_METHOD_LABEL
+                        ] ?? m}
                       </p>
                       <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
                         <div

@@ -17,12 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { ArchiveCustomerButton } from "./archive-button";
@@ -80,16 +75,12 @@ export default async function CustomerDetailPage({ params }: PageProps) {
   const [{ data: client }, { data: sales }] = await Promise.all([
     supabase
       .from("clients")
-      .select(
-        "id, name, phone, email, address, notes, active, created_at",
-      )
+      .select("id, name, phone, email, address, notes, active, created_at")
       .eq("id", id)
       .maybeSingle(),
     supabase
       .from("sales")
-      .select(
-        "id, ticket_number, date_at, total, paid_amount, status",
-      )
+      .select("id, ticket_number, date_at, total, paid_amount, status")
       .eq("client_id", id)
       .neq("status", "cancelled")
       .order("date_at", { ascending: false })
@@ -116,9 +107,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <div className="grid size-14 shrink-0 place-items-center rounded-md bg-primary/10 text-lg font-semibold text-primary">
-            {initials || (
-              <User aria-hidden className="size-6" />
-            )}
+            {initials || <User aria-hidden className="size-6" />}
           </div>
           <div>
             <Link
@@ -175,9 +164,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                 Total comprado
               </p>
               <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
-                {totalPurchases > 0
-                  ? esMXCurrency.format(totalPurchases)
-                  : "—"}
+                {totalPurchases > 0 ? esMXCurrency.format(totalPurchases) : "—"}
               </p>
               <p className="mt-1.5 text-xs text-muted-foreground">
                 {(sales ?? []).length === 0
@@ -252,13 +239,19 @@ export default async function CustomerDetailPage({ params }: PageProps) {
             <CardContent className="flex flex-col gap-3 text-sm">
               {client.phone ? (
                 <div className="flex items-center gap-3">
-                  <Phone aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+                  <Phone
+                    aria-hidden
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
                   <span className="font-mono tabular-nums">{client.phone}</span>
                 </div>
               ) : null}
               {client.email ? (
                 <div className="flex items-center gap-3">
-                  <Mail aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+                  <Mail
+                    aria-hidden
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
                   <span className="truncate">{client.email}</span>
                 </div>
               ) : null}
@@ -283,7 +276,10 @@ export default async function CustomerDetailPage({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight">
-                  <NotebookText aria-hidden className="size-4 text-muted-foreground" />
+                  <NotebookText
+                    aria-hidden
+                    className="size-4 text-muted-foreground"
+                  />
                   Notas
                 </CardTitle>
               </CardHeader>

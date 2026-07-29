@@ -9,11 +9,27 @@ import type { ReactNode } from "react";
 import { SideNav } from "@/components/nav/side-nav";
 import { TopBar } from "@/components/nav/top-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const supabase = await getSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let userName = "";
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    userName = (profile?.full_name ?? "").trim();
+    if (!userName && user.email) userName = user.email.split("@")[0];
+  }
+
   return (
     <SidebarProvider defaultOpen>
-      <SideNav />
+      <SideNav userName={userName} />
       <SidebarInset>
         <TopBar />
         <main className="mx-auto w-full max-w-screen-2xl px-4 py-4 md:px-8 md:py-6">

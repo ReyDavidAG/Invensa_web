@@ -36,7 +36,10 @@ function loadEnv(path) {
     if (eq < 0) continue;
     const key = line.slice(0, eq).trim();
     let val = line.slice(eq + 1).trim();
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
       val = val.slice(1, -1);
     }
     env[key] = val;
@@ -49,19 +52,25 @@ const env = loadEnv(envPath);
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !serviceKey) {
-  console.error(`[bootstrap-admin] Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in ${envPath}`);
+  console.error(
+    `[bootstrap-admin] Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in ${envPath}`,
+  );
   process.exit(1);
 }
 
 // ---- 2. Parse CLI args ---------------------------------------------------
 const [, , emailArg, passwordArg] = process.argv;
 if (!emailArg || !passwordArg) {
-  console.error("Usage: node scripts/bootstrap-admin.mjs <email> <temp-password>");
+  console.error(
+    "Usage: node scripts/bootstrap-admin.mjs <email> <temp-password>",
+  );
   console.error("Example: pnpm bootstrap:admin sister@tienda.local Cambiar123");
   process.exit(1);
 }
 if (passwordArg.length < 8) {
-  console.error("[bootstrap-admin] Password must be at least 8 characters (matches zod regex in lib/schemas/auth.ts).");
+  console.error(
+    "[bootstrap-admin] Password must be at least 8 characters (matches zod regex in lib/schemas/auth.ts).",
+  );
   process.exit(1);
 }
 
@@ -96,8 +105,12 @@ const { data: profile, error: profileErr } = await admin
   .single();
 
 if (profileErr) {
-  console.error(`[bootstrap-admin] User created but profile lookup failed: ${profileErr.message}`);
-  console.error("[bootstrap-admin] The on_auth_user_created trigger should have created the profile. Check 0001_init.sql.");
+  console.error(
+    `[bootstrap-admin] User created but profile lookup failed: ${profileErr.message}`,
+  );
+  console.error(
+    "[bootstrap-admin] The on_auth_user_created trigger should have created the profile. Check 0001_init.sql.",
+  );
   process.exit(1);
 }
 
@@ -108,11 +121,21 @@ console.log(`  full_name = ${profile.full_name ?? "(empty)"}`);
 console.log(`  role      = ${profile.role}`);
 
 if (profile.role !== "admin") {
-  console.warn(`[bootstrap-admin] WARNING: role is "${profile.role}", not "admin".`);
-  console.warn("[bootstrap-admin] This means profiles already had rows when this user was created (someone else got there first).");
-  console.warn("[bootstrap-admin] If that's wrong, update the role manually in the dashboard and investigate.");
+  console.warn(
+    `[bootstrap-admin] WARNING: role is "${profile.role}", not "admin".`,
+  );
+  console.warn(
+    "[bootstrap-admin] This means profiles already had rows when this user was created (someone else got there first).",
+  );
+  console.warn(
+    "[bootstrap-admin] If that's wrong, update the role manually in the dashboard and investigate.",
+  );
   process.exit(2);
 }
 
-console.log("\n[bootstrap-admin] Done. The sister can now log in at /login with the temp password.");
-console.log("[bootstrap-admin] Remind her to change the password from /account immediately.");
+console.log(
+  "\n[bootstrap-admin] Done. The sister can now log in at /login with the temp password.",
+);
+console.log(
+  "[bootstrap-admin] Remind her to change the password from /account immediately.",
+);

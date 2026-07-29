@@ -6,23 +6,14 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ChevronLeft,
-  Loader2,
-  Save,
-} from "lucide-react";
+import { ChevronLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUpdateCustomer } from "@/lib/query/mutations";
 import {
   type CustomerUpdateFormValues,
@@ -229,9 +220,7 @@ function Field({
         ) : null}
       </span>
       {children}
-      {error ? (
-        <span className="text-xs text-destructive">{error}</span>
-      ) : null}
+      {error ? <span className="text-xs text-destructive">{error}</span> : null}
     </label>
   );
 }
