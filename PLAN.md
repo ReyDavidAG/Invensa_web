@@ -188,7 +188,7 @@ Invensa_web/
 | 8 | Módulo productos (CRUD completo — lista + alta + detalle + edición) | ✅ Hecho |
 | 9 | Módulo ventas (POS-like + lista + recibo) | ✅ Hecho |
 | 10 | Módulo clientes (lista + alta + detalle + edición + archivo) | ✅ Hecho |
-| 11 | Reportes (cortes, stock bajo, top productos) | Pendiente |
+| 11 | Reportes (cortes + chart + top productos + stock bajo + top clientes + métodos) | ✅ Hecho |
 | 12 | Deploy a Vercel + env vars + verificación | Pendiente |
 | 13 | Pruebas con hermana + mamá | Pendiente |
 
