@@ -79,6 +79,13 @@ export async function createSaleAction(
     0,
   );
 
+  // For cash sales, the client sends the actual received amount via
+  // paidAmount; the difference (max 0) is the change the cashier gave back.
+  const changeGiven =
+    data.paymentMethod === "cash" && data.status === "paid"
+      ? Math.max(0, data.paidAmount - total)
+      : 0;
+
   // Insert sale header
   const { data: sale, error: saleError } = await supabase
     .from("sales")
@@ -87,6 +94,7 @@ export async function createSaleAction(
       client_id: data.clientId ?? null,
       total,
       paid_amount: data.status === "credit" ? data.paidAmount : total,
+      change_given: changeGiven,
       status: data.status,
       payment_method: data.paymentMethod,
       notes: data.notes?.trim() ? data.notes.trim() : null,

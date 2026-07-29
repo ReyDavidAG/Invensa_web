@@ -1,4 +1,5 @@
 import {
+  Banknote,
   ChevronRight,
   Receipt,
   ShoppingCart,
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +85,14 @@ export default async function DashboardPage() {
   const yesterdayStart = new Date(todayStart);
   yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
+  // Today's date in Mexico City timezone (cash closing key).
+  const todayMx = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Mexico_City",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
   // Parallel fetches
   const [
     { data: profile, error: profileError },
@@ -91,6 +101,7 @@ export default async function DashboardPage() {
     { data: recentSales, error: recentSalesError },
     { data: stocks, error: stocksError },
     { data: productsForStock, error: productsForStockError },
+    { data: cashClosing, error: cashClosingError },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -124,6 +135,11 @@ export default async function DashboardPage() {
       .from("products")
       .select("id, stock_low_threshold, status")
       .eq("status", "active"),
+    supabase
+      .from("cash_closings")
+      .select("id, status, expected_cash, counted_cash, diff")
+      .eq("date", todayMx)
+      .maybeSingle(),
   ]);
 
   const logDbErr = (
@@ -144,6 +160,7 @@ export default async function DashboardPage() {
   logDbErr("recent sales", recentSalesError);
   logDbErr("stock view", stocksError);
   logDbErr("products for stock", productsForStockError);
+  logDbErr("cash closing", cashClosingError);
 
   // ── Greeting ──────────────────────────────────────────────────
   const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0] || "";
@@ -259,6 +276,64 @@ export default async function DashboardPage() {
               : "« primer día de operación »"
           }
         />
+      </section>
+
+      {/* Cash closing widget — single row, full width on mobile */}
+      <section
+        aria-label="Cierre de caja del día"
+        className="animate-fade-up"
+        style={{ animationDelay: "120ms" }}
+      >
+        <Link
+          href={"/cash-closing" as Route}
+          className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          <Card
+            className={cn(
+              "flex flex-col gap-2 p-4 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between",
+              cashClosing?.status === "closed"
+                ? "border-success/30 bg-success/5"
+                : "border-border bg-card",
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "grid size-10 shrink-0 place-items-center rounded-md",
+                  cashClosing?.status === "closed"
+                    ? "bg-success/15 text-success"
+                    : "bg-secondary text-secondary-foreground",
+                )}
+              >
+                <Banknote aria-hidden className="size-5" />
+              </span>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-foreground">
+                  Cierre de caja del día
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {cashClosing?.status === "closed"
+                    ? `Cerrada · ${esMXCurrency.format(Number(cashClosing.expected_cash))} esperado · contado ${esMXCurrency.format(Number(cashClosing.counted_cash))}`
+                    : "Pendiente de cierre"}
+                </span>
+              </div>
+            </div>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 self-start rounded-full px-2.5 py-1 text-xs font-semibold sm:self-auto",
+                cashClosing?.status === "closed"
+                  ? "bg-success/15 text-success ring-1 ring-inset ring-success/30"
+                  : "bg-warning/15 text-warning ring-1 ring-inset ring-warning/30",
+              )}
+            >
+              {cashClosing?.status === "closed"
+                ? cashClosing.diff === null || Number(cashClosing.diff) === 0
+                  ? "Cuadra"
+                  : esMXCurrency.format(Number(cashClosing.diff))
+                : "Abrir cierre"}
+            </span>
+          </Card>
+        </Link>
       </section>
 
       {/* Recent sales + actions */}

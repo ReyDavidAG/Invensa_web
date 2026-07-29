@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import {
+  Banknote,
   BarChart3,
   LayoutDashboard,
   Package,
@@ -27,13 +28,14 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 
-type NavItem = { href: Route; label: string; icon: LucideIcon };
+type NavItem = { href: string; label: string; icon: LucideIcon };
 
 const PRIMARY_NAV: NavItem[] = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
   { href: "/products", label: "Productos", icon: Package },
   { href: "/sales", label: "Ventas", icon: ShoppingCart },
   { href: "/customers", label: "Clientes", icon: Users },
+  { href: "/cash-closing", label: "Cierre de caja", icon: Banknote },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
 ];
 
@@ -84,7 +86,7 @@ export function SideNav({
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   size="lg"
-                  render={<Link href={item.href} />}
+                  render={<Link href={item.href as Route} />}
                   isActive={isActive(pathname, item.href)}
                   tooltip={item.label}
                   className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:data-[active=true]:border-l-0 group-data-[collapsible=icon]:data-[active=true]:bg-primary group-data-[collapsible=icon]:data-[active=true]:text-primary-foreground [&_svg]:size-5 [&>span:last-child]:group-data-[collapsible=icon]:hidden"
@@ -103,7 +105,7 @@ export function SideNav({
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={<Link href={accountNav.href} />}
+              render={<Link href={accountNav.href as Route} />}
               isActive={isActive(pathname, accountNav.href)}
               tooltip={accountNav.label}
               className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:data-[active=true]:border-l-0 group-data-[collapsible=icon]:data-[active=true]:bg-primary group-data-[collapsible=icon]:data-[active=true]:text-primary-foreground [&_svg]:size-5 [&>span:last-child]:group-data-[collapsible=icon]:hidden"

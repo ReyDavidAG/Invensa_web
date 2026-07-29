@@ -227,7 +227,9 @@ export function PosClient({
     fd.set("clientId", clientId);
     fd.set("paymentMethod", "cash");
     fd.set("status", "paid");
-    fd.set("paidAmount", String(total));
+    // Send the actual amount received (>= total). Server stores change_given
+    // = paidAmount - total for cash sales.
+    fd.set("paidAmount", String(paidAmount));
     fd.set("notes", notes);
     fd.set("items", JSON.stringify(cart));
     const result = await createSale.mutateAsync(fd);

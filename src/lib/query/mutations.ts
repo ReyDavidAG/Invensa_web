@@ -56,6 +56,10 @@ import {
   bulkSetProductImageAction,
   type BulkSetProductImageResult,
 } from "@/app/actions/products";
+import {
+  type CashClosingActionResult,
+  closeCashAction,
+} from "@/app/actions/cash-closing";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -174,5 +178,11 @@ export function useBulkSetProductImage() {
   >({
     mutationFn: ({ productIds, publicUrl }) =>
       bulkSetProductImageAction(productIds, publicUrl),
+  });
+}
+
+export function useCloseCash() {
+  return useMutation<CashClosingActionResult, Error, FormData>({
+    mutationFn: (formData) => closeCashAction(null, formData),
   });
 }
