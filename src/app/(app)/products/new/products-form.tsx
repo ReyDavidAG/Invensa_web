@@ -7,7 +7,7 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ImageIcon, Loader2, Save } from "lucide-react";
+import { ChevronLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,6 +20,7 @@ import {
   CreatableCombobox,
   type CreatableOption,
 } from "@/components/form/creatable-combobox";
+import { ProductImageDropzone } from "@/components/form/product-image-dropzone";
 import {
   useCreateCategory,
   useCreateProduct,
@@ -61,6 +62,7 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
       priceSale: 0,
       priceBuy: 0,
       stockLowThreshold: 5,
+      initialStock: 0,
       imageUrl: "",
     },
   });
@@ -139,25 +141,17 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div
-                role="img"
-                aria-label="Arrastra una imagen o pega una URL"
-                className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 text-center text-sm text-muted-foreground"
-              >
-                <ImageIcon
-                  aria-hidden
-                  className="size-8 text-muted-foreground/60"
-                />
-                <span>Subida a R2</span>
-                <span className="text-xs">disponible en una fase futura</span>
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Por ahora pega una URL pública en el campo de la derecha.
-              </p>
+              <ProductImageDropzone
+                onUploaded={(url) =>
+                  setValue("imageUrl", url, { shouldValidate: true })
+                }
+                disabled={isBusy}
+              />
               <Field
                 label="URL de imagen"
+                hint="Se llena al subir la imagen. Puedes pegar otra URL manualmente si ya tienes una."
                 error={errors.imageUrl?.message ?? fieldErrors?.imageUrl?.[0]}
-                className="mt-4"
+                className="mt-3"
               >
                 <input
                   type="url"
@@ -346,6 +340,24 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
                   step="0.01"
                   min="0"
                   {...register("stockLowThreshold")}
+                  className={cn(inputClass, "font-mono tabular-nums")}
+                />
+              </Field>
+
+              <Field
+                label="Inventario inicial (opcional)"
+                hint="Si es mayor a 0, se registra automáticamente como una entrada."
+                error={
+                  errors.initialStock?.message ??
+                  fieldErrors?.initialStock?.[0]
+                }
+              >
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  {...register("initialStock")}
                   className={cn(inputClass, "font-mono tabular-nums")}
                 />
               </Field>
