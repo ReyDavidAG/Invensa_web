@@ -2,6 +2,8 @@
 // Single column, max-w-md, vertically centred. No card around the form.
 
 import * as React from "react";
+import { BrandMark } from "@/components/brand-mark";
+import { APP_VERSION } from "@/lib/version";
 import { cn } from "@/lib/utils";
 
 interface AuthShellProps {
@@ -23,7 +25,22 @@ export function AuthShell({
     <main className="flex min-h-svh flex-col items-center justify-center px-4 py-16 sm:py-24">
       <div className={cn("w-full max-w-[420px] flex flex-col gap-8")}>
         <header className="flex flex-col gap-3">
-          <BrandMark />
+          <div className="flex items-center gap-2.5">
+            <span
+              className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground shadow-sm"
+              aria-hidden
+            >
+              <BrandMark className="size-5 text-primary-foreground" />
+            </span>
+            <span className="flex flex-col leading-tight">
+              <span className="text-lg font-bold tracking-[-0.02em] text-foreground">
+                Invensa
+              </span>
+              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                v{APP_VERSION}
+              </span>
+            </span>
+          </div>
           <div
             className="mt-1 h-1 w-10 rounded-full"
             style={{ backgroundColor: "var(--primary)" }}
@@ -47,25 +64,6 @@ export function AuthShell({
         ) : null}
       </div>
     </main>
-  );
-}
-
-function BrandMark() {
-  // Wordmark + small filled square (favicon-sibling visual). Pulled from
-  // public/ when present; falls back to the typographic mark.
-  return (
-    <div className="flex items-center gap-2.5">
-      <div
-        className="flex h-8 w-8 items-center justify-center rounded-md"
-        style={{ backgroundColor: "var(--primary)" }}
-        aria-hidden
-      >
-        <span className="text-sm font-bold text-primary-foreground">i</span>
-      </div>
-      <span className="text-lg font-bold tracking-[-0.02em] text-foreground">
-        Invensa
-      </span>
-    </div>
   );
 }
 

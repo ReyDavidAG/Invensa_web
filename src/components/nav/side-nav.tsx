@@ -54,7 +54,13 @@ function isActive(pathname: string | null, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SideNav({ userName }: { userName: string }) {
+export function SideNav({
+  userName,
+  appVersion,
+}: {
+  userName: string;
+  appVersion: string;
+}) {
   const pathname = usePathname();
   const accountLabel = userName.trim() || "Cuenta";
   const accountNav: NavItem = { ...ACCOUNT_NAV_BASE, label: accountLabel };
@@ -70,8 +76,11 @@ export function SideNav({ userName }: { userName: string }) {
           <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm group-data-[collapsible=icon]:size-7">
             <BrandMark className="size-5 group-data-[collapsible=icon]:size-3.5" />
           </span>
-          <span className="truncate group-data-[collapsible=icon]:hidden">
-            Invensa
+          <span className="flex min-w-0 flex-col truncate group-data-[collapsible=icon]:hidden">
+            <span className="truncate">Invensa</span>
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+              v{appVersion}
+            </span>
           </span>
         </Link>
       </SidebarHeader>
