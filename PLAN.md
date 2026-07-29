@@ -2,7 +2,7 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-28 · Módulo productos completo (lista + alta + detalle + edición)
+> **Última actualización:** 2026-07-29 · Plan: cierre de caja + alertas stock bajo + resumen diario
 >
 > **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
@@ -191,6 +191,9 @@ Invensa_web/
 | 11 | Reportes (cortes + chart + top productos + stock bajo + top clientes + métodos) | ✅ Hecho |
 | 12 | Deploy a Vercel + env vars + verificación | Pendiente |
 | 13 | Pruebas con hermana + mamá | Pendiente |
+| 14 | **Cierre de caja** (`cash_closings` + UI `/cash-closing`) | 🟡 En curso |
+| 15 | **Alerta stock bajo proactiva** (cron + Resend) | ⬜ Pendiente |
+| 16 | **Email diario de resumen** (cron + Resend) | ⬜ Pendiente |
 
 ### Stack realmente instalado (versiones verificadas)
 
@@ -277,3 +280,169 @@ Pendiente: imagen upload a Cloudflare R2 via presigned URLs (placeholder visual 
 - `src/components/nav/theme-toggle.tsx` — client component con `useTheme` de next-themes (light/dark con ícono sol/luna).
 - `src/components/nav/account-menu.tsx` — client component con DropdownMenu (avatar con iniciales + nombre + email + sign-out).
 - `src/app/(app)/dashboard/page.tsx` — reemplazado el stub con dashboard real: 4 stat tiles (Ventas hoy, Ticket promedio, Stock bajo, Fiados pendientes) + lista de ventas recientes + acciones rápidas. Queries reales (no fake) con empty-states honestos ("—" con « datos reales cuando se registren ventas »).
+
+## 11. Próximas fases planeadas (2026-07-29)
+
+Tres mejoras que la dueña necesita ya. Sin fiado (la tienda no fía — confirmado). Sin caducidad (no venden comida, son productos de limpieza y refacciones para moto).
+
+### Fase 14 — Cierre de caja (`cash_closings`)
+
+**Por qué:** la hermana cierra la tienda sin saber si la caja cuadra. Hoy no hay forma de comparar lo que el sistema dice que entró contra lo que realmente hay en el cajón. Sin este dato no sabe si le falta dinero o si la app tiene un bug.
+
+**Tabla nueva:**
+- `cash_closings(id, date UNIQUE, opened_at, closed_at, expected_cash, counted_cash, diff GENERATED, notes, closed_by, status)` — una fila por día. `expected_cash` se calcula de `sales.paid_amount - sales.change_given` del día (es server-derived, no input).
+
+**Cálculo del expected_cash:**
+- Sum de ventas pagadas en efectivo del día, **menos** el cambio/devolución que se dio.
+- Hoy la columna `sales.change_given` no existe. Se agrega en esta misma migración.
+
+**UI:**
+- `/cash-closing` — page con el cierre del día. Si `status=open`: input "¿cuánto hay en caja?" + notas → submit. Si `status=closed`: lectura con `expected`, `counted`, `diff` destacados (verde si 0, ámbar si ±$5, rojo si más).
+- `side-nav.tsx` — nuevo item "Cierre de caja" entre Reportes y Cuenta.
+- `dashboard/page.tsx` — widget "Cierre de hoy" con badge (pendiente / cerrado / descuadre).
+
+**Server Actions:** `openCashSessionAction` (auto al primer GET del día), `closeCashAction`, `getTodayClosingAction` (lectura).
+
+**RLS:**
+- admin: SELECT, UPDATE, DELETE.
+- employee: SELECT, INSERT, UPDATE (la caja la cierra quien esté en turno; no se borra).
+
+**Esfuerzo:** 2 días.
+
+### Fase 15 — Alerta de stock bajo proactiva
+
+**Por qué:** `products.stock_low_threshold` y `vw_product_stock` ya existen. La hermana entra al sistema solo cuando ya se quedó sin producto. Necesita que el sistema le avise.
+
+**Infraestructura:**
+- Cron diario **9:00 AM America/Mexico_City** → `GET /api/cron/low-stock-alert`.
+- Query: productos `status=active` con `stock_on_hand <= stock_low_threshold` y `stock_low_threshold > 0`.
+- Email via Resend con tabla de productos críticos (nombre, SKU, stock actual, threshold).
+- Botón manual en `/dashboard` (admin only) para disparar el envío inmediato sin esperar al cron.
+
+**Esfuerzo:** 1 día. Reusa Resend y la vista existente.
+
+### Fase 16 — Email diario de resumen
+
+**Por qué:** hermana y mamá no abren el dashboard a diario. Reciben un email a las 9pm con el cierre del día para saber cómo les fue sin tener que entrar.
+
+**Contenido del email:**
+- Total vendido hoy (MXN) + count de ventas.
+- Comparación con ayer (% cambio).
+- Top 3 productos del día.
+- Estado del cierre de caja (cerrado / pendiente / descuadre).
+
+**Infraestructura:**
+- Cron diario **9:00 PM America/Mexico_City** → `GET /api/cron/daily-summary`.
+- Misma estructura de email que #15, distinto query.
+
+**Esfuerzo:** 0.5 día. Comparte infra con #15.
+
+### Cron jobs en Vercel
+
+Vercel Hobby permite 2 cron jobs por proyecto. Uso exacto:
+
+| Cron path | Hora MX | Hora UTC | Fase |
+|---|---|---|---|
+| `/api/cron/low-stock-alert` | 09:00 | 15:00 | 15 |
+| `/api/cron/daily-summary` | 21:00 | 03:00 | 16 |
+
+Definidos en `vercel.json`:
+```json
+{
+  "crons": [
+    { "path": "/api/cron/low-stock-alert", "schedule": "0 15 * * *" },
+    { "path": "/api/cron/daily-summary", "schedule": "0 3 * * *" }
+  ]
+}
+```
+
+> **Timezone:** México CST (UTC-6) sin DST en la práctica para nuestro uso (no nos importa el cambio de horario). Si quisiéramos_DST-aware, usamos `vercel.json` con tz + librería tz-aware en el server. Por ahora: offsets fijos.
+
+### Email: Resend
+
+Ya tenemos `RESEND_API_KEY` y `RESEND_FROM_EMAIL` en env. Solo falta:
+- Instalar `resend` (npm).
+- Wrapper en `src/lib/email/send.ts` (server-only).
+- Templates en `src/lib/email/templates/*.ts` — **HTML inline con tablas**, sin React Email.
+
+**Por qué no React Email:** una dependencia más para emails que se ven en clientes de correo (que ignoran CSS). HTML inline con tablas es feo pero funciona en Gmail/Outlook y mantiene el bundle limpio. Se introduce React Email solo si el HTML se vuelve inmanejable.
+
+### Decisiones que se reabren
+
+| Decisión | Default | Razón |
+|---|---|---|
+| Cron hosting | **Vercel Cron** (Hobby, 2 jobs) | $0, suficiente. Si necesitamos >2 jobs, se mueve a GitHub Actions. |
+| Email HTML | **Inline tables**, sin React Email | Ponytail. Bundle limpio, compatibilidad probada. |
+| Cash closings: ¿una o múltiples sesiones por día? | **Una por día** (`date UNIQUE`) | YAGNI. Si hay corte de turno mañana/tarde, se introduce `cash_session` después. |
+| Recipient del daily summary | **Todos los admin + employee** activos | Sin UI de preferencias todavía. Si la mamá no quiere recibirlo, se filtra por `notification_prefs` después. |
+| Recipient del low-stock alert | **Solo admin** | La hermana toma decisiones de compra, la mamá solo registra ventas. |
+
+### Esquema de base de datos — diff
+
+```sql
+-- 0006_cash_closings.sql
+
+-- 1. Nueva columna en sales: cambio que se dio al cliente
+alter table public.sales
+  add column if not exists change_given numeric(12,2) not null default 0
+  check (change_given >= 0);
+
+-- 2. Tabla cash_closings
+create table if not exists public.cash_closings (
+  id uuid primary key default gen_random_uuid(),
+  date date not null unique,
+  opened_at timestamptz not null default now(),
+  closed_at timestamptz,
+  expected_cash numeric(12,2) not null default 0,
+  counted_cash numeric(12,2) check (counted_cash is null or counted_cash >= 0),
+  diff numeric(12,2) generated always as (
+    coalesce(counted_cash, 0) - expected_cash
+  ) stored,
+  notes text,
+  closed_by uuid references public.profiles(id),
+  status text not null default 'open' check (status in ('open', 'closed'))
+);
+
+create index cash_closings_date_idx on public.cash_closings(date desc);
+
+-- 3. RLS
+alter table public.cash_closings enable row level security;
+
+create policy cash_closings_select_authenticated
+  on public.cash_closings for select
+  to authenticated using (true);
+
+create policy cash_closings_insert_authenticated
+  on public.cash_closings for insert
+  to authenticated with check (true);
+
+create policy cash_closings_update_authenticated
+  on public.cash_closings for update
+  to authenticated using (true);
+
+create policy cash_closings_delete_admin
+  on public.cash_closings for delete
+  to authenticated using (public.current_user_role() = 'admin');
+
+-- 4. Helper view: ventas en efectivo del día (para expected_cash)
+create or replace view public.vw_cash_sales_today as
+select
+  date_trunc('day', s.date_at at time zone 'America/Mexico_City')::date as sale_date,
+  sum(s.paid_amount - s.change_given) as net_cash
+from public.sales s
+where s.status = 'paid'
+  and s.payment_method = 'cash'
+group by 1;
+```
+
+## 12. Próximo paso inmediato
+
+**Fase 14 (cierre de caja).** Empezar por:
+1. Migración `0006_cash_closings.sql` + aplicar a Supabase local.
+2. `src/lib/schemas/cash-closing.ts` (zod).
+3. `src/app/actions/cash-closing.ts` (open/close/getToday).
+4. `src/app/(app)/cash-closing/page.tsx` + componentes.
+5. Side-nav item + dashboard widget.
+6. Después: Fase 15 (cron + email + Resend).
+7. Después: Fase 16 (cron + email + Resend, reusando infra de 15).
+
