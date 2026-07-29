@@ -27,6 +27,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useParseProductPhoto } from "@/lib/query/mutations";
+import { resizeImage } from "@/lib/image/resize";
 import type { AiProductParsed } from "@/lib/schemas/ai-product";
 import { cn } from "@/lib/utils";
 
@@ -84,10 +85,17 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
     setParsed(null);
   }, [open, imagePreview]);
 
-  function handleFile(file: File) {
-    setImageFile(file);
+  async function handleFile(file: File) {
+    // Resize client-side to keep the Server Action body under 1 MB.
+    let toAnalyze = file;
+    try {
+      toAnalyze = await resizeImage(file);
+    } catch (e) {
+      console.warn("[ai-photo-import] resize failed", e);
+    }
+    setImageFile(toAnalyze);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImagePreview(URL.createObjectURL(file));
+    setImagePreview(URL.createObjectURL(toAnalyze));
     setParsed(null);
   }
 
@@ -181,7 +189,6 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
               ref={inputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              capture="environment"
               onChange={onInputChange}
               className="sr-only"
             />
