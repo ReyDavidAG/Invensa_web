@@ -50,10 +50,12 @@ export function AuthShell({
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
             {eyebrow}
           </p>
-          <h1 className="text-3xl font-bold tracking-[-0.025em] text-foreground">
+          <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground sm:text-3xl">
             {heading}
           </h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">{sub}</p>
+          <p className="overflow-wrap-anywhere text-sm leading-relaxed text-muted-foreground">
+            {sub}
+          </p>
         </header>
 
         <section className="flex flex-col gap-5">{children}</section>
