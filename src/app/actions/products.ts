@@ -12,6 +12,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireAdmin } from "@/app/actions/_guards";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import {
   productCreateSchema,
@@ -19,39 +20,12 @@ import {
 } from "@/lib/schemas/products";
 
 export type ProductActionResult =
-  | { ok: true; id: string }
+  | { ok: true; id: string; warning?: string }
   | {
       ok: false;
       error: string;
       fieldErrors?: Record<string, string[]>;
     };
-
-async function requireAdmin(): Promise<
-  { userId: string } | { ok: false; error: string }
-> {
-  const supabase = await getSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return {
-      ok: false,
-      error: "Tu sesión expiró. Vuelve a iniciar sesión.",
-    };
-  }
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") {
-    return {
-      ok: false,
-      error: "Solo administradores pueden modificar el catálogo.",
-    };
-  }
-  return { userId: user.id };
-}
 
 function fromFormData<T extends Record<string, FormDataEntryValue | null>>(
   formData: FormData,
@@ -68,7 +42,7 @@ export async function createProductAction(
   _state: unknown,
   formData: FormData,
 ): Promise<ProductActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin({ actionLabel: "modificar el catálogo" });
   if ("ok" in auth) return auth;
 
   const parsed = productCreateSchema.safeParse(
@@ -130,7 +104,7 @@ export async function updateProductAction(
   _state: unknown,
   formData: FormData,
 ): Promise<ProductActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin({ actionLabel: "modificar el catálogo" });
   if ("ok" in auth) return auth;
 
   const parsed = productUpdateSchema.safeParse(
@@ -190,7 +164,7 @@ export async function updateProductAction(
 export async function archiveProductAction(
   productId: string,
 ): Promise<ProductActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin({ actionLabel: "modificar el catálogo" });
   if ("ok" in auth) return auth;
 
   const supabase = await getSupabaseServer();
