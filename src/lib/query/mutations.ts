@@ -39,6 +39,14 @@ import {
   type ProfileActionResult,
   updateProfileAction,
 } from "@/app/actions/profile";
+import {
+  type PresignActionResult,
+  requestProductImageUploadAction,
+} from "@/app/actions/storage";
+import {
+  type InventoryMovementActionResult,
+  createInventoryMovementAction,
+} from "@/app/actions/inventory";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -103,5 +111,17 @@ export function useArchiveCustomer() {
 export function useUpdateProfile() {
   return useMutation<ProfileActionResult, Error, FormData>({
     mutationFn: (formData) => updateProfileAction(null, formData),
+  });
+}
+
+export function useRequestProductImageUpload() {
+  return useMutation<PresignActionResult, Error, FormData>({
+    mutationFn: (formData) => requestProductImageUploadAction(null, formData),
+  });
+}
+
+export function useCreateInventoryMovement() {
+  return useMutation<InventoryMovementActionResult, Error, FormData>({
+    mutationFn: (formData) => createInventoryMovementAction(null, formData),
   });
 }

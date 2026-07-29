@@ -1,8 +1,13 @@
 "use client";
 
 /* Hallmark · locked system applied (Taller) · src/app/(app)/reports/bar-chart.tsx
- * Daily sales bar chart. Pure SVG, no chart library. Bars animate from
- * height 0 to their target via motion with a small per-bar stagger.
+ * Daily sales bar chart. Pure SVG bars + HTML labels overlay.
+ *
+ * Why HTML labels: an earlier version used <text> inside the SVG with
+ * preserveAspectRatio="none", which stretched the labels horizontally
+ * (e.g. 3.2 unit fontSize rendered as 3.2px tall x ~19px wide when the
+ * SVG was scaled 6x to fill the card). HTML labels stay crisp at any
+ * container width.
  */
 
 import { motion } from "motion/react";
@@ -35,52 +40,48 @@ const dayLabel = new Intl.DateTimeFormat("es-MX", {
 export function BarChart({ data, height = 180, className }: Props) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const max = Math.max(...data.map((d) => d.total), 1);
-  const barWidth = 100 / Math.max(data.length, 1);
-  const innerWidth = barWidth * 0.7;
-  const innerX = (barWidth - innerWidth) / 2;
   const labelStride = data.length > 10 ? Math.ceil(data.length / 7) : 1;
-  const viewBox = "0 0 100 " + String(height);
+  // 1 viewBox unit = one day slot. Total width = data.length.
+  const viewBoxWidth = Math.max(data.length, 1);
 
   return (
     <div className={cn("relative w-full", className)}>
       <svg
-        viewBox={viewBox}
+        viewBox={`0 0 ${viewBoxWidth} ${height}`}
         preserveAspectRatio="none"
         className="block w-full"
         style={{ height }}
         role="img"
         aria-label="Ventas por día"
       >
+        {/* Baseline */}
         <line
           x1={0}
-          x2={100}
+          x2={viewBoxWidth}
           y1={height - 0.5}
           y2={height - 0.5}
           stroke="var(--border)"
-          strokeWidth={0.2}
+          strokeWidth={0.1}
           vectorEffect="non-scaling-stroke"
         />
         {data.map((d, i) => {
-          const x = i * barWidth + innerX;
+          const slotX = i;
+          const barX = i + 0.15;
+          const barW = 0.7;
           const h = (d.total / max) * (height - 20);
           const y = height - 0.5 - h;
           const isZero = d.total === 0;
           const isHover = hoverIdx === i;
-          const fill = isZero
-            ? "var(--muted)"
-            : isHover
-              ? "var(--primary)"
-              : "var(--primary)";
           const opacity = isZero ? 0.55 : isHover ? 1 : 0.7;
           return (
             <g key={d.date}>
               <motion.rect
-                x={x}
+                x={barX}
                 y={y}
-                width={innerWidth}
+                width={barW}
                 height={Math.max(h, isZero ? 0.6 : 0)}
-                rx={0.6}
-                fill={fill}
+                rx={0.15}
+                fill="var(--primary)"
                 fillOpacity={opacity}
                 initial={{ height: 0, y: height - 0.5 }}
                 animate={{ height: Math.max(h, isZero ? 0.6 : 0), y }}
@@ -91,10 +92,11 @@ export function BarChart({ data, height = 180, className }: Props) {
                 }}
                 vectorEffect="non-scaling-stroke"
               />
+              {/* Invisible hover target per day slot */}
               <rect
-                x={i * barWidth}
+                x={slotX}
                 y={0}
-                width={barWidth}
+                width={1}
                 height={height}
                 fill="transparent"
                 onMouseEnter={() => setHoverIdx(i)}
@@ -103,30 +105,31 @@ export function BarChart({ data, height = 180, className }: Props) {
             </g>
           );
         })}
-        {data.map((d, i) => {
-          if (i % labelStride !== 0) return null;
-          const date = new Date(d.date + "T12:00:00");
-          return (
-            <text
-              key={"label-" + d.date}
-              x={i * barWidth + barWidth / 2}
-              y={height + 0.5}
-              fontSize={3.2}
-              textAnchor="middle"
-              fill="var(--muted-foreground)"
-              fontFamily="var(--font-mono)"
-              style={{ pointerEvents: "none" }}
-            >
-              {dayLabel.format(date)}
-            </text>
-          );
-        })}
       </svg>
+
+      {/* HTML labels — never stretched. Reserve space below the SVG. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex"
+        style={{ height: "1.25rem" }}
+      >
+        {data.map((d, i) => (
+          <div
+            key={`label-${d.date}`}
+            className="flex items-center justify-center font-mono text-[10px] tabular-nums text-muted-foreground"
+            style={{ flex: 1 }}
+          >
+            {i % labelStride === 0
+              ? dayLabel.format(new Date(d.date + "T12:00:00"))
+              : null}
+          </div>
+        ))}
+      </div>
+
       {hoverIdx !== null && data[hoverIdx] ? (
         <div
           className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-border bg-card px-3 py-2 text-xs shadow-md"
           style={{
-            left: (hoverIdx + 0.5) * barWidth + "%",
+            left: `${((hoverIdx + 0.5) / data.length) * 100}%`,
             top: 0,
           }}
         >

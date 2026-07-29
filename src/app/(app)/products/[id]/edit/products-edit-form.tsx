@@ -8,7 +8,7 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, ImageIcon, Loader2, Save } from "lucide-react";
+import { ChevronLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,6 +21,7 @@ import {
   CreatableCombobox,
   type CreatableOption,
 } from "@/components/form/creatable-combobox";
+import { ProductImageDropzone } from "@/components/form/product-image-dropzone";
 import {
   useCreateCategory,
   useCreateUnit,
@@ -135,29 +136,19 @@ export function EditProductForm({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {defaults.imageUrl ? (
-                <img
-                  src={defaults.imageUrl}
-                  alt=""
-                  className="aspect-square w-full rounded-lg border border-border bg-muted object-cover"
-                />
-              ) : (
-                <div
-                  aria-label="Sin imagen"
-                  className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 text-sm text-muted-foreground"
-                >
-                  <ImageIcon
-                    aria-hidden
-                    className="size-8 text-muted-foreground/60"
-                  />
-                  <span>Subida a R2</span>
-                  <span className="text-xs">disponible en una fase futura</span>
-                </div>
-              )}
+              <ProductImageDropzone
+                defaultUrl={defaults.imageUrl ?? undefined}
+                productId={productId}
+                onUploaded={(url) =>
+                  setValue("imageUrl", url, { shouldValidate: true })
+                }
+                disabled={isBusy}
+              />
               <Field
                 label="URL de imagen"
+                hint="Se llena al subir la imagen. Puedes pegar otra URL manualmente si ya tienes una."
                 error={errors.imageUrl?.message ?? fieldErrors?.imageUrl?.[0]}
-                className="mt-4"
+                className="mt-3"
               >
                 <input
                   type="url"

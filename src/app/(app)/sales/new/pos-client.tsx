@@ -44,6 +44,7 @@ export type PosProduct = {
   name: string;
   priceSale: number;
   stock: number;
+  imageUrl: string | null;
 };
 
 export type PosClient = {
@@ -59,6 +60,7 @@ type CartLine = {
   unitPrice: number;
   quantity: number;
   stock: number;
+  imageUrl: string | null;
 };
 
 type PaymentMode = "cash"; // Fiado y transferencia deshabilitados por ahora
@@ -185,6 +187,7 @@ export function PosClient({
           unitPrice: p.priceSale,
           quantity: 1,
           stock: p.stock,
+          imageUrl: p.imageUrl,
         },
       ];
     });
@@ -402,11 +405,21 @@ export function PosClient({
                                 disabled={outOfStock}
                                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                               >
-                                <span className="grid size-9 shrink-0 place-items-center rounded-md bg-secondary text-secondary-foreground">
-                                  <PackageSearch
-                                    aria-hidden
-                                    className="size-4"
-                                  />
+                                <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-md bg-secondary text-secondary-foreground">
+                                  {p.imageUrl ? (
+                                    <img
+                                      src={p.imageUrl}
+                                      alt=""
+                                      loading="lazy"
+                                      decoding="async"
+                                      className="size-full object-cover"
+                                    />
+                                  ) : (
+                                    <PackageSearch
+                                      aria-hidden
+                                      className="size-4"
+                                    />
+                                  )}
                                 </span>
                                 <span className="flex min-w-0 flex-1 flex-col">
                                   <span className="truncate text-sm font-medium text-foreground">
@@ -613,6 +626,15 @@ function CartLineRow({
   const subtotal = line.unitPrice * line.quantity;
   return (
     <div className="flex items-start gap-2 px-4 py-3">
+      {line.imageUrl ? (
+        <img
+          src={line.imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="size-10 shrink-0 rounded-md border border-border bg-muted object-cover"
+        />
+      ) : null}
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-sm font-medium text-foreground">
           {line.name}

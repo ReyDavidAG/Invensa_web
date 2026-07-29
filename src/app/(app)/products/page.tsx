@@ -13,6 +13,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MoreHorizontal, Plus } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -83,7 +84,7 @@ export default async function ProductsPage({
   let query = supabase
     .from("products")
     .select(
-      "id, code, name, price_sale, status, categories!inner(code, name)",
+      "id, code, name, price_sale, status, stock_low_threshold, image_url, categories!inner(code, name)",
       { count: "exact" },
     )
     .eq("status", "active");
@@ -224,6 +225,9 @@ export default async function ProductsPage({
                 >
                   SKU
                 </ProductsSortableTh>
+                <th scope="col" className="w-12 px-1 py-2.5 font-medium">
+                  <span className="sr-only">Imagen</span>
+                </th>
                 <ProductsSortableTh
                   column="name"
                   sort={sort}
@@ -255,7 +259,7 @@ export default async function ProductsPage({
             <tbody className="divide-y divide-border">
               {(products ?? []).map((p) => {
                 const stock = stockByProduct.get(p.id as string) ?? 0;
-                const lowStock = stock <= 5;
+                const lowStock = stock <= Number(p.stock_low_threshold);
                 const outOfStock = stock <= 0;
                 const category = Array.isArray(p.categories)
                   ? p.categories[0]
@@ -264,6 +268,24 @@ export default async function ProductsPage({
                   <tr key={p.id} className="bg-background hover:bg-muted/30">
                     <td className="px-4 py-2.5 font-mono text-xs tabular-nums text-muted-foreground">
                       {p.code}
+                    </td>
+                    <td className="px-1 py-2">
+                      {p.image_url ? (
+                        <img
+                          src={p.image_url as string}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="size-9 rounded-md border border-border bg-muted object-cover"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden
+                          className="grid size-9 place-items-center rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground"
+                        >
+                          <ImageIcon className="size-4" />
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-2.5">
                       <Link

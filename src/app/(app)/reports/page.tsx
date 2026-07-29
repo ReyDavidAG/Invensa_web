@@ -134,12 +134,13 @@ export default async function ReportsPage({
 
   // Parallel fetch — all reads, scoped by date range and chart range.
   const [
-    { data: periodSales },
-    { data: yesterdaySales },
-    { data: chartSales },
-    { data: topSaleItems },
-    { data: lowStock },
-    { data: paymentAgg },
+    { data: periodSales, error: periodSalesError },
+    { data: yesterdaySales, error: yesterdaySalesError },
+    { data: chartSales, error: chartSalesError },
+    { data: topSaleItems, error: topSaleItemsError },
+    { data: lowStock, error: lowStockError },
+    { data: stockRows, error: stockRowsError },
+    { data: paymentAgg, error: paymentAggError },
   ] = await Promise.all([
     supabase
       .from("sales")
@@ -163,7 +164,7 @@ export default async function ReportsPage({
             .lt("date_at", yEnd.toISOString())
             .neq("status", "cancelled");
         })()
-      : Promise.resolve({ data: [] as Array<{ total: number }> }),
+      : Promise.resolve({ data: [] as Array<{ total: number }>, error: null }),
     supabase
       .from("sales")
       .select("id, total, date_at")
@@ -181,10 +182,11 @@ export default async function ReportsPage({
       .neq("sales.status", "cancelled"),
     supabase
       .from("products")
-      .select(
-        "id, code, name, stock_low_threshold, vw_product_stock(stock_on_hand)",
-      )
+      .select("id, code, name, stock_low_threshold, image_url")
       .eq("status", "active"),
+    // Stock is a view; PostgREST cannot infer an embedded relationship, so
+    // query it directly and join in app code (mirrors /products/page.tsx).
+    supabase.from("vw_product_stock").select("product_id, stock_on_hand"),
     supabase
       .from("sales")
       .select("payment_method, total")
@@ -192,6 +194,16 @@ export default async function ReportsPage({
       .lte("date_at", range.to.toISOString())
       .neq("status", "cancelled"),
   ]);
+
+  if (periodSalesError) console.error("[reports] period sales", periodSalesError);
+  if (yesterdaySalesError)
+    console.error("[reports] yesterday sales", yesterdaySalesError);
+  if (chartSalesError) console.error("[reports] chart sales", chartSalesError);
+  if (topSaleItemsError)
+    console.error("[reports] top sale items", topSaleItemsError);
+  if (lowStockError) console.error("[reports] low stock products", lowStockError);
+  if (stockRowsError) console.error("[reports] stock rows", stockRowsError);
+  if (paymentAggError) console.error("[reports] payment agg", paymentAggError);
 
   // ── KPIs ─────────────────────────────────────────────────────────
   const periodTotal = (periodSales ?? []).reduce(
@@ -263,23 +275,25 @@ export default async function ReportsPage({
     id: string;
     code: string;
     name: string;
+    imageUrl: string | null;
     stock: number;
     threshold: number;
   };
+  const stockByProduct = new Map<string, number>(
+    (stockRows ?? []).map((s) => [
+      s.product_id as string,
+      Number(s.stock_on_hand),
+    ]),
+  );
   const lowStockList: LowStockRow[] = (lowStock ?? [])
-    .map((p) => {
-      const stock = Array.isArray(p.vw_product_stock)
-        ? Number(p.vw_product_stock[0]?.stock_on_hand ?? 0)
-        : 0;
-      const threshold = Number(p.stock_low_threshold);
-      return {
-        id: p.id as string,
-        code: p.code as string,
-        name: p.name as string,
-        stock,
-        threshold,
-      };
-    })
+    .map((p) => ({
+      id: p.id as string,
+      code: p.code as string,
+      name: p.name as string,
+      imageUrl: (p.image_url as string | null) ?? null,
+      stock: stockByProduct.get(p.id as string) ?? 0,
+      threshold: Number(p.stock_low_threshold),
+    }))
     .filter((p) => p.stock <= p.threshold)
     .sort((a, b) => a.stock - b.stock)
     .slice(0, 10);

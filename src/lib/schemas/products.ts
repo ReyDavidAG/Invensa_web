@@ -13,6 +13,7 @@ export const productCreateSchema = z.object({
   priceSale: z.coerce.number().min(0, "Debe ser ≥ 0"),
   priceBuy: z.coerce.number().min(0, "Debe ser ≥ 0"),
   stockLowThreshold: z.coerce.number().min(0, "Debe ser ≥ 0").default(5),
+  initialStock: z.coerce.number().min(0, "Debe ser ≥ 0").default(0),
   imageUrl: z.string().trim().url("URL inválida").optional().or(z.literal("")),
 });
 

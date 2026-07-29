@@ -42,7 +42,7 @@ export default async function NewSalePage() {
   ] = await Promise.all([
     supabase
       .from("products")
-      .select("id, code, name, price_sale, status")
+      .select("id, code, name, price_sale, status, image_url")
       .eq("status", "active")
       .order("name", { ascending: true })
       .limit(500),
@@ -78,6 +78,7 @@ export default async function NewSalePage() {
     name: p.name as string,
     priceSale: Number(p.price_sale),
     stock: stockByProduct.get(p.id as string) ?? 0,
+    imageUrl: (p.image_url as string | null) ?? null,
   }));
 
   // Aggregate recent products by id, sort by count desc, take top 5

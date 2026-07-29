@@ -7,6 +7,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireAdmin } from "@/app/actions/_guards";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import {
   customerCreateSchema,
@@ -20,30 +21,6 @@ export type CustomerActionResult =
       error: string;
       fieldErrors?: Record<string, string[]>;
     };
-
-async function requireAdmin(): Promise<
-  { userId: string } | { ok: false; error: string }
-> {
-  const supabase = await getSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { ok: false, error: "Tu sesión expiró. Vuelve a iniciar sesión." };
-  }
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") {
-    return {
-      ok: false,
-      error: "Solo administradores pueden modificar clientes.",
-    };
-  }
-  return { userId: user.id };
-}
 
 function fromFormData<T extends Record<string, FormDataEntryValue | null>>(
   formData: FormData,
@@ -60,7 +37,7 @@ export async function createCustomerAction(
   _state: unknown,
   formData: FormData,
 ): Promise<CustomerActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin({ actionLabel: "modificar clientes" });
   if ("ok" in auth) return auth;
 
   const parsed = customerCreateSchema.safeParse(
@@ -107,7 +84,7 @@ export async function updateCustomerAction(
   _state: unknown,
   formData: FormData,
 ): Promise<CustomerActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin({ actionLabel: "modificar clientes" });
   if ("ok" in auth) return auth;
 
   const parsed = customerUpdateSchema.safeParse(
@@ -148,7 +125,7 @@ export async function updateCustomerAction(
 export async function archiveCustomerAction(
   customerId: string,
 ): Promise<CustomerActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin({ actionLabel: "modificar clientes" });
   if ("ok" in auth) return auth;
 
   const supabase = await getSupabaseServer();
