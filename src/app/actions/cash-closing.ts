@@ -103,8 +103,13 @@ export async function closeCashAction(
   const auth = await requireUser();
   if ("ok" in auth) return auth;
 
+  // FormData values are always strings; coerce countedCash to number for the
+  // shared schema (which expects a number). Empty string → 0 (counts as
+  // "nothing in the drawer", which is valid).
+  const countedRaw = formData.get("countedCash");
+  const countedCash = countedRaw == null ? 0 : Number(countedRaw);
   const parsed = cashClosingCloseSchema.safeParse({
-    countedCash: formData.get("countedCash"),
+    countedCash: Number.isFinite(countedCash) ? countedCash : 0,
     notes: formData.get("notes") || undefined,
   });
   if (!parsed.success) {
