@@ -10,6 +10,7 @@ import { SideNav } from "@/components/nav/side-nav";
 import { TopBar } from "@/components/nav/top-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { APP_VERSION } from "@/lib/version";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await getSupabaseServer();
@@ -29,7 +30,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen>
-      <SideNav userName={userName} />
+      <SideNav userName={userName} appVersion={APP_VERSION} />
       <SidebarInset>
         <TopBar />
         <main className="mx-auto w-full max-w-screen-2xl px-4 py-4 md:px-8 md:py-6">
