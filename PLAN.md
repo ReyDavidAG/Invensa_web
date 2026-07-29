@@ -502,6 +502,118 @@ Variables en Vercel que se deben configurar:
 - `src/lib/email/send.ts` — reescrito: transporter Gmail SMTP singleton, lee `GMAIL_USER` + `GMAIL_APP_PASSWORD` + opcional `EMAIL_FROM`.
 - `src/lib/env.ts` — schema actualizado: removidas `RESEND_*`, agregadas `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `EMAIL_FROM`.
 - `.env.local.example` — sección Email reescrita con instrucciones para contraseña de app de Google.
+- `.env.local` — actualizadas variables nuevas (GMAIL_USER + GMAIL_APP_PASSWORD + EMAIL_FROM + CRON_SECRET generado).
+
+## 19. Deploy end-to-end (orden exacto)
+
+### A. Antes del deploy — generar secrets locales
+
+```bash
+# 1) Generar CRON_SECRET (si no tienes uno ya). 32 bytes hex = 64 chars.
+openssl rand -hex 32
+# Output: e0e00c97cbf3ca313452151305f22a6aedc45d07909e48d963b6fc2e2a45d851
+# → pegar en .env.local:  CRON_SECRET="<ese-valor>"
+```
+
+**Contraseña de app de Gmail** (solo se hace una vez):
+1. Abrir la cuenta Gmail que va a ser el remitente.
+2. Ir a https://myaccount.google.com/security
+3. Verificar que **2-Step Verification** está ON (si no, activarlo primero).
+4. Ir a https://myaccount.google.com/apppasswords
+5. App name = "Invensa" → Generate.
+6. Te muestra 16 chars tipo `abcd efgh ijkl mnop`. **Copiarlos YA** porque no se vuelven a mostrar.
+7. En `.env.local`:
+   ```
+   GMAIL_USER="tugmail@gmail.com"
+   GMAIL_APP_PASSWORD="abcd efgh ijkl mnop"
+   EMAIL_FROM="Invensa <tugmail@gmail.com>"
+   CRON_SECRET="<el-valor-de-openssl>"
+   ```
+
+### B. Aplicar migración nueva (cierre de caja)
+
+```bash
+# Una vez (linkea el proyecto a tu Supabase la primera vez):
+pnpm exec supabase link --project-ref lyvypclifdweyoujgyzd
+
+# Aplicar 0006 (cierre de caja):
+pnpm exec supabase db push
+# O específico:
+pnpm exec supabase migration up
+```
+
+Verifica en el dashboard de Supabase → Table Editor → `cash_closings` debe existir con columnas `id, date, opened_at, closed_at, expected_cash, counted_cash, diff, notes, closed_by, status`.
+
+### C. Configurar Vercel
+
+1. **Ir a**: https://vercel.com → tu proyecto → Settings → Environment Variables.
+2. **Agregar** (Production + Preview + Development):
+   - `NEXT_PUBLIC_SUPABASE_URL` = `https://lyvypclifdweyoujgyzd.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (mismo que en .env.local)
+   - `SUPABASE_SERVICE_ROLE_KEY` = (mismo)
+   - `NEXT_PUBLIC_SITE_URL` = tu dominio final (ej. `https://invensa.vercel.app`)
+   - `NEXT_PUBLIC_LOCALE` = `es-MX`
+   - `NEXT_PUBLIC_R2_PUBLIC_URL` = `https://pub-bd19f9f5ece04ec7833dcfec7461a913.r2.dev`
+   - `R2_ACCOUNT_ID` = `af1ba039dbed5e7e82379b1ad4e677b1`
+   - `R2_ACCESS_KEY_ID` = (mismo)
+   - `R2_SECRET_ACCESS_KEY` = (mismo)
+   - `R2_BUCKET` = `invensa-products`
+   - `R2_REGION` = `auto`
+   - `MINIMAX_API_KEY` = (mismo)
+   - `MINIMAX_MODEL` = `MiniMax-M3`
+   - `APP_BASE_URL` = tu dominio final (ej. `https://invensa.vercel.app`)
+   - **`GMAIL_USER`** = `tugmail@gmail.com`
+   - **`GMAIL_APP_PASSWORD`** = `abcd efgh ijkl mnop`
+   - **`EMAIL_FROM`** = `Invensa <tugmail@gmail.com>`
+   - **`CRON_SECRET`** = `<el-mismo-valor-que-en-env-local>`
+3. **Redeploy** el último commit (env vars solo aplican en builds nuevos).
+
+### D. Verificar los crons
+
+Vercel → tu proyecto → Settings → Crons debe listar:
+- `0 15 * * *` → `/api/cron/low-stock-alert`
+- `0 3 * * *` → `/api/cron/daily-summary`
+
+**Prueba manual** (con el secret que generaste):
+```bash
+curl -i -H "Authorization: Bearer $CRON_SECRET" \
+  https://<tu-dominio>.vercel.app/api/cron/low-stock-alert
+# Esperado: 200 con JSON {"sent":1,"rows":N,"recipients":N}
+```
+
+```bash
+curl -i -H "Authorization: Bearer $CRON_SECRET" \
+  https://<tu-dominio>.vercel.app/api/cron/daily-summary
+# Esperado: 200 con JSON {"sent":1,"recipients":N,"salesCount":N,"salesTotal":N}
+```
+
+### E. Smoke test manual del cierre de caja
+
+1. Ir a `/cash-closing` → debe mostrar "Caja abierta · Esperado $0" (si no hay ventas hoy).
+2. Registrar una venta de prueba en `/sales/new` → volver a `/cash-closing` → "Esperado" debe aumentar.
+3. Llenar "Total contado en caja" → Cerrar.
+4. Verificar que la fila en Supabase `cash_closings` tiene `status='closed'`, `diff` calculado.
+5. Botón "Enviar ahora" en dashboard (admin) debe mandar email a `GMAIL_USER` (test).
+
+### F. Verificar el dominio en producción
+
+Si tienes dominio propio (no es obligatorio para Vercel):
+- Vercel → Settings → Domains → agregar.
+- En Cloudflare Registrar (o donde lo compraste): apuntar CNAME a `cname.vercel-dns.com`.
+
+Vercel te da HTTPS gratis vía Let's Encrypt.
+
+## 20. Recap de costos mensuales (después del deploy)
+
+| Servicio | Plan | Costo |
+|---|---|---|
+| Vercel | Hobby | $0 |
+| Supabase | Free tier | $0 |
+| Cloudflare R2 | Free tier (10 GB, 0 egress) | $0 |
+| Gmail SMTP | Personal (500 emails/día) | $0 |
+| Dominio (opcional) | .com/.app/etc | ~$10-15 USD/año |
+
+**Total mensual: $0.** Único pago opcional: dominio para que el remitente del email sea `noreply@invensa.com` en lugar de tu Gmail personal.
 
 
 
