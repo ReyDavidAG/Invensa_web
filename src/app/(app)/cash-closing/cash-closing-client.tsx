@@ -92,9 +92,25 @@ export function CashClosingClient({
     if (res.ok) {
       setRow(res.row);
       toast.success(`Cierre del ${date} registrado`);
-    } else {
-      toast.error(res.error);
+      return;
     }
+    // Surface server-side field errors inline so the user sees what to fix.
+    if (res.fieldErrors) {
+      for (const [field, msgs] of Object.entries(res.fieldErrors)) {
+        const message = msgs?.[0];
+        if (!message) continue;
+        form.setError(field as keyof CashClosingCloseInput, { message });
+      }
+      const firstField = Object.keys(res.fieldErrors)[0] as
+        | keyof CashClosingCloseInput
+        | undefined;
+      const firstMsg = firstField
+        ? res.fieldErrors[firstField]?.[0]
+        : undefined;
+      toast.error(firstMsg ?? res.error);
+      return;
+    }
+    toast.error(res.error);
   }
 
   return (
