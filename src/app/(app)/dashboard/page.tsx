@@ -126,16 +126,24 @@ export default async function DashboardPage() {
       .eq("status", "active"),
   ]);
 
-  if (profileError) console.error("[dashboard] profile", profileError);
-  if (salesTodayError)
-    console.error("[dashboard] sales today", salesTodayError);
-  if (salesYesterdayError)
-    console.error("[dashboard] sales yesterday", salesYesterdayError);
-  if (recentSalesError)
-    console.error("[dashboard] recent sales", recentSalesError);
-  if (stocksError) console.error("[dashboard] stock view", stocksError);
-  if (productsForStockError)
-    console.error("[dashboard] products for stock", productsForStockError);
+  const logDbErr = (
+    scope: string,
+    err: { message?: string; code?: string; details?: string } | null,
+  ) => {
+    if (!err) return;
+    console.error(
+      `[dashboard] ${scope}:`,
+      err.message ?? "(no message)",
+      err.code ? `(code: ${err.code})` : "",
+      err.details ?? "",
+    );
+  };
+  logDbErr("profile", profileError);
+  logDbErr("sales today", salesTodayError);
+  logDbErr("sales yesterday", salesYesterdayError);
+  logDbErr("recent sales", recentSalesError);
+  logDbErr("stock view", stocksError);
+  logDbErr("products for stock", productsForStockError);
 
   // ── Greeting ──────────────────────────────────────────────────
   const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0] || "";
