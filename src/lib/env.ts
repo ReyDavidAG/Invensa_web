@@ -31,8 +31,10 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: optionalString,
   R2_BUCKET: z.string().default("invensa-products"),
   R2_REGION: z.string().default("auto"),
-  RESEND_API_KEY: optionalString,
-  RESEND_FROM_EMAIL: optionalString,
+  // Gmail SMTP (transactional email via nodemailer). Free, 500 emails/day limit.
+  GMAIL_USER: optionalString,
+  GMAIL_APP_PASSWORD: optionalString,
+  EMAIL_FROM: optionalString,
   SUPABASE_WEBHOOK_SECRET: optionalString,
   APP_BASE_URL: optionalString,
   MINIMAX_API_KEY: optionalString,

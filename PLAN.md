@@ -2,7 +2,7 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-29 · Fases 14-16 completas (cierre de caja + alertas stock bajo + resumen diario)
+> **Última actualización:** 2026-07-29 · Fases 14-17 completas (cierre de caja + cron stock bajo + cron resumen + email vía Gmail SMTP)
 >
 > **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
@@ -193,7 +193,8 @@ Invensa_web/
 | 13 | Pruebas con hermana + mamá | Pendiente |
 | 14 | **Cierre de caja** (`cash_closings` + UI `/cash-closing`) | ✅ Hecho |
 | 15 | **Alerta stock bajo proactiva** (cron + Resend) | ✅ Hecho |
-| 16 | **Email diario de resumen** (cron + Resend) | ✅ Hecho |
+| 16 | **Email diario de resumen** (cron + email) | ✅ Hecho |
+| 17 | **Email backend = Gmail SMTP** (sin Resend, sin dominio) | ✅ Hecho |
 
 ### Stack realmente instalado (versiones verificadas)
 
@@ -476,12 +477,31 @@ group by 1;
 ## 16. Operativa post-deploy (todos)
 
 Variables en Vercel que se deben configurar:
-- `RESEND_API_KEY` (ya estaba en `.env.local.example`, falta poner valor real).
-- `RESEND_FROM_EMAIL` (ej. `Invensa <noreply@invensa.app>`).
+- `GMAIL_USER` — la dirección Gmail que manda los correos.
+- `GMAIL_APP_PASSWORD` — contraseña de aplicación de 16 chars (Google → Cuenta → Seguridad → 2FA activado → Contraseñas de aplicación).
+- `EMAIL_FROM` — opcional. Default = `GMAIL_USER`. Formato: `Invensa <invensa.tu@gmail.com>`.
 - `CRON_SECRET` — generar con `openssl rand -hex 32`, pegarlo en Vercel env. Vercel lo manda en `Authorization: Bearer …` automáticamente a los cron paths.
 - `SUPABASE_SERVICE_ROLE_KEY` — ya estaba; se usa solo si en el futuro se decide ejecutar el cron como SQL directo desde Postgres en lugar de un GET HTTP.
 
 → Cuando despliegues, el primer email de las 9am y el de las 9pm saldrán automáticamente. Si quieres probar antes sin esperar, el botón "Enviar ahora" del dashboard dispara el mismo flujo.
+
+## 17. Decisión de fase 17 — Gmail SMTP en lugar de Resend
+
+**Por qué se cambió:** Resend exige dominio propio para producción. Comprar dominio = ~$10-15 USD/año. Gmail SMTP vía nodemailer = $0, sin dominio, 500 emails/día (Invensa usa ~2/día = 0.4% del límite). Setup: 5 minutos (crear contraseña de app en Google).
+
+**Trade-offs:**
+- Remitente aparece como tu Gmail personal, no como `noreply@invensa.app`. Menos "profesional" pero funcional.
+- A veces cae en "Promociones" si el destinatario no tiene guardado el contacto. Mitigación: la hermana y la mamá usan el mismo sistema que manda, así que con un email de "warm-up" se arregla.
+- Riesgo de seguridad: la contraseña de app da acceso completo al Gmail. Guardar solo en Vercel + `.env.local` (gitignored), nunca en código.
+
+**Si en el futuro quieres dominio propio** (ej. cuando Invensa crezca): el cambio es trivial. `sendEmail()` es el único punto que toca SMTP. Reemplazar `nodemailer.createTransport({ service: 'gmail', ... })` por `nodemailer.createTransport({ host: 'smtp.resend.com', ... })` o el provider que sea. Los templates no cambian.
+
+## 18. Lo que ya está hecho en fase 17
+
+- `pnpm remove resend` + `pnpm add nodemailer` + `@types/nodemailer`.
+- `src/lib/email/send.ts` — reescrito: transporter Gmail SMTP singleton, lee `GMAIL_USER` + `GMAIL_APP_PASSWORD` + opcional `EMAIL_FROM`.
+- `src/lib/env.ts` — schema actualizado: removidas `RESEND_*`, agregadas `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `EMAIL_FROM`.
+- `.env.local.example` — sección Email reescrita con instrucciones para contraseña de app de Google.
 
 
 

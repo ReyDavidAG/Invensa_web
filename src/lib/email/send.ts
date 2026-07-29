@@ -1,18 +1,24 @@
 import "server-only";
 
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 import { getServerEnv } from "@/lib/env";
 
-let cached: Resend | null = null;
+let cached: nodemailer.Transporter | null = null;
 
-function client(): Resend {
+function transporter(): nodemailer.Transporter {
   if (cached) return cached;
   const env = getServerEnv();
-  if (!env.RESEND_API_KEY) {
-    throw new Error("[email] RESEND_API_KEY not set");
+  if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) {
+    throw new Error("[email] GMAIL_USER and GMAIL_APP_PASSWORD must be set");
   }
-  cached = new Resend(env.RESEND_API_KEY);
+  cached = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: env.GMAIL_USER,
+      pass: env.GMAIL_APP_PASSWORD,
+    },
+  });
   return cached;
 }
 
@@ -27,16 +33,16 @@ export async function sendEmail(
   input: SendEmailInput,
 ): Promise<{ id: string }> {
   const env = getServerEnv();
-  const from = env.RESEND_FROM_EMAIL || "Invensa <noreply@invensa.app>";
-  const { data, error } = await client().emails.send({
+  const from = env.EMAIL_FROM || env.GMAIL_USER;
+  if (!from) {
+    throw new Error("[email] EMAIL_FROM or GMAIL_USER required");
+  }
+  const info = await transporter().sendMail({
     from,
-    to: input.to,
+    to: input.to.join(", "),
     subject: input.subject,
     html: input.html,
     text: input.text,
   });
-  if (error || !data) {
-    throw new Error(`Resend send failed: ${error?.message ?? "no data"}`);
-  }
-  return { id: data.id };
+  return { id: info.messageId };
 }
