@@ -47,6 +47,14 @@ import {
   type InventoryMovementActionResult,
   createInventoryMovementAction,
 } from "@/app/actions/inventory";
+import {
+  type ParseProductPhotoResult,
+  parseProductPhotoAction,
+} from "@/app/actions/ai-product";
+import {
+  type BulkCreateProductsResult,
+  bulkCreateProductsAction,
+} from "@/app/actions/bulk-products";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -123,5 +131,17 @@ export function useRequestProductImageUpload() {
 export function useCreateInventoryMovement() {
   return useMutation<InventoryMovementActionResult, Error, FormData>({
     mutationFn: (formData) => createInventoryMovementAction(null, formData),
+  });
+}
+
+export function useParseProductPhoto() {
+  return useMutation<ParseProductPhotoResult, Error, FormData>({
+    mutationFn: (formData) => parseProductPhotoAction(null, formData),
+  });
+}
+
+export function useBulkCreateProducts() {
+  return useMutation<BulkCreateProductsResult, Error, FormData>({
+    mutationFn: (formData) => bulkCreateProductsAction(null, formData),
   });
 }
