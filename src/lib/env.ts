@@ -32,7 +32,9 @@ const clientEnvSchema = z.object({
 });
 
 const serverEnvSchema = clientEnvSchema.extend({
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20, "service role key looks too short"),
+  SUPABASE_SERVICE_ROLE_KEY: z
+    .string()
+    .min(20, "service role key looks too short"),
 
   // Cloudflare R2 (server-only)
   R2_ACCOUNT_ID: optionalString,
@@ -60,7 +62,9 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
 
 function formatZodError(label: string, err: z.ZodError): string {
-  const lines = err.issues.map((i) => `  - ${i.path.join(".") || "(root)"}: ${i.message}`);
+  const lines = err.issues.map(
+    (i) => `  - ${i.path.join(".") || "(root)"}: ${i.message}`,
+  );
   return `[env] ${label} environment is invalid:\n${lines.join("\n")}`;
 }
 

@@ -86,8 +86,7 @@ export function useCreateCustomer() {
 
 export function useUpdateCustomer(customerId: string) {
   return useMutation<CustomerActionResult, Error, FormData>({
-    mutationFn: (formData) =>
-      updateCustomerAction(customerId, null, formData),
+    mutationFn: (formData) => updateCustomerAction(customerId, null, formData),
   });
 }
 

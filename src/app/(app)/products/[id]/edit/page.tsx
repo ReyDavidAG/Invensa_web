@@ -47,7 +47,9 @@ export default async function EditProductPage({ params }: PageProps) {
     await Promise.all([
       supabase
         .from("products")
-        .select("id, code, name, price_sale, price_buy, stock_low_threshold, image_url, category_id, unit_id")
+        .select(
+          "id, code, name, price_sale, price_buy, stock_low_threshold, image_url, category_id, unit_id",
+        )
         .eq("id", id)
         .maybeSingle(),
       supabase

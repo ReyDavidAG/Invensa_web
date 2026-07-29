@@ -12,7 +12,13 @@ interface AuthShellProps {
   footer?: React.ReactNode;
 }
 
-export function AuthShell({ eyebrow, heading, sub, children, footer }: AuthShellProps) {
+export function AuthShell({
+  eyebrow,
+  heading,
+  sub,
+  children,
+  footer,
+}: AuthShellProps) {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center px-4 py-16 sm:py-24">
       <div className={cn("w-full max-w-[420px] flex flex-col gap-8")}>
@@ -73,7 +79,9 @@ export function ErrorBanner({ message }: { message: string }) {
         aria-hidden
         className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full bg-destructive"
       />
-      <p className="text-sm font-medium leading-snug text-destructive">{message}</p>
+      <p className="text-sm font-medium leading-snug text-destructive">
+        {message}
+      </p>
     </div>
   );
 }

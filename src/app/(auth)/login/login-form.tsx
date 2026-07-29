@@ -51,10 +51,7 @@ export function LoginForm() {
           inputMode="email"
         />
 
-        <PasswordFormField
-          name="password"
-          autoComplete="current-password"
-        />
+        <PasswordFormField name="password" autoComplete="current-password" />
 
         <SubmitButton
           loading={form.formState.isSubmitting}

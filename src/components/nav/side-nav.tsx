@@ -43,7 +43,11 @@ const PRIMARY_NAV: NavItem[] = [
   { href: "/reports", label: "Reportes", icon: BarChart3 },
 ];
 
-const ACCOUNT_NAV: NavItem = { href: "/account", label: "Cuenta", icon: UserCircle };
+const ACCOUNT_NAV: NavItem = {
+  href: "/account",
+  label: "Cuenta",
+  icon: UserCircle,
+};
 
 function isActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;

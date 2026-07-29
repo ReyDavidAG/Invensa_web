@@ -21,7 +21,9 @@ const PUBLIC_PREFIXES = [
 ];
 
 function isPublic(pathname: string): boolean {
-  return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  return PUBLIC_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
 }
 
 export async function proxy(request: NextRequest) {
@@ -41,10 +43,20 @@ export async function proxy(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet: CookieToSet[]) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        );
         response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }: { name: string; value: string; options?: CookieOptions }) =>
-          response.cookies.set(name, value, options),
+        cookiesToSet.forEach(
+          ({
+            name,
+            value,
+            options,
+          }: {
+            name: string;
+            value: string;
+            options?: CookieOptions;
+          }) => response.cookies.set(name, value, options),
         );
       },
     },

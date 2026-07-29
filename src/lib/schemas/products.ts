@@ -6,27 +6,14 @@
 import { z } from "zod";
 
 export const productCreateSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .min(1, "Requerido")
-    .max(64, "Máximo 64 caracteres"),
-  name: z
-    .string()
-    .trim()
-    .min(1, "Requerido")
-    .max(120, "Máximo 120 caracteres"),
+  code: z.string().trim().min(1, "Requerido").max(64, "Máximo 64 caracteres"),
+  name: z.string().trim().min(1, "Requerido").max(120, "Máximo 120 caracteres"),
   categoryId: z.string().uuid("Selecciona una categoría"),
   unitId: z.string().uuid("Selecciona una unidad"),
   priceSale: z.coerce.number().min(0, "Debe ser ≥ 0"),
   priceBuy: z.coerce.number().min(0, "Debe ser ≥ 0"),
   stockLowThreshold: z.coerce.number().min(0, "Debe ser ≥ 0").default(5),
-  imageUrl: z
-    .string()
-    .trim()
-    .url("URL inválida")
-    .optional()
-    .or(z.literal("")),
+  imageUrl: z.string().trim().url("URL inválida").optional().or(z.literal("")),
 });
 
 export type ProductCreateInput = z.infer<typeof productCreateSchema>;

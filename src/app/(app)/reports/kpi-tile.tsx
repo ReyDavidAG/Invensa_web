@@ -20,13 +20,7 @@ type KpiTileProps = {
   icon: ReactNode;
 };
 
-export function KpiTile({
-  delay,
-  label,
-  value,
-  subtitle,
-  icon,
-}: KpiTileProps) {
+export function KpiTile({ delay, label, value, subtitle, icon }: KpiTileProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}

@@ -13,7 +13,13 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ChevronRight, Receipt, ShoppingCart, UserPlus, Wallet } from "lucide-react";
+import {
+  ChevronRight,
+  Receipt,
+  ShoppingCart,
+  UserPlus,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -158,7 +164,9 @@ export default function DashboardPage() {
         >
           <Card className="p-0 card-hover-lift">
             <header className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6">
-              <h2 className="text-sm font-semibold tracking-tight">Ventas recientes</h2>
+              <h2 className="text-sm font-semibold tracking-tight">
+                Ventas recientes
+              </h2>
               <Link
                 href="/sales"
                 className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
@@ -169,9 +177,14 @@ export default function DashboardPage() {
             </header>
             {data.recentSales.length === 0 ? (
               <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
-                <Receipt aria-hidden className="size-8 text-muted-foreground/60" />
+                <Receipt
+                  aria-hidden
+                  className="size-8 text-muted-foreground/60"
+                />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">Aún no tienes ventas hoy</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Aún no tienes ventas hoy
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     Cuando registres una venta aparecerá aquí.
                   </p>
@@ -188,7 +201,10 @@ export default function DashboardPage() {
             ) : (
               <ul role="list" className="divide-y divide-border">
                 {data.recentSales.map((sale) => (
-                  <li key={sale.id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+                  <li
+                    key={sale.id}
+                    className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6"
+                  >
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="font-mono text-xs tabular-nums text-muted-foreground">
                         #{sale.ticketNumber}
@@ -225,11 +241,13 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, delay: 0.20, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.32, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
           <Card className="p-0 card-hover-lift">
             <header className="border-b border-border px-4 py-3 sm:px-6">
-              <h2 className="text-sm font-semibold tracking-tight">Acciones rápidas</h2>
+              <h2 className="text-sm font-semibold tracking-tight">
+                Acciones rápidas
+              </h2>
             </header>
             <ul role="list" className="flex flex-col">
               <QuickAction
@@ -292,7 +310,9 @@ function StatTile({
         <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
           {value}
         </p>
-        <p className="mt-1.5 text-xs leading-snug text-muted-foreground">{subtitle}</p>
+        <p className="mt-1.5 text-xs leading-snug text-muted-foreground">
+          {subtitle}
+        </p>
       </Card>
     </motion.div>
   );
@@ -322,7 +342,10 @@ function QuickAction({
           <span className="font-medium text-foreground">{label}</span>
           <span className="text-xs text-muted-foreground">{hint}</span>
         </span>
-        <ChevronRight aria-hidden className="ml-auto size-4 text-muted-foreground" />
+        <ChevronRight
+          aria-hidden
+          className="ml-auto size-4 text-muted-foreground"
+        />
       </Link>
     </li>
   );

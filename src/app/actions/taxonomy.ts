@@ -20,8 +20,7 @@ export type TaxonomyOption = {
 };
 
 export type TaxonomyActionResult =
-  | { ok: true; option: TaxonomyOption }
-  | { ok: false; error: string };
+  { ok: true; option: TaxonomyOption } | { ok: false; error: string };
 
 async function requireAdmin(): Promise<
   { userId: string } | { ok: false; error: string }
@@ -55,7 +54,12 @@ function deriveCode(name: string): string {
     .map((w) => w[0]!.toUpperCase())
     .join("");
   if (initials.length >= 2) return initials.slice(0, 3);
-  return trimmed.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 3) || "X";
+  return (
+    trimmed
+      .replace(/[^A-Za-z0-9]/g, "")
+      .toUpperCase()
+      .slice(0, 3) || "X"
+  );
 }
 
 export async function createCategoryAction(
@@ -100,9 +104,16 @@ export async function createCategoryAction(
       lastError = "duplicate";
       continue;
     }
-    return { ok: false, error: error?.message ?? "No pudimos crear la categoría." };
+    return {
+      ok: false,
+      error: error?.message ?? "No pudimos crear la categoría.",
+    };
   }
-  return { ok: false, error: "Código duplicado: " + (lastError ?? "no se pudo generar código único.") };
+  return {
+    ok: false,
+    error:
+      "Código duplicado: " + (lastError ?? "no se pudo generar código único."),
+  };
 }
 
 export async function createUnitAction(
@@ -145,7 +156,14 @@ export async function createUnitAction(
       lastError = "duplicate";
       continue;
     }
-    return { ok: false, error: error?.message ?? "No pudimos crear la unidad." };
+    return {
+      ok: false,
+      error: error?.message ?? "No pudimos crear la unidad.",
+    };
   }
-  return { ok: false, error: "Código duplicado: " + (lastError ?? "no se pudo generar código único.") };
+  return {
+    ok: false,
+    error:
+      "Código duplicado: " + (lastError ?? "no se pudo generar código único."),
+  };
 }

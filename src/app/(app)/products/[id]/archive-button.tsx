@@ -69,7 +69,13 @@ export function ArchiveButton({ productId, productName }: ArchiveButtonProps) {
         </DialogHeader>
         <DialogFooter>
           <DialogClose
-            render={<Button type="button" variant="outline" disabled={archiveProduct.isPending} />}
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                disabled={archiveProduct.isPending}
+              />
+            }
           >
             Cancelar
           </DialogClose>

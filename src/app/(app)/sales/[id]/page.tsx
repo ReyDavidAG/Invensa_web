@@ -17,12 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
@@ -99,12 +94,16 @@ export default async function SaleDetailPage({ params }: PageProps) {
   const [{ data: items }, { data: movements }] = await Promise.all([
     supabase
       .from("sale_items")
-      .select("id, quantity, unit_price, subtotal, products(id, code, name, units(code, name))")
+      .select(
+        "id, quantity, unit_price, subtotal, products(id, code, name, units(code, name))",
+      )
       .eq("sale_id", id)
       .order("created_at", { ascending: true }),
     supabase
       .from("inventory_movements")
-      .select("id, movement_type, quantity, quantity_adj, note, created_at, products(code, name)")
+      .select(
+        "id, movement_type, quantity, quantity_adj, note, created_at, products(code, name)",
+      )
       .eq("sale_id", id)
       .order("created_at", { ascending: true }),
   ]);
@@ -118,9 +117,7 @@ export default async function SaleDetailPage({ params }: PageProps) {
   const total = Number(sale.total);
   const paid = Number(sale.paid_amount);
   const outstanding = Math.max(0, total - paid);
-  const client = Array.isArray(sale.clients)
-    ? sale.clients[0]
-    : sale.clients;
+  const client = Array.isArray(sale.clients) ? sale.clients[0] : sale.clients;
 
   return (
     <div className="flex flex-col gap-6">
@@ -138,7 +135,8 @@ export default async function SaleDetailPage({ params }: PageProps) {
             <span className="font-mono">#{sale.ticket_number}</span>
             <span
               className={
-                "rounded-full px-2.5 py-1 text-xs font-medium " + statusMeta.className
+                "rounded-full px-2.5 py-1 text-xs font-medium " +
+                statusMeta.className
               }
             >
               {statusMeta.label}

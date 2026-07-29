@@ -49,7 +49,11 @@ export function ProductsSortableTh({
         href={href}
         scroll={false}
         aria-label={`Ordenar por ${typeof children === "string" ? children : column} (${
-          isActive ? (dir === "asc" ? "ascendente" : "descendente") : "ascendente"
+          isActive
+            ? dir === "asc"
+              ? "ascendente"
+              : "descendente"
+            : "ascendente"
         })`}
         className={cn(
           "inline-flex items-center gap-1.5 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded",

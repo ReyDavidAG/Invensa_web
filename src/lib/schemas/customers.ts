@@ -10,11 +10,7 @@
 import { z } from "zod";
 
 export const customerCreateSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Requerido")
-    .max(120, "Máximo 120 caracteres"),
+  name: z.string().trim().min(1, "Requerido").max(120, "Máximo 120 caracteres"),
   phone: z
     .string()
     .trim()

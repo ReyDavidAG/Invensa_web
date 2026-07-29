@@ -24,13 +24,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -155,8 +149,7 @@ export function PosClient({
   }, [debouncedSearch, products]);
 
   const total = useMemo(
-    () =>
-      cart.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0),
+    () => cart.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0),
     [cart],
   );
   const totalQuantity = cart.reduce((sum, l) => sum + l.quantity, 0);
@@ -200,25 +193,22 @@ export function PosClient({
     searchRef.current?.focus();
   }, []);
 
-  const setQuantity = useCallback(
-    (productId: string, qty: number) => {
-      if (qty <= 0) {
-        setCart((prev) => prev.filter((l) => l.productId !== productId));
-        return;
-      }
-      setCart((prev) =>
-        prev.map((l) => {
-          if (l.productId !== productId) return l;
-          if (qty > l.stock) {
-            toast.error(`Sin stock suficiente para "${l.name}"`);
-            return l;
-          }
-          return { ...l, quantity: qty };
-        }),
-      );
-    },
-    [],
-  );
+  const setQuantity = useCallback((productId: string, qty: number) => {
+    if (qty <= 0) {
+      setCart((prev) => prev.filter((l) => l.productId !== productId));
+      return;
+    }
+    setCart((prev) =>
+      prev.map((l) => {
+        if (l.productId !== productId) return l;
+        if (qty > l.stock) {
+          toast.error(`Sin stock suficiente para "${l.name}"`);
+          return l;
+        }
+        return { ...l, quantity: qty };
+      }),
+    );
+  }, []);
 
   const removeLine = useCallback((productId: string) => {
     setCart((prev) => prev.filter((l) => l.productId !== productId));
@@ -293,13 +283,11 @@ export function PosClient({
                   code: "—",
                   name: "Anónimo (cliente ocasional)",
                 },
-                ...clients.map(
-                  (c): CreatableOption => ({
-                    id: c.id,
-                    code: "·",
-                    name: c.name,
-                  }),
-                ),
+                ...clients.map((c): CreatableOption => ({
+                  id: c.id,
+                  code: "·",
+                  name: c.name,
+                })),
               ]}
               onCreate={async (name) => {
                 try {
@@ -321,13 +309,17 @@ export function PosClient({
                     ]);
                     setClientId(res.id);
                     toast.success(`Cliente "${name}" creado`);
-                    return { ok: true, option: { id: res.id, code: "·", name } };
+                    return {
+                      ok: true,
+                      option: { id: res.id, code: "·", name },
+                    };
                   }
                   return { ok: false, error: res.error };
                 } catch (err) {
                   return {
                     ok: false,
-                    error: err instanceof Error ? err.message : "Error desconocido",
+                    error:
+                      err instanceof Error ? err.message : "Error desconocido",
                   };
                 }
               }}
@@ -452,9 +444,7 @@ export function PosClient({
           {/* Cart header */}
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-baseline gap-2">
-              <h2 className="text-sm font-semibold tracking-tight">
-                Carrito
-              </h2>
+              <h2 className="text-sm font-semibold tracking-tight">Carrito</h2>
               <span className="text-xs text-muted-foreground">
                 ({totalQuantity} {totalQuantity === 1 ? "pieza" : "piezas"})
               </span>
@@ -501,7 +491,9 @@ export function PosClient({
           {/* Payment + Total + Submit */}
           <div className="flex flex-col gap-3 border-t border-border p-4">
             {/* Error banner */}
-            {createSale.data && !createSale.data.ok && !createSale.data.fieldErrors ? (
+            {createSale.data &&
+            !createSale.data.ok &&
+            !createSale.data.fieldErrors ? (
               <div
                 role="alert"
                 className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive"
@@ -512,9 +504,7 @@ export function PosClient({
 
             {/* Payment method (currently cash-only; toggle hidden until transfer/fiado land) */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-foreground">
-                Pago
-              </span>
+              <span className="text-xs font-medium text-foreground">Pago</span>
               <span className="inline-flex h-7 items-center rounded-full bg-primary/10 px-2.5 text-xs font-medium text-primary">
                 Efectivo
               </span>

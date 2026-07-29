@@ -56,12 +56,16 @@ export function AccountMenu({ email, fullName }: AccountMenuProps) {
         <DropdownMenuLabel className="flex flex-col gap-0.5">
           <span className="text-sm font-medium text-foreground">{display}</span>
           {fullName?.trim() ? (
-            <span className="text-xs font-normal text-muted-foreground">{email}</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {email}
+            </span>
           ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <form action={signOutAction}>
-          <DropdownMenuItem render={<button type="submit" className="w-full cursor-pointer" />}>
+          <DropdownMenuItem
+            render={<button type="submit" className="w-full cursor-pointer" />}
+          >
             <LogOut aria-hidden />
             <span>Cerrar sesión</span>
           </DropdownMenuItem>

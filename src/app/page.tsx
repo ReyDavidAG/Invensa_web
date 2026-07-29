@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 /** Root entry. Redirects to dashboard if signed in, otherwise to login. */
 export default async function Home() {
   const supabase = await getSupabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (user) redirect("/dashboard");
   redirect("/login");
 }

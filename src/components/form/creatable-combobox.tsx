@@ -29,7 +29,9 @@ type CreatableComboboxProps = {
   options: CreatableOption[];
   onCreate: (
     name: string,
-  ) => Promise<{ ok: true; option: CreatableOption } | { ok: false; error: string }>;
+  ) => Promise<
+    { ok: true; option: CreatableOption } | { ok: false; error: string }
+  >;
   placeholder?: string;
   emptyHint?: string;
   renderOption?: (option: CreatableOption) => React.ReactNode;
@@ -73,8 +75,7 @@ export function CreatableCombobox({
     if (!q) return options;
     return options.filter(
       (o) =>
-        o.name.toLowerCase().includes(q) ||
-        o.code.toLowerCase().includes(q),
+        o.name.toLowerCase().includes(q) || o.code.toLowerCase().includes(q),
     );
   }, [options, search]);
 

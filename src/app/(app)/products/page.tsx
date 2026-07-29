@@ -124,9 +124,7 @@ export default async function ProductsPage({
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   // Build a URL that preserves filters + overrides the given ones.
-  const buildUrl = (
-    overrides: Record<string, string | undefined>,
-  ): string => {
+  const buildUrl = (overrides: Record<string, string | undefined>): string => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (cat !== "all") params.set("cat", cat);
@@ -153,10 +151,7 @@ export default async function ProductsPage({
         <div className="flex items-center gap-3">
           <ProductsSearch defaultValue={q} />
           {isAdmin ? (
-            <Button
-              render={<Link href="/products/new" />}
-              nativeButton={false}
-            >
+            <Button render={<Link href="/products/new" />} nativeButton={false}>
               <Plus aria-hidden />
               <span>Nuevo</span>
             </Button>
@@ -240,10 +235,7 @@ export default async function ProductsPage({
                 <th scope="col" className="px-4 py-2.5 font-medium">
                   Categoría
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-2.5 text-right font-medium"
-                >
+                <th scope="col" className="px-4 py-2.5 text-right font-medium">
                   Stock
                 </th>
                 <ProductsSortableTh
@@ -255,10 +247,7 @@ export default async function ProductsPage({
                 >
                   Precio
                 </ProductsSortableTh>
-                <th
-                  scope="col"
-                  className="px-4 py-2.5 text-right font-medium"
-                >
+                <th scope="col" className="px-4 py-2.5 text-right font-medium">
                   <span className="sr-only">Acciones</span>
                 </th>
               </tr>

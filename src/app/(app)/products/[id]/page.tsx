@@ -7,19 +7,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ChevronLeft,
-  ImageIcon,
-  Pencil,
-} from "lucide-react";
+import { ChevronLeft, ImageIcon, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { ArchiveButton } from "./archive-button";
@@ -72,7 +63,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
     await Promise.all([
       supabase
         .from("products")
-        .select("id, code, name, price_sale, price_buy, status, image_url, categories(name), units(code, name)")
+        .select(
+          "id, code, name, price_sale, price_buy, status, image_url, categories(name), units(code, name)",
+        )
         .eq("id", id)
         .maybeSingle(),
       supabase
@@ -82,7 +75,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
         .maybeSingle(),
       supabase
         .from("inventory_movements")
-        .select("id, movement_type, quantity, quantity_adj, unit_price, note, created_at")
+        .select(
+          "id, movement_type, quantity, quantity_adj, unit_price, note, created_at",
+        )
         .eq("product_id", id)
         .order("created_at", { ascending: false })
         .limit(20),
@@ -93,9 +88,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const category = Array.isArray(product.categories)
     ? product.categories[0]
     : product.categories;
-  const unit = Array.isArray(product.units)
-    ? product.units[0]
-    : product.units;
+  const unit = Array.isArray(product.units) ? product.units[0] : product.units;
   const stock = Number(stockRow?.stock_on_hand ?? 0);
 
   return (
@@ -163,7 +156,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 aria-label="Sin imagen"
                 className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/30 text-sm text-muted-foreground"
               >
-                <ImageIcon aria-hidden className="size-8 text-muted-foreground/60" />
+                <ImageIcon
+                  aria-hidden
+                  className="size-8 text-muted-foreground/60"
+                />
                 <span>Sin imagen</span>
               </div>
             )}
@@ -178,9 +174,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col divide-y divide-border text-sm">
-            <DetailRow label="Categoría">
-              {category?.name ?? "—"}
-            </DetailRow>
+            <DetailRow label="Categoría">{category?.name ?? "—"}</DetailRow>
             <DetailRow label="Unidad">
               {unit ? `${unit.name} (${unit.code})` : "—"}
             </DetailRow>

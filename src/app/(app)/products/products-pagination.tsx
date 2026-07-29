@@ -41,10 +41,20 @@ export function ProductsPagination({
       className="flex flex-wrap items-center justify-between gap-3 text-xs"
     >
       <p className="text-muted-foreground">
-        Mostrando <span className="font-medium tabular-nums text-foreground">{start}–{end}</span> de{" "}
-        <span className="font-medium tabular-nums text-foreground">{totalCount}</span> · Página{" "}
-        <span className="font-medium tabular-nums text-foreground">{page}</span> de{" "}
-        <span className="font-medium tabular-nums text-foreground">{totalPages}</span>
+        Mostrando{" "}
+        <span className="font-medium tabular-nums text-foreground">
+          {start}–{end}
+        </span>{" "}
+        de{" "}
+        <span className="font-medium tabular-nums text-foreground">
+          {totalCount}
+        </span>{" "}
+        · Página{" "}
+        <span className="font-medium tabular-nums text-foreground">{page}</span>{" "}
+        de{" "}
+        <span className="font-medium tabular-nums text-foreground">
+          {totalPages}
+        </span>
       </p>
 
       <ul role="list" className="flex items-center gap-1">
@@ -59,7 +69,11 @@ export function ProductsPagination({
         </li>
         {pages.map((p, i) =>
           p === "…" ? (
-            <li key={`gap-${i}`} aria-hidden className="px-1 text-muted-foreground">
+            <li
+              key={`gap-${i}`}
+              aria-hidden
+              className="px-1 text-muted-foreground"
+            >
               …
             </li>
           ) : (
@@ -77,7 +91,9 @@ export function ProductsPagination({
         )}
         <li>
           <PageLink
-            href={buildUrl({ page: page < totalPages ? String(page + 1) : undefined })}
+            href={buildUrl({
+              page: page < totalPages ? String(page + 1) : undefined,
+            })}
             disabled={page >= totalPages}
             aria-label="Página siguiente"
           >
@@ -131,7 +147,11 @@ function PageLink({
 function pageWindow(current: number, total: number): (number | "…")[] {
   const span = 2;
   const set = new Set<number>([1, total, current]);
-  for (let i = Math.max(1, current - span); i <= Math.min(total, current + span); i++) {
+  for (
+    let i = Math.max(1, current - span);
+    i <= Math.min(total, current + span);
+    i++
+  ) {
     set.add(i);
   }
   const sorted = [...set].sort((a, b) => a - b);

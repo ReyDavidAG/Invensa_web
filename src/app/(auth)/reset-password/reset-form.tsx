@@ -10,7 +10,10 @@ import { SubmitButton } from "@/components/form/submit-button";
 import { ErrorBanner } from "../auth-shell";
 
 import { resetPasswordAction } from "@/app/actions/auth";
-import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/schemas/auth";
+import {
+  resetPasswordSchema,
+  type ResetPasswordInput,
+} from "@/lib/schemas/auth";
 
 export function ResetForm() {
   const [serverError, setServerError] = React.useState<string | null>(null);

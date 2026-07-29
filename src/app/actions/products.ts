@@ -13,7 +13,10 @@
 import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { productCreateSchema, productUpdateSchema } from "@/lib/schemas/products";
+import {
+  productCreateSchema,
+  productUpdateSchema,
+} from "@/lib/schemas/products";
 
 export type ProductActionResult =
   | { ok: true; id: string }
@@ -84,7 +87,10 @@ export async function createProductAction(
     return {
       ok: false,
       error: "Datos inválidos",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 
@@ -143,7 +149,10 @@ export async function updateProductAction(
     return {
       ok: false,
       error: "Datos inválidos",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 

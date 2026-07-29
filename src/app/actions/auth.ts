@@ -38,7 +38,10 @@ export async function loginAction(
     return {
       ok: false,
       error: "Datos inválidos",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 
@@ -64,7 +67,10 @@ export async function registerAction(
     return {
       ok: false,
       error: "Datos inválidos",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 
@@ -120,16 +126,21 @@ export async function forgotPasswordAction(
     return {
       ok: false,
       error: "Datos inválidos",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 
   const supabase = await getSupabaseServer();
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${origin}/reset-password`,
-  });
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parsed.data.email,
+    {
+      redirectTo: `${origin}/reset-password`,
+    },
+  );
   // Don't leak which emails exist — same message either way.
   if (error) {
     return {
@@ -151,7 +162,10 @@ export async function resetPasswordAction(
     return {
       ok: false,
       error: "Datos inválidos",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 

@@ -13,7 +13,9 @@ type FormFieldContextValue = {
   name: string;
 };
 
-const FormFieldContext = React.createContext<FormFieldContextValue | null>(null);
+const FormFieldContext = React.createContext<FormFieldContextValue | null>(
+  null,
+);
 
 const FormItemContext = React.createContext<{ id: string } | null>(null);
 
@@ -21,7 +23,8 @@ function useFormField() {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
-  if (!fieldContext) throw new Error("useFormField must be used inside <FormField>");
+  if (!fieldContext)
+    throw new Error("useFormField must be used inside <FormField>");
   const fieldState = getFieldState(fieldContext.name, formState);
   const { id } = itemContext ?? { id: "form" };
   return {
@@ -39,28 +42,41 @@ interface FormFieldProps {
   control?: unknown;
   render: (props: {
     field: object;
-    fieldState: { invalid: boolean; isDirty: boolean; isTouched: boolean; error?: unknown };
+    fieldState: {
+      invalid: boolean;
+      isDirty: boolean;
+      isTouched: boolean;
+      error?: unknown;
+    };
   }) => React.ReactNode;
 }
 
 function FormField({ name, render }: FormFieldProps) {
   return (
     <FormFieldContext.Provider value={{ name }}>
-      <Controller name={name} render={({ field, fieldState }) => <>{render({ field, fieldState })}</>} />
+      <Controller
+        name={name}
+        render={({ field, fieldState }) => <>{render({ field, fieldState })}</>}
+      />
     </FormFieldContext.Provider>
   );
 }
 
-const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => {
-    const id = React.useId();
-    return (
-      <FormItemContext.Provider value={{ id }}>
-        <div ref={ref} className={cn("flex flex-col gap-2", className)} {...props} />
-      </FormItemContext.Provider>
-    );
-  },
-);
+const FormItem = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+  const id = React.useId();
+  return (
+    <FormItemContext.Provider value={{ id }}>
+      <div
+        ref={ref}
+        className={cn("flex flex-col gap-2", className)}
+        {...props}
+      />
+    </FormItemContext.Provider>
+  );
+});
 FormItem.displayName = "FormItem";
 
 const FormLabel = React.forwardRef<
@@ -83,13 +99,16 @@ const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+  const { error, formItemId, formDescriptionId, formMessageId } =
+    useFormField();
   return (
     <Slot
       ref={ref}
       id={formItemId}
       aria-describedby={
-        !error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`
+        !error
+          ? `${formDescriptionId}`
+          : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
       {...props}

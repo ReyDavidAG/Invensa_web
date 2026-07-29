@@ -21,20 +21,24 @@ export async function getSupabaseServer() {
   const env = await getServerEnv();
   const store = await cookies();
 
-  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll() {
-        return store.getAll();
-      },
-      setAll(cookiesToSet: CookieToSet[]) {
-        try {
-          for (const { name, value, options } of cookiesToSet) {
-            store.set(name, value, options);
+  return createServerClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return store.getAll();
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          try {
+            for (const { name, value, options } of cookiesToSet) {
+              store.set(name, value, options);
+            }
+          } catch {
+            // ignore writes from a read-only context (Server Component render)
           }
-        } catch {
-          // ignore writes from a read-only context (Server Component render)
-        }
+        },
       },
     },
-  });
+  );
 }

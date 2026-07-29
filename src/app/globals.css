@@ -127,16 +127,16 @@
   --destructive: oklch(0.55 0.215 28);
   --destructive-foreground: oklch(0.99 0.005 80);
   --success: oklch(0.62 0.155 145);
-  --warning: oklch(0.70 0.18 65);
+  --warning: oklch(0.7 0.18 65);
 
   /* hairline + focus */
-  --border: oklch(0.90 0.012 75);
-  --input: oklch(0.90 0.012 75);
+  --border: oklch(0.9 0.012 75);
+  --input: oklch(0.9 0.012 75);
   --ring: oklch(0.55 0.16 250);
 
   /* chart series — cobalt first (Taller), then amber/green/red/teal */
   --chart-1: oklch(0.55 0.16 250);
-  --chart-2: oklch(0.70 0.18 65);
+  --chart-2: oklch(0.7 0.18 65);
   --chart-3: oklch(0.62 0.155 145);
   --chart-4: oklch(0.62 0.215 28);
   --chart-5: oklch(0.55 0.13 180);
@@ -151,7 +151,7 @@
   --sidebar-primary-foreground: oklch(0.99 0.005 80);
   --sidebar-accent: oklch(0.94 0.022 75);
   --sidebar-accent-foreground: oklch(0.28 0.012 70);
-  --sidebar-border: oklch(0.90 0.012 75);
+  --sidebar-border: oklch(0.9 0.012 75);
   --sidebar-ring: oklch(0.55 0.16 250);
 
   /* sidebar gradient stops — Taller light: cream paper → warm tan (top to bottom) */
@@ -167,9 +167,9 @@
   --background: oklch(0.16 0.008 70);
   --foreground: oklch(0.94 0.012 80);
 
-  --card: oklch(0.20 0.010 70);
+  --card: oklch(0.2 0.01 70);
   --card-foreground: oklch(0.94 0.012 80);
-  --popover: oklch(0.20 0.010 70);
+  --popover: oklch(0.2 0.01 70);
   --popover-foreground: oklch(0.94 0.012 80);
 
   /* cobalt in dark mode: brighter so it stays the brightest hue, foreground stays dark for AA */
@@ -188,8 +188,8 @@
   --success: oklch(0.68 0.16 145);
   --warning: oklch(0.78 0.18 65);
 
-  --border: oklch(0.30 0.012 70);
-  --input: oklch(0.30 0.012 70);
+  --border: oklch(0.3 0.012 70);
+  --input: oklch(0.3 0.012 70);
   --ring: oklch(0.68 0.15 250);
 
   --chart-1: oklch(0.68 0.15 250);
@@ -198,13 +198,13 @@
   --chart-4: oklch(0.65 0.21 28);
   --chart-5: oklch(0.65 0.14 180);
 
-  --sidebar: oklch(0.18 0.010 70);
+  --sidebar: oklch(0.18 0.01 70);
   --sidebar-foreground: oklch(0.94 0.012 80);
   --sidebar-primary: oklch(0.68 0.15 250);
   --sidebar-primary-foreground: oklch(0.99 0.005 80);
   --sidebar-accent: oklch(0.26 0.014 70);
   --sidebar-accent-foreground: oklch(0.94 0.012 80);
-  --sidebar-border: oklch(0.30 0.012 70);
+  --sidebar-border: oklch(0.3 0.012 70);
   --sidebar-ring: oklch(0.68 0.15 250);
 
   /* sidebar gradient stops — Taller dark: cobalt-tinted deep → warm deep (top to bottom) */
@@ -225,7 +225,9 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
   /* Numerics in tables use tabular nums (design.md §5) */
   .tabular {
@@ -260,8 +262,10 @@
   /* Card hover lift — translateY(-2px) + shadow */
   .card-hover-lift {
     transition:
-      transform var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
-      box-shadow var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+      transform var(--dur-fast, 120ms)
+        var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+      box-shadow var(--dur-fast, 120ms)
+        var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
   }
   .card-hover-lift:hover {
     transform: translateY(-2px);
