@@ -182,9 +182,16 @@ export function PosClient({
         },
       ];
     });
-    // Clear search and refocus
+    // Clear the search + reset debouncedSearch so the dropdown switches from
+    // the previous results to "Recientes" immediately (no 200ms stale window).
+    // Keep the dropdown open and refocus the input on the next frame so the
+    // user can keep adding products without re-clicking the search field.
     setSearch("");
-    searchRef.current?.focus();
+    setDebouncedSearch("");
+    setSearchFocused(true);
+    requestAnimationFrame(() => {
+      searchRef.current?.focus();
+    });
   }, []);
 
   const setQuantity = useCallback((productId: string, qty: number) => {
@@ -358,6 +365,7 @@ export function PosClient({
                   ? filteredProducts.slice(0, 8)
                   : recentProducts.slice(0, 3);
                 const isSearch = Boolean(debouncedSearch);
+                const isFiltering = search.trim() !== debouncedSearch;
                 const headerLabel = isSearch
                   ? `${filteredProducts.length} resultado${filteredProducts.length === 1 ? "" : "s"}`
                   : "Recientes";
@@ -366,7 +374,16 @@ export function PosClient({
                     <p className="sticky top-0 border-b border-border bg-card px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {headerLabel}
                     </p>
-                    {items.length === 0 ? (
+                    {isFiltering ? (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="flex items-center gap-2 px-4 py-6 text-sm text-muted-foreground"
+                      >
+                        <Loader2 aria-hidden className="size-4 animate-spin" />
+                        Buscando…
+                      </div>
+                    ) : items.length === 0 ? (
                       <p className="px-4 py-6 text-center text-sm text-muted-foreground">
                         {isSearch
                           ? `Sin resultados para "${debouncedSearch}".`
@@ -385,8 +402,11 @@ export function PosClient({
                                     toast.error(`"${p.name}" sin stock`);
                                     return;
                                   }
+                                  // addToCart owns focus + dropdown state — do
+                                  // NOT call setSearchFocused(false) here or it
+                                  // races with the focus event and the dropdown
+                                  // gets stuck closed.
                                   addToCart(p);
-                                  setSearchFocused(false);
                                 }}
                                 disabled={outOfStock}
                                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
