@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BellRing,
   ChevronRight,
   Receipt,
   ShoppingCart,
@@ -14,6 +15,8 @@ import { Card } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+
+import { LowStockAlertTrigger } from "./low-stock-alert-trigger";
 
 export const dynamic = "force-dynamic";
 
@@ -335,6 +338,17 @@ export default async function DashboardPage() {
           </Card>
         </Link>
       </section>
+
+      {/* Low-stock alert trigger — admin only */}
+      {profile?.role === "admin" ? (
+        <section
+          aria-label="Alerta de stock bajo"
+          className="animate-fade-up"
+          style={{ animationDelay: "140ms" }}
+        >
+          <LowStockAlertTrigger lowStockCount={lowStockCount} />
+        </section>
+      ) : null}
 
       {/* Recent sales + actions */}
       <section className="grid gap-4 lg:grid-cols-3">

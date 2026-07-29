@@ -60,6 +60,10 @@ import {
   type CashClosingActionResult,
   closeCashAction,
 } from "@/app/actions/cash-closing";
+import {
+  type LowStockAlertResult,
+  sendLowStockAlertAction,
+} from "@/app/actions/alerts";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -184,5 +188,11 @@ export function useBulkSetProductImage() {
 export function useCloseCash() {
   return useMutation<CashClosingActionResult, Error, FormData>({
     mutationFn: (formData) => closeCashAction(null, formData),
+  });
+}
+
+export function useSendLowStockAlert() {
+  return useMutation<LowStockAlertResult, Error, void>({
+    mutationFn: () => sendLowStockAlertAction(),
   });
 }

@@ -1,0 +1,79 @@
+"use server";
+
+import { requireAdmin } from "@/app/actions/_guards";
+import { sendEmail } from "@/lib/email/send";
+import { getRecipients } from "@/lib/email/recipients";
+import {
+  lowStockAlertHtml,
+  lowStockAlertText,
+} from "@/lib/email/templates/low-stock-alert";
+import { getSupabaseServer } from "@/lib/supabase/server";
+
+export type LowStockAlertResult =
+  { ok: true; rows: number; recipients: number } | { ok: false; error: string };
+
+export async function sendLowStockAlertAction(): Promise<LowStockAlertResult> {
+  const auth = await requireAdmin({ actionLabel: "enviar alerta de stock" });
+  if ("ok" in auth) return auth;
+
+  const supabase = await getSupabaseServer();
+  const { data: stocks } = await supabase
+    .from("vw_product_stock")
+    .select("product_id, stock_on_hand");
+
+  const lowIds = (stocks ?? [])
+    .filter((s) => Number(s.stock_on_hand) <= 0)
+    .map((s) => s.product_id as string);
+
+  if (lowIds.length === 0) {
+    return { ok: true, rows: 0, recipients: 0 };
+  }
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, code, name, stock_low_threshold, status")
+    .in("id", lowIds)
+    .eq("status", "active");
+
+  const stockById = new Map(
+    (stocks ?? []).map((s) => [
+      s.product_id as string,
+      Number(s.stock_on_hand),
+    ]),
+  );
+
+  const rows = (products ?? [])
+    .map((p) => ({
+      code: p.code as string,
+      name: p.name as string,
+      stock: stockById.get(p.id as string) ?? 0,
+      threshold: Number(p.stock_low_threshold),
+    }))
+    .filter((r) => r.stock <= r.threshold && r.threshold > 0)
+    .sort((a, b) => a.stock - b.stock);
+
+  if (rows.length === 0) {
+    return { ok: true, rows: 0, recipients: 0 };
+  }
+
+  const recipients = await getRecipients(["admin"]);
+  if (recipients.length === 0) {
+    return { ok: true, rows: rows.length, recipients: 0 };
+  }
+
+  try {
+    await sendEmail({
+      to: recipients,
+      subject: `${rows.length} producto${rows.length === 1 ? "" : "s"} por agotarse`,
+      html: lowStockAlertHtml(rows, new Date()),
+      text: lowStockAlertText(rows),
+    });
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Error enviando email",
+    };
+  }
+
+  return { ok: true, rows: rows.length, recipients: recipients.length };
+}
