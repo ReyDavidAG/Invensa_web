@@ -2,7 +2,7 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-28 · App shell completo (sidebar + topbar + dashboard con datos reales)
+> **Última actualización:** 2026-07-28 · Módulo productos completo (lista + alta + detalle + edición)
 >
 > **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
@@ -185,7 +185,7 @@ Invensa_web/
 | 5 | Layout shell (side-nav + top-bar + theme toggle) | ✅ Hecho |
 | 6 | Auth UI completa (login / register / forgot / reset / confirm) + Server Actions | ✅ Hecho |
 | 7 | Migration 0001-0005: profiles + products + sales + customers + RLS + seed | ✅ Hecho |
-| 8 | Módulo productos (CRUD + upload R2) | Pendiente |
+| 8 | Módulo productos (CRUD completo — lista + alta + detalle + edición) | ✅ Hecho |
 | 9 | Módulo ventas (POS-like) + recibos | Pendiente |
 | 10 | Módulo clientes (fiados / deuda) | Pendiente |
 | 11 | Reportes (cortes, stock bajo, top productos) | Pendiente |
@@ -253,7 +253,22 @@ shadcn components instalados: button, input, label, form, select, textarea, chec
 
 Antes de empezar la UI de productos, **corre el bootstrap admin** (`pnpm bootstrap:admin <email> <password>`) para poder loguearte y probar el dashboard.
 
-## 9. Lo que ya está hecho en fase 5
+## 9. Lo que ya está hecho en fase 8 (productos)
+
+- `src/app/(app)/products/page.tsx` — server component con searchParams `?q` `?cat` `?sort` `?dir` `?page`. Lista filtrable + ordenable + paginada. Empty-states honestos. `+ Nuevo` solo si admin.
+- `src/app/(app)/products/products-search.tsx` — client component con debounce 250ms que empuja `q` al URL via `router.replace`.
+- `src/app/(app)/products/products-filter-chip.tsx` — chip URL-driven (categoría activa en coral).
+- `src/app/(app)/products/products-sortable-th.tsx` — TH clickable con toggle asc/desc + ícono de dirección.
+- `src/app/(app)/products/products-pagination.tsx` — paginación windowed ±2 con prev/next.
+- `src/app/(app)/products/new/page.tsx` + `products-form.tsx` — alta con RHF + zod + useActionState. Imagen = placeholder (R2 dropzone en fase futura).
+- `src/app/(app)/products/[id]/page.tsx` — detalle con imagen + categorías/unidad + stock (color warning si ≤5) + últimos 20 inventory_movements. Botones Editar/Archivar solo si admin.
+- `src/app/(app)/products/[id]/edit/page.tsx` + `products-edit-form.tsx` — edición con RHF pre-rellenado, `updateProductAction.bind(null, id)`.
+- `src/lib/schemas/products.ts` — `productCreateSchema`, `productUpdateSchema` (zod 4), tipos input/output separados.
+- `src/app/actions/products.ts` — Server Actions: `createProductAction`, `updateProductAction(id, ...)`, `archiveProductAction`. Verifica admin server-side, mapea error 23505 a "código duplicado", redirige con `revalidatePath`.
+
+Pendiente: imagen upload a Cloudflare R2 via presigned URLs (placeholder visual ya en su lugar).
+
+## 10. Lo que ya está hecho en fase 5
 
 - `src/app/(app)/layout.tsx` — SidebarProvider + SideNav + SidebarInset + TopBar + main con paddings responsivos.
 - `src/components/nav/side-nav.tsx` — client component con 5 items primarios + Cuenta, active state con 2px coral border-left + coral text, colapsa a iconos en lg.
