@@ -17,6 +17,15 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   CreatableCombobox,
   type CreatableOption,
 } from "@/components/form/creatable-combobox";
@@ -44,6 +53,11 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   const [categoryOptions, setCategoryOptions] = useState(categories);
   const [unitOptions, setUnitOptions] = useState(units);
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
+  const [pendingNewItems, setPendingNewItems] = useState<{
+    category?: string;
+    unit?: string;
+  } | null>(null);
+  const [creatingItems, setCreatingItems] = useState(false);
 
   const createProduct = useCreateProduct();
   const createCategory = useCreateCategory();
@@ -108,24 +122,79 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
       setValue("priceSale", parsed.priceSale, { shouldValidate: true });
     if (parsed.priceBuy !== null)
       setValue("priceBuy", parsed.priceBuy, { shouldValidate: true });
+
+    // Category: match exactly, otherwise queue for create confirmation.
+    let matchedCategoryId: string | null = null;
     if (parsed.categoryName) {
       const match = categoryOptions.find(
         (c) => c.name.toLowerCase() === parsed.categoryName!.toLowerCase(),
       );
       if (match) {
+        matchedCategoryId = match.id;
         setValue("categoryId", match.id, { shouldValidate: true });
       }
-      // If no match, leave the field alone — sister picks manually.
     }
+
+    // Unit: same logic.
+    let matchedUnitId: string | null = null;
     if (parsed.unitCode) {
       const match = unitOptions.find(
         (u) => u.code.toLowerCase() === parsed.unitCode!.toLowerCase(),
       );
       if (match) {
+        matchedUnitId = match.id;
         setValue("unitId", match.id, { shouldValidate: true });
       }
     }
+
+    // Queue missing items for the create-new confirmation dialog.
+    const pending: { category?: string; unit?: string } = {};
+    if (parsed.categoryName && !matchedCategoryId) pending.category = parsed.categoryName;
+    if (parsed.unitCode && !matchedUnitId) pending.unit = parsed.unitCode;
+    if (pending.category || pending.unit) {
+      setPendingNewItems(pending);
+      return; // Dialog will handle the rest; toast fires after dialog closes.
+    }
+
     toast.success("Campos aplicados. Revisa y guarda.");
+  }
+
+  async function confirmCreateMissing() {
+    if (!pendingNewItems) return;
+    setCreatingItems(true);
+    try {
+      if (pendingNewItems.category) {
+        const name = pendingNewItems.category;
+        const res = await createCategory.mutateAsync(name);
+        if (res.ok) {
+          setCategoryOptions((prev) => [...prev, res.option]);
+          setValue("categoryId", res.option.id, { shouldValidate: true });
+        } else {
+          toast.error(`No se pudo crear la categoría: ${res.error}`);
+        }
+      }
+      if (pendingNewItems.unit) {
+        const code = pendingNewItems.unit;
+        const res = await createUnit.mutateAsync(code);
+        if (res.ok) {
+          setUnitOptions((prev) => [...prev, res.option]);
+          setValue("unitId", res.option.id, { shouldValidate: true });
+        } else {
+          toast.error(`No se pudo crear la unidad: ${res.error}`);
+        }
+      }
+      toast.success("Campos aplicados. Revisa y guarda.");
+    } finally {
+      setCreatingItems(false);
+      setPendingNewItems(null);
+    }
+  }
+
+  function skipCreatingMissing() {
+    setPendingNewItems(null);
+    toast.success(
+      "Campos aplicados. Selecciona manualmente categoría/unidad si hace falta.",
+    );
   }
 
   return (
@@ -436,6 +505,82 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
       onOpenChange={setAiSheetOpen}
       onApply={applyAiResult}
     />
+
+    <Dialog
+      open={pendingNewItems !== null}
+      onOpenChange={(open) => {
+        if (!open) skipCreatingMissing();
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Crear elementos nuevos</DialogTitle>
+          <DialogDescription>
+            La IA sugirió estos valores que aún no existen en tu catálogo.
+            ¿Los creo para que el producto se guarde con ellos?
+          </DialogDescription>
+        </DialogHeader>
+        <ul role="list" className="flex flex-col gap-2 text-sm">
+          {pendingNewItems?.category ? (
+            <li className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
+              <div className="flex flex-col">
+                <span className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
+                  Categoría
+                </span>
+                <span className="font-medium text-foreground">
+                  {pendingNewItems.category}
+                </span>
+              </div>
+              <span className="font-mono text-xs text-muted-foreground">
+                nueva
+              </span>
+            </li>
+          ) : null}
+          {pendingNewItems?.unit ? (
+            <li className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
+              <div className="flex flex-col">
+                <span className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
+                  Unidad
+                </span>
+                <span className="font-medium text-foreground">
+                  {pendingNewItems.unit}
+                </span>
+              </div>
+              <span className="font-mono text-xs text-muted-foreground">
+                nueva
+              </span>
+            </li>
+          ) : null}
+        </ul>
+        <DialogFooter className="gap-2">
+          <DialogClose
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                disabled={creatingItems}
+              />
+            }
+          >
+            Elegir manualmente
+          </DialogClose>
+          <Button
+            type="button"
+            onClick={confirmCreateMissing}
+            disabled={creatingItems}
+          >
+            {creatingItems ? (
+              <>
+                <Loader2 aria-hidden className="size-4 animate-spin" />
+                Creando…
+              </>
+            ) : (
+              "Crear y aplicar"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
