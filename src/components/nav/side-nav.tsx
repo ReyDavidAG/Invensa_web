@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { BrandMark } from "@/components/brand-mark";
+import { InstallPwaButton } from "@/components/install-pwa-button";
 import {
   Sidebar,
   SidebarContent,
@@ -102,6 +103,7 @@ export function SideNav({
       <SidebarFooter className="px-2 pb-3">
         <SidebarSeparator className="mb-2" />
         <SidebarMenu className="gap-1">
+          <InstallPwaButton />
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
