@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { ArchiveButton } from "./archive-button";
+import { InventoryMovementButton } from "./inventory-movement-button";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       supabase
         .from("products")
         .select(
-          "id, code, name, price_sale, price_buy, status, image_url, categories(name), units(code, name)",
+          "id, code, name, price_sale, price_buy, status, stock_low_threshold, image_url, categories(name), units(code, name)",
         )
         .eq("id", id)
         .maybeSingle(),
@@ -110,28 +111,35 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {product.code}
           </p>
         </div>
-        {isAdmin ? (
-          <div className="flex items-center gap-2">
-            <Button
-              render={<Link href={`/products/${product.id}/edit`} />}
-              nativeButton={false}
-              variant="outline"
-            >
-              <Pencil aria-hidden className="size-4" />
-              Editar
-            </Button>
-            {product.status === "active" ? (
-              <ArchiveButton
-                productId={product.id}
-                productName={product.name}
-              />
-            ) : (
-              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                Archivado
-              </span>
-            )}
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Visible to both admin and employee — RLS enforces created_by. */}
+          <InventoryMovementButton
+            productId={product.id}
+            productName={product.name}
+          />
+          {isAdmin ? (
+            <>
+              <Button
+                render={<Link href={`/products/${product.id}/edit`} />}
+                nativeButton={false}
+                variant="outline"
+              >
+                <Pencil aria-hidden className="size-4" />
+                Editar
+              </Button>
+              {product.status === "active" ? (
+                <ArchiveButton
+                  productId={product.id}
+                  productName={product.name}
+                />
+              ) : (
+                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                  Archivado
+                </span>
+              )}
+            </>
+          ) : null}
+        </div>
       </div>
 
       <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
@@ -149,6 +157,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <img
                 src={product.image_url}
                 alt={product.name}
+                loading="lazy"
+                decoding="async"
                 className="aspect-square w-full rounded-lg border border-border bg-muted object-cover"
               />
             ) : (
@@ -193,13 +203,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 className={
                   stock <= 0
                     ? "font-mono text-base font-semibold tabular-nums text-destructive"
-                    : stock <= 5
+                    : stock <= Number(product.stock_low_threshold)
                       ? "font-mono text-base font-semibold tabular-nums text-warning"
                       : "font-mono text-base font-semibold tabular-nums text-foreground"
                 }
               >
                 {stock} {unit ? unit.code : ""}
               </span>
+            </DetailRow>
+            <DetailRow label="Umbral de stock bajo">
+              {Number(product.stock_low_threshold)} {unit ? unit.code : ""}
             </DetailRow>
           </CardContent>
         </Card>
