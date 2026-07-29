@@ -9,6 +9,7 @@
  */
 
 import Link from "next/link";
+import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
@@ -34,7 +35,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
+type NavItem = { href: Route; label: string; icon: LucideIcon };
 
 const PRIMARY_NAV: NavItem[] = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },

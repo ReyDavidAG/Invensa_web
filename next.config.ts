@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  typedRoutes: true,
   experimental: {
-    typedRoutes: true,
     serverActions: {
       // Default 1 MB is too small for product photos even after the
       // client-side resize. 4 MB leaves headroom for any Server Action

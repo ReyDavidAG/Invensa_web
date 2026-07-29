@@ -4,6 +4,7 @@
  */
 
 import Link from "next/link";
+import type { Route } from "next";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ export function ProductsFilterChip({
 }: FilterChipProps) {
   return (
     <Link
-      href={href}
+      href={href as Route}
       aria-current={active ? "page" : undefined}
       className={cn(
         "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",

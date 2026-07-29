@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from "next";
+import type { Route } from "next";
 import Link from "next/link";
 import { ChevronRight, Plus, Receipt } from "lucide-react";
 
@@ -118,7 +119,7 @@ export default async function SalesPage({
             href={buildUrl({
               status: f.value === "all" ? undefined : f.value,
               page: undefined,
-            })}
+            }) as Route}
             aria-current={statusFilter === f.value ? "page" : undefined}
             className={
               "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
