@@ -2,7 +2,7 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-29 · Fases 14-17 completas (cierre de caja + cron stock bajo + cron resumen + email vía Gmail SMTP)
+> **Última actualización:** 2026-07-29 · Fases 14-18 completas (cierre de caja + email Gmail SMTP + campanita de notificaciones)
 >
 > **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
@@ -195,6 +195,7 @@ Invensa_web/
 | 15 | **Alerta stock bajo proactiva** (cron + Resend) | ✅ Hecho |
 | 16 | **Email diario de resumen** (cron + email) | ✅ Hecho |
 | 17 | **Email backend = Gmail SMTP** (sin Resend, sin dominio) | ✅ Hecho |
+| 18 | **Notificaciones in-app** (campanita + historial per-usuario) | ✅ Hecho |
 
 ### Stack realmente instalado (versiones verificadas)
 
@@ -607,13 +608,38 @@ Vercel te da HTTPS gratis vía Let's Encrypt.
 
 | Servicio | Plan | Costo |
 |---|---|---|
-| Vercel | Hobby | $0 |
+| Vercel | Hobby (2 cron jobs) | $0 |
 | Supabase | Free tier | $0 |
 | Cloudflare R2 | Free tier (10 GB, 0 egress) | $0 |
 | Gmail SMTP | Personal (500 emails/día) | $0 |
+| GitHub Actions | Free tier (2000 min/mes) | $0 |
 | Dominio (opcional) | .com/.app/etc | ~$10-15 USD/año |
 
 **Total mensual: $0.** Único pago opcional: dominio para que el remitente del email sea `noreply@invensa.com` en lugar de tu Gmail personal.
+
+## 21. Notificaciones in-app (campanita)
+
+Plan detallado en `docs/notifications.md`. Resumen:
+
+- **Per-usuario, RLS por `user_id`**: cada usuario ve solo las suyas. Service-role para inserts del sistema (cron sin auth).
+- **UI**: campanita en top-bar entre ThemeToggle y AccountMenu. Badge rojo destructive cuando hay unread. Click → Popover con lista, dedup por día, "Marcar todas como leídas".
+- **Hallmark**: badge destructive (atención), dot cobalt en item (estado), iconos con tinte por tipo (warning low_stock, primary cash_closing). Sin emojis, copy honesta, sin métricas inventadas.
+- **Triggers**:
+  - `low-stock` cron → insert notif por admin (1/día, dedup).
+  - `cash-closing-reminder` cron (11 AM Mexico) → insert notif por admin+employee si `status='open'`.
+- **Out of scope V1**: realtime, push, per-user preferences, grouping, auto-archive.
+
+**Migración a Supabase** cuando despliegues: `pnpm exec supabase db push` aplica `0007_notifications.sql`.
+
+**Cron infra**:
+- `daily-summary` movido a GitHub Actions (`.github/workflows/daily-summary.yml`). Secrets necesarios en el repo: `APP_URL` + `CRON_SECRET` (mismo valor que en Vercel).
+- Vercel ahora hospeda 2 crons: low-stock (9 AM) + cash-closing-reminder (11 AM). Al límite Hobby.
+
+**GitHub Actions setup** (manual, en el repo):
+1. Settings → Secrets and variables → Actions → New repository secret:
+   - `APP_URL` = `https://invensa.vercel.app` (o tu dominio)
+   - `CRON_SECRET` = el mismo valor generado con `openssl rand -hex 32` que está en `.env.local` y Vercel.
+2. El workflow ya está en el repo (`.github/workflows/daily-summary.yml`). Se activa solo.
 
 
 
