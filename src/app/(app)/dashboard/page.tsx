@@ -98,11 +98,12 @@ export default async function DashboardPage() {
 
   // Parallel fetches
   const [
-    { data: profile },
-    { data: salesToday },
-    { data: salesYesterday },
-    { data: recentSales },
-    { data: stocks },
+    { data: profile, error: profileError },
+    { data: salesToday, error: salesTodayError },
+    { data: salesYesterday, error: salesYesterdayError },
+    { data: recentSales, error: recentSalesError },
+    { data: stocks, error: stocksError },
+    { data: productsForStock, error: productsForStockError },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -129,12 +130,24 @@ export default async function DashboardPage() {
       .neq("status", "cancelled")
       .order("date_at", { ascending: false })
       .limit(5),
+    // vw_product_stock is a view; PostgREST cannot embed it via products.
+    // Query the view directly and join thresholds in app code.
+    supabase.from("vw_product_stock").select("product_id, stock_on_hand"),
     supabase
-      .from("vw_product_stock")
-      .select(
-        "product_id, stock_on_hand, products!inner(id, stock_low_threshold, status)",
-      ),
+      .from("products")
+      .select("id, stock_low_threshold, status")
+      .eq("status", "active"),
   ]);
+
+  if (profileError) console.error("[dashboard] profile", profileError);
+  if (salesTodayError) console.error("[dashboard] sales today", salesTodayError);
+  if (salesYesterdayError)
+    console.error("[dashboard] sales yesterday", salesYesterdayError);
+  if (recentSalesError)
+    console.error("[dashboard] recent sales", recentSalesError);
+  if (stocksError) console.error("[dashboard] stock view", stocksError);
+  if (productsForStockError)
+    console.error("[dashboard] products for stock", productsForStockError);
 
   // ── Greeting ──────────────────────────────────────────────────
   const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0] || "";
@@ -160,14 +173,18 @@ export default async function DashboardPage() {
       : null;
 
   // ── Low stock count ──────────────────────────────────────────
+  const thresholdByProduct = new Map<string, number>(
+    (productsForStock ?? []).map((p) => [
+      p.id as string,
+      Number(p.stock_low_threshold),
+    ]),
+  );
   let lowStockCount = 0;
   for (const row of stocks ?? []) {
-    const product = Array.isArray(row.products)
-      ? row.products[0]
-      : row.products;
-    if (!product || product.status !== "active") continue;
+    const productId = row.product_id as string;
+    const threshold = thresholdByProduct.get(productId);
+    if (threshold === undefined) continue;
     const stock = Number(row.stock_on_hand);
-    const threshold = Number(product.stock_low_threshold);
     if (stock <= threshold) lowStockCount += 1;
   }
 

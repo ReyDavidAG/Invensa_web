@@ -21,6 +21,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
+import { PrintButton } from "./print-button";
+
 export const dynamic = "force-dynamic";
 
 const esMXCurrency = new Intl.NumberFormat("es-MX", {
@@ -95,7 +97,7 @@ export default async function SaleDetailPage({ params }: PageProps) {
     supabase
       .from("sale_items")
       .select(
-        "id, quantity, unit_price, subtotal, products(id, code, name, units(code, name))",
+        "id, quantity, unit_price, subtotal, products(id, code, name, image_url, units(code, name))",
       )
       .eq("sale_id", id)
       .order("created_at", { ascending: true }),
@@ -147,17 +149,7 @@ export default async function SaleDetailPage({ params }: PageProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {sale.status === "paid" ? (
-            <Button
-              variant="outline"
-              onClick={() => window.print()}
-              render={<button type="button" />}
-              nativeButton={false}
-            >
-              <Printer aria-hidden className="size-4" />
-              Imprimir
-            </Button>
-          ) : null}
+          {sale.status === "paid" ? <PrintButton /> : null}
         </div>
       </div>
 
@@ -193,6 +185,15 @@ export default async function SaleDetailPage({ params }: PageProps) {
                       className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6"
                     >
                       <div className="flex min-w-0 items-center gap-3">
+                        {product?.image_url ? (
+                          <img
+                            src={product.image_url as string}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            className="size-10 shrink-0 rounded-md border border-border bg-muted object-cover"
+                          />
+                        ) : null}
                         <span className="font-mono text-xs tabular-nums text-muted-foreground">
                           {Number(item.quantity)}×
                         </span>
