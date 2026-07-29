@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/customers/page.tsx
- * Customers list. URL-driven filters (search + active filter + pagination).
- * Click any row → detail page.
- */
-
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
@@ -140,10 +135,12 @@ export default async function CustomersPage({
         ].map((f) => (
           <Link
             key={f.value}
-            href={buildUrl({
-              active: f.value === "all" ? undefined : f.value,
-              page: undefined,
-            }) as Route}
+            href={
+              buildUrl({
+                active: f.value === "all" ? undefined : f.value,
+                page: undefined,
+              }) as Route
+            }
             aria-current={active === f.value ? "page" : undefined}
             className={
               "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +

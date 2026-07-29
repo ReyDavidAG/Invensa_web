@@ -1,15 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied · src/app/actions/products.ts
- * Server Actions for the products module. All writes go through here.
- * The action validates input with the same zod schema as the form,
- * checks the caller's role server-side, and lets RLS be the final gate.
- *
- * Returns a discriminated union — no redirect() so the client can show a
- * toast and decide where to navigate next (the client uses react-query
- * useMutation + router.push).
- */
-
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/app/actions/_guards";

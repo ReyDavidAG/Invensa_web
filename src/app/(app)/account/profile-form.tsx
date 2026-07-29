@@ -1,12 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/account/profile-form.tsx
- * Edit-name form for the /account page. RHF + zodResolver + useUpdateProfile.
- * Every control disables while the mutation is in flight; field-level
- * errors come from RHF (client validation) and from the server response
- * (re-validated against the same schema).
- */
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Save } from "lucide-react";
 import { useEffect } from "react";

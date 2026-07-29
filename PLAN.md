@@ -2,7 +2,7 @@
 
 > Bitácora viva del proyecto. Se actualiza en cada cambio relevante.
 >
-> **Última actualización:** 2026-07-28 · Módulo productos completo (lista + alta + detalle + edición)
+> **Última actualización:** 2026-07-29 · Fases 14-18 completas (cierre de caja + email Gmail SMTP + campanita de notificaciones)
 >
 > **Lee `CONTEXT.md` antes de tocar el proyecto.** Contiene las invariantes de negocio (tienda única, $0 recurrentes, mobile-first, fotos a R2, sin Auth0, etc.).
 
@@ -191,6 +191,11 @@ Invensa_web/
 | 11 | Reportes (cortes + chart + top productos + stock bajo + top clientes + métodos) | ✅ Hecho |
 | 12 | Deploy a Vercel + env vars + verificación | Pendiente |
 | 13 | Pruebas con hermana + mamá | Pendiente |
+| 14 | **Cierre de caja** (`cash_closings` + UI `/cash-closing`) | ✅ Hecho |
+| 15 | **Alerta stock bajo proactiva** (cron + Resend) | ✅ Hecho |
+| 16 | **Email diario de resumen** (cron + email) | ✅ Hecho |
+| 17 | **Email backend = Gmail SMTP** (sin Resend, sin dominio) | ✅ Hecho |
+| 18 | **Notificaciones in-app** (campanita + historial per-usuario) | ✅ Hecho |
 
 ### Stack realmente instalado (versiones verificadas)
 
@@ -277,3 +282,425 @@ Pendiente: imagen upload a Cloudflare R2 via presigned URLs (placeholder visual 
 - `src/components/nav/theme-toggle.tsx` — client component con `useTheme` de next-themes (light/dark con ícono sol/luna).
 - `src/components/nav/account-menu.tsx` — client component con DropdownMenu (avatar con iniciales + nombre + email + sign-out).
 - `src/app/(app)/dashboard/page.tsx` — reemplazado el stub con dashboard real: 4 stat tiles (Ventas hoy, Ticket promedio, Stock bajo, Fiados pendientes) + lista de ventas recientes + acciones rápidas. Queries reales (no fake) con empty-states honestos ("—" con « datos reales cuando se registren ventas »).
+
+## 11. Próximas fases planeadas (2026-07-29)
+
+Tres mejoras que la dueña necesita ya. Sin fiado (la tienda no fía — confirmado). Sin caducidad (no venden comida, son productos de limpieza y refacciones para moto).
+
+### Fase 14 — Cierre de caja (`cash_closings`)
+
+**Por qué:** la hermana cierra la tienda sin saber si la caja cuadra. Hoy no hay forma de comparar lo que el sistema dice que entró contra lo que realmente hay en el cajón. Sin este dato no sabe si le falta dinero o si la app tiene un bug.
+
+**Tabla nueva:**
+- `cash_closings(id, date UNIQUE, opened_at, closed_at, expected_cash, counted_cash, diff GENERATED, notes, closed_by, status)` — una fila por día. `expected_cash` se calcula de `sales.paid_amount - sales.change_given` del día (es server-derived, no input).
+
+**Cálculo del expected_cash:**
+- Sum de ventas pagadas en efectivo del día, **menos** el cambio/devolución que se dio.
+- Hoy la columna `sales.change_given` no existe. Se agrega en esta misma migración.
+
+**UI:**
+- `/cash-closing` — page con el cierre del día. Si `status=open`: input "¿cuánto hay en caja?" + notas → submit. Si `status=closed`: lectura con `expected`, `counted`, `diff` destacados (verde si 0, ámbar si ±$5, rojo si más).
+- `side-nav.tsx` — nuevo item "Cierre de caja" entre Reportes y Cuenta.
+- `dashboard/page.tsx` — widget "Cierre de hoy" con badge (pendiente / cerrado / descuadre).
+
+**Server Actions:** `openCashSessionAction` (auto al primer GET del día), `closeCashAction`, `getTodayClosingAction` (lectura).
+
+**RLS:**
+- admin: SELECT, UPDATE, DELETE.
+- employee: SELECT, INSERT, UPDATE (la caja la cierra quien esté en turno; no se borra).
+
+**Esfuerzo:** 2 días.
+
+### Fase 15 — Alerta de stock bajo proactiva
+
+**Por qué:** `products.stock_low_threshold` y `vw_product_stock` ya existen. La hermana entra al sistema solo cuando ya se quedó sin producto. Necesita que el sistema le avise.
+
+**Infraestructura:**
+- Cron diario **9:00 AM America/Mexico_City** → `GET /api/cron/low-stock-alert`.
+- Query: productos `status=active` con `stock_on_hand <= stock_low_threshold` y `stock_low_threshold > 0`.
+- Email via Resend con tabla de productos críticos (nombre, SKU, stock actual, threshold).
+- Botón manual en `/dashboard` (admin only) para disparar el envío inmediato sin esperar al cron.
+
+**Esfuerzo:** 1 día. Reusa Resend y la vista existente.
+
+### Fase 16 — Email diario de resumen
+
+**Por qué:** hermana y mamá no abren el dashboard a diario. Reciben un email a las 9pm con el cierre del día para saber cómo les fue sin tener que entrar.
+
+**Contenido del email:**
+- Total vendido hoy (MXN) + count de ventas.
+- Comparación con ayer (% cambio).
+- Top 3 productos del día.
+- Estado del cierre de caja (cerrado / pendiente / descuadre).
+
+**Infraestructura:**
+- Cron diario **9:00 PM America/Mexico_City** → `GET /api/cron/daily-summary`.
+- Misma estructura de email que #15, distinto query.
+
+**Esfuerzo:** 0.5 día. Comparte infra con #15.
+
+### Cron jobs en Vercel
+
+Vercel Hobby permite 2 cron jobs por proyecto. Uso exacto:
+
+| Cron path | Hora MX | Hora UTC | Fase |
+|---|---|---|---|
+| `/api/cron/low-stock-alert` | 09:00 | 15:00 | 15 |
+| `/api/cron/daily-summary` | 21:00 | 03:00 | 16 |
+
+Definidos en `vercel.json`:
+```json
+{
+  "crons": [
+    { "path": "/api/cron/low-stock-alert", "schedule": "0 15 * * *" },
+    { "path": "/api/cron/daily-summary", "schedule": "0 3 * * *" }
+  ]
+}
+```
+
+> **Timezone:** México CST (UTC-6) sin DST en la práctica para nuestro uso (no nos importa el cambio de horario). Si quisiéramos_DST-aware, usamos `vercel.json` con tz + librería tz-aware en el server. Por ahora: offsets fijos.
+
+### Email: Resend
+
+Ya tenemos `RESEND_API_KEY` y `RESEND_FROM_EMAIL` en env. Solo falta:
+- Instalar `resend` (npm).
+- Wrapper en `src/lib/email/send.ts` (server-only).
+- Templates en `src/lib/email/templates/*.ts` — **HTML inline con tablas**, sin React Email.
+
+**Por qué no React Email:** una dependencia más para emails que se ven en clientes de correo (que ignoran CSS). HTML inline con tablas es feo pero funciona en Gmail/Outlook y mantiene el bundle limpio. Se introduce React Email solo si el HTML se vuelve inmanejable.
+
+### Decisiones que se reabren
+
+| Decisión | Default | Razón |
+|---|---|---|
+| Cron hosting | **Vercel Cron** (Hobby, 2 jobs) | $0, suficiente. Si necesitamos >2 jobs, se mueve a GitHub Actions. |
+| Email HTML | **Inline tables**, sin React Email | Ponytail. Bundle limpio, compatibilidad probada. |
+| Cash closings: ¿una o múltiples sesiones por día? | **Una por día** (`date UNIQUE`) | YAGNI. Si hay corte de turno mañana/tarde, se introduce `cash_session` después. |
+| Recipient del daily summary | **Todos los admin + employee** activos | Sin UI de preferencias todavía. Si la mamá no quiere recibirlo, se filtra por `notification_prefs` después. |
+| Recipient del low-stock alert | **Solo admin** | La hermana toma decisiones de compra, la mamá solo registra ventas. |
+
+### Esquema de base de datos — diff
+
+```sql
+-- 0006_cash_closings.sql
+
+-- 1. Nueva columna en sales: cambio que se dio al cliente
+alter table public.sales
+  add column if not exists change_given numeric(12,2) not null default 0
+  check (change_given >= 0);
+
+-- 2. Tabla cash_closings
+create table if not exists public.cash_closings (
+  id uuid primary key default gen_random_uuid(),
+  date date not null unique,
+  opened_at timestamptz not null default now(),
+  closed_at timestamptz,
+  expected_cash numeric(12,2) not null default 0,
+  counted_cash numeric(12,2) check (counted_cash is null or counted_cash >= 0),
+  diff numeric(12,2) generated always as (
+    coalesce(counted_cash, 0) - expected_cash
+  ) stored,
+  notes text,
+  closed_by uuid references public.profiles(id),
+  status text not null default 'open' check (status in ('open', 'closed'))
+);
+
+create index cash_closings_date_idx on public.cash_closings(date desc);
+
+-- 3. RLS
+alter table public.cash_closings enable row level security;
+
+create policy cash_closings_select_authenticated
+  on public.cash_closings for select
+  to authenticated using (true);
+
+create policy cash_closings_insert_authenticated
+  on public.cash_closings for insert
+  to authenticated with check (true);
+
+create policy cash_closings_update_authenticated
+  on public.cash_closings for update
+  to authenticated using (true);
+
+create policy cash_closings_delete_admin
+  on public.cash_closings for delete
+  to authenticated using (public.current_user_role() = 'admin');
+
+-- 4. Helper view: ventas en efectivo del día (para expected_cash)
+create or replace view public.vw_cash_sales_today as
+select
+  date_trunc('day', s.date_at at time zone 'America/Mexico_City')::date as sale_date,
+  sum(s.paid_amount - s.change_given) as net_cash
+from public.sales s
+where s.status = 'paid'
+  and s.payment_method = 'cash'
+group by 1;
+```
+
+## 12. Lo que ya está hecho en fase 14 (cierre de caja)
+
+- `supabase/migrations/0006_cash_closings.sql` — `sales.change_given` (cambio devuelto al cliente), tabla `cash_closings` con `diff` como columna generada, RLS (admin borra, ambos roles insertan/actualizan), vista `vw_cash_sales_by_day` (net cash por día local).
+- `src/lib/schemas/cash-closing.ts` — `cashClosingCloseSchema` + tipos.
+- `src/app/actions/cash-closing.ts` — `getTodayCashClosingAction` (auto-open en primer GET), `closeCashAction` (recomputa expected al cerrar).
+- `src/app/(app)/cash-closing/page.tsx` + `cash-closing-client.tsx` — server component + client con RHF/zod. Banner de estado (verde/ámbar/rojo según diff), 2 stat tiles (esperado/contado), form para cerrar, lectura cuando ya cerrado. Diff tones: success si 0, warning si ±$5, destructive más allá.
+- `src/app/api/cash-closing/today/route.ts` — GET para polling live del expected (cada 30s mientras está abierto).
+- `src/components/nav/side-nav.tsx` — item "Cierre de caja" entre Clientes y Reportes (ícono Banknote).
+- `src/app/(app)/dashboard/page.tsx` — widget "Cierre de caja del día" con badge de estado. Link a `/cash-closing`.
+- `src/app/actions/sales.ts` — server calcula `change_given = max(0, paidAmount - total)` para ventas en efectivo paid.
+- `src/app/(app)/sales/new/pos-client.tsx` — POS ahora envía `paidAmount` real (lo que recibió), no `total`. Server deriva `change_given` y `paid_amount = total`.
+- `src/lib/query/mutations.ts` — hook `useCloseCash`.
+
+→ Mover la migración a Supabase: `pnpm exec supabase db push` (cuando estés listo).
+
+## 13. Próximo paso inmediato
+
+**Fase 17: deploy + verificación end-to-end.** Aplicar migración 0006 a Supabase, configurar `CRON_SECRET` + verificar `RESEND_API_KEY` + `RESEND_FROM_EMAIL` en Vercel, probar el cron manualmente con `curl -H "Authorization: Bearer $CRON_SECRET" https://<deploy>/api/cron/low-stock-alert`. Confirmar email llega. Repetir con `/api/cron/daily-summary`.
+
+## 14. Lo que ya está hecho en fase 15 (alerta stock bajo)
+
+- `resend` npm package añadido.
+- `src/lib/email/send.ts` — wrapper `sendEmail()` server-only, singleton del cliente Resend, lee `RESEND_API_KEY` y `RESEND_FROM_EMAIL` de env.
+- `src/lib/email/templates/low-stock-alert.ts` — HTML inline con tabla de productos críticos (SKU, nombre, stock, umbral). Texto plano como fallback.
+- `src/lib/email/recipients.ts` — helper `getRecipients(['admin'])` que query `profiles` filtrando por role.
+- `src/app/api/cron/low-stock-alert/route.ts` — GET con auth `Bearer $CRON_SECRET`. Query `vw_product_stock` + `products` filtrando `stock_on_hand <= stock_low_threshold AND threshold > 0`. Si no hay filas, 200 OK sin enviar (Vercel no reintenta). Solo recipients = admin.
+- `vercel.json` — cron `0 15 * * *` (9 AM Mexico, UTC-6 sin DST).
+- `src/app/actions/alerts.ts` — `sendLowStockAlertAction()` admin-only (mismo query que el cron, para trigger manual).
+- `src/lib/query/mutations.ts` — `useSendLowStockAlert()` hook.
+- `src/app/(app)/dashboard/low-stock-alert-trigger.tsx` — card client con botón "Enviar ahora", solo visible si `profile.role === 'admin'`. Muestra conteo actual de críticos.
+
+## 15. Lo que ya está hecho en fase 16 (resumen diario)
+
+- `src/lib/email/templates/daily-summary.ts` — HTML con: ventas hoy (count + total + delta % vs ayer, color verde/rojo), top 3 productos, estado del cierre de caja (color por status + diff).
+- `src/app/api/cron/daily-summary/route.ts` — GET con mismo auth. Query paralela: ventas hoy, ventas ayer, sale_items de hoy, cash_closing del día. Calcula delta %, agrega top productos, recipients = admin + employee.
+- `vercel.json` — cron `0 3 * * *` (9 PM Mexico). Total: 2 jobs dentro del límite Hobby.
+- El cierre de caja UI creado en fase 14 provee el `diff` que este email muestra (sin acoplamiento directo: el cron solo lee la tabla).
+
+## 16. Operativa post-deploy (todos)
+
+Variables en Vercel que se deben configurar:
+- `GMAIL_USER` — la dirección Gmail que manda los correos.
+- `GMAIL_APP_PASSWORD` — contraseña de aplicación de 16 chars (Google → Cuenta → Seguridad → 2FA activado → Contraseñas de aplicación).
+- `EMAIL_FROM` — opcional. Default = `GMAIL_USER`. Formato: `Invensa <invensa.tu@gmail.com>`.
+- `CRON_SECRET` — generar con `openssl rand -hex 32`, pegarlo en Vercel env. Vercel lo manda en `Authorization: Bearer …` automáticamente a los cron paths.
+- `SUPABASE_SERVICE_ROLE_KEY` — ya estaba; se usa solo si en el futuro se decide ejecutar el cron como SQL directo desde Postgres en lugar de un GET HTTP.
+
+→ Cuando despliegues, el primer email de las 9am y el de las 9pm saldrán automáticamente. Si quieres probar antes sin esperar, el botón "Enviar ahora" del dashboard dispara el mismo flujo.
+
+## 17. Decisión de fase 17 — Gmail SMTP en lugar de Resend
+
+**Por qué se cambió:** Resend exige dominio propio para producción. Comprar dominio = ~$10-15 USD/año. Gmail SMTP vía nodemailer = $0, sin dominio, 500 emails/día (Invensa usa ~2/día = 0.4% del límite). Setup: 5 minutos (crear contraseña de app en Google).
+
+**Trade-offs:**
+- Remitente aparece como tu Gmail personal, no como `noreply@invensa.app`. Menos "profesional" pero funcional.
+- A veces cae en "Promociones" si el destinatario no tiene guardado el contacto. Mitigación: la hermana y la mamá usan el mismo sistema que manda, así que con un email de "warm-up" se arregla.
+- Riesgo de seguridad: la contraseña de app da acceso completo al Gmail. Guardar solo en Vercel + `.env.local` (gitignored), nunca en código.
+
+**Si en el futuro quieres dominio propio** (ej. cuando Invensa crezca): el cambio es trivial. `sendEmail()` es el único punto que toca SMTP. Reemplazar `nodemailer.createTransport({ service: 'gmail', ... })` por `nodemailer.createTransport({ host: 'smtp.resend.com', ... })` o el provider que sea. Los templates no cambian.
+
+## 18. Lo que ya está hecho en fase 17
+
+- `pnpm remove resend` + `pnpm add nodemailer` + `@types/nodemailer`.
+- `src/lib/email/send.ts` — reescrito: transporter Gmail SMTP singleton, lee `GMAIL_USER` + `GMAIL_APP_PASSWORD` + opcional `EMAIL_FROM`.
+- `src/lib/env.ts` — schema actualizado: removidas `RESEND_*`, agregadas `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `EMAIL_FROM`.
+- `.env.local.example` — sección Email reescrita con instrucciones para contraseña de app de Google.
+- `.env.local` — actualizadas variables nuevas (GMAIL_USER + GMAIL_APP_PASSWORD + EMAIL_FROM + CRON_SECRET generado).
+
+## 19. Deploy end-to-end (orden exacto)
+
+### A. Antes del deploy — generar secrets locales
+
+```bash
+# 1) Generar CRON_SECRET (si no tienes uno ya). 32 bytes hex = 64 chars.
+openssl rand -hex 32
+# Output: e0e00c97cbf3ca313452151305f22a6aedc45d07909e48d963b6fc2e2a45d851
+# → pegar en .env.local:  CRON_SECRET="<ese-valor>"
+```
+
+**Contraseña de app de Gmail** (solo se hace una vez):
+1. Abrir la cuenta Gmail que va a ser el remitente.
+2. Ir a https://myaccount.google.com/security
+3. Verificar que **2-Step Verification** está ON (si no, activarlo primero).
+4. Ir a https://myaccount.google.com/apppasswords
+5. App name = "Invensa" → Generate.
+6. Te muestra 16 chars tipo `abcd efgh ijkl mnop`. **Copiarlos YA** porque no se vuelven a mostrar.
+7. En `.env.local`:
+   ```
+   GMAIL_USER="tugmail@gmail.com"
+   GMAIL_APP_PASSWORD="abcd efgh ijkl mnop"
+   EMAIL_FROM="Invensa <tugmail@gmail.com>"
+   CRON_SECRET="<el-valor-de-openssl>"
+   ```
+
+### B. Aplicar migración nueva (cierre de caja)
+
+```bash
+# Una vez (linkea el proyecto a tu Supabase la primera vez):
+pnpm exec supabase link --project-ref lyvypclifdweyoujgyzd
+
+# Aplicar 0006 (cierre de caja):
+pnpm exec supabase db push
+# O específico:
+pnpm exec supabase migration up
+```
+
+Verifica en el dashboard de Supabase → Table Editor → `cash_closings` debe existir con columnas `id, date, opened_at, closed_at, expected_cash, counted_cash, diff, notes, closed_by, status`.
+
+### C. Configurar Vercel
+
+1. **Ir a**: https://vercel.com → tu proyecto → Settings → Environment Variables.
+2. **Agregar** (Production + Preview + Development):
+   - `NEXT_PUBLIC_SUPABASE_URL` = `https://lyvypclifdweyoujgyzd.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (mismo que en .env.local)
+   - `SUPABASE_SERVICE_ROLE_KEY` = (mismo)
+   - `NEXT_PUBLIC_SITE_URL` = tu dominio final (ej. `https://invensa.vercel.app`)
+   - `NEXT_PUBLIC_LOCALE` = `es-MX`
+   - `NEXT_PUBLIC_R2_PUBLIC_URL` = `https://pub-bd19f9f5ece04ec7833dcfec7461a913.r2.dev`
+   - `R2_ACCOUNT_ID` = `af1ba039dbed5e7e82379b1ad4e677b1`
+   - `R2_ACCESS_KEY_ID` = (mismo)
+   - `R2_SECRET_ACCESS_KEY` = (mismo)
+   - `R2_BUCKET` = `invensa-products`
+   - `R2_REGION` = `auto`
+   - `MINIMAX_API_KEY` = (mismo)
+   - `MINIMAX_MODEL` = `MiniMax-M3`
+   - `APP_BASE_URL` = tu dominio final (ej. `https://invensa.vercel.app`)
+   - **`GMAIL_USER`** = `tugmail@gmail.com`
+   - **`GMAIL_APP_PASSWORD`** = `abcd efgh ijkl mnop`
+   - **`EMAIL_FROM`** = `Invensa <tugmail@gmail.com>`
+   - **`CRON_SECRET`** = `<el-mismo-valor-que-en-env-local>`
+3. **Redeploy** el último commit (env vars solo aplican en builds nuevos).
+
+### D. Verificar los crons
+
+Vercel → tu proyecto → Settings → Crons debe listar:
+- `0 15 * * *` → `/api/cron/low-stock-alert`
+- `0 3 * * *` → `/api/cron/daily-summary`
+
+**Prueba manual** (con el secret que generaste):
+```bash
+curl -i -H "Authorization: Bearer $CRON_SECRET" \
+  https://<tu-dominio>.vercel.app/api/cron/low-stock-alert
+# Esperado: 200 con JSON {"sent":1,"rows":N,"recipients":N}
+```
+
+```bash
+curl -i -H "Authorization: Bearer $CRON_SECRET" \
+  https://<tu-dominio>.vercel.app/api/cron/daily-summary
+# Esperado: 200 con JSON {"sent":1,"recipients":N,"salesCount":N,"salesTotal":N}
+```
+
+### E. Smoke test manual del cierre de caja
+
+1. Ir a `/cash-closing` → debe mostrar "Caja abierta · Esperado $0" (si no hay ventas hoy).
+2. Registrar una venta de prueba en `/sales/new` → volver a `/cash-closing` → "Esperado" debe aumentar.
+3. Llenar "Total contado en caja" → Cerrar.
+4. Verificar que la fila en Supabase `cash_closings` tiene `status='closed'`, `diff` calculado.
+5. Botón "Enviar ahora" en dashboard (admin) debe mandar email a `GMAIL_USER` (test).
+
+### F. Verificar el dominio en producción
+
+Si tienes dominio propio (no es obligatorio para Vercel):
+- Vercel → Settings → Domains → agregar.
+- En Cloudflare Registrar (o donde lo compraste): apuntar CNAME a `cname.vercel-dns.com`.
+
+Vercel te da HTTPS gratis vía Let's Encrypt.
+
+## 20. Recap de costos mensuales (después del deploy)
+
+| Servicio | Plan | Costo |
+|---|---|---|
+| Vercel | Hobby (2 cron jobs) | $0 |
+| Supabase | Free tier | $0 |
+| Cloudflare R2 | Free tier (10 GB, 0 egress) | $0 |
+| Gmail SMTP | Personal (500 emails/día) | $0 |
+| GitHub Actions | Free tier (2000 min/mes) | $0 |
+| Dominio (opcional) | .com/.app/etc | ~$10-15 USD/año |
+
+**Total mensual: $0.** Único pago opcional: dominio para que el remitente del email sea `noreply@invensa.com` en lugar de tu Gmail personal.
+
+## 21. Notificaciones in-app (campanita)
+
+Plan detallado en `docs/notifications.md`. Resumen:
+
+- **Per-usuario, RLS por `user_id`**: cada usuario ve solo las suyas. Service-role para inserts del sistema (cron sin auth).
+- **UI**: campanita en top-bar entre ThemeToggle y AccountMenu. Badge rojo destructive cuando hay unread. Click → Popover con lista, dedup por día, "Marcar todas como leídas".
+- **Hallmark**: badge destructive (atención), dot cobalt en item (estado), iconos con tinte por tipo (warning low_stock, primary cash_closing). Sin emojis, copy honesta, sin métricas inventadas.
+- **Triggers**:
+  - `low-stock` cron → insert notif por admin (1/día, dedup).
+  - `cash-closing-reminder` cron (11 AM Mexico) → insert notif por admin+employee si `status='open'`.
+- **Out of scope V1**: realtime, push, per-user preferences, grouping, auto-archive.
+
+**Migración a Supabase** cuando despliegues: `pnpm exec supabase db push` aplica `0007_notifications.sql`.
+
+**Cron infra**:
+- `daily-summary` movido a GitHub Actions (`.github/workflows/daily-summary.yml`).
+- Vercel ahora hospeda 2 crons: low-stock (9 AM) + cash-closing-reminder (11 AM). Al límite Hobby.
+
+### Setup de GitHub Actions — paso a paso
+
+El workflow `.github/workflows/daily-summary.yml` está en el repo pero **no funciona hasta que configures dos secrets**. Sin ellos, GitHub no puede autenticarse contra el endpoint de Vercel y los correos de las 9pm no salen.
+
+**Cómo llegar paso a paso** (con click por click):
+
+1. **Abre el repo en GitHub.** En la barra superior de tu repo, busca la fila de tabs: `<> Code` · `Issues` · `Pull requests` · `Actions` · `Projects` · `Security` · **`Settings`**. Click en **Settings**. Es el último tab.
+   - Si no ves Settings, es porque no tienes permisos de admin en el repo. Pídele al dueño (o a ti mismo si es tu repo personal) que te dé acceso.
+2. **En el menú lateral izquierdo**, baja hasta encontrar la sección "Security". Verás:
+   - Code security and analysis
+   - **Secrets and variables**
+   - Deploy keys
+3. **Click en "Secrets and variables"** → se expande con sub-opciones. Click en **"Actions"**.
+4. Te aparece una pantalla con título "Actions secrets and variables" y un botón verde **"New repository secret"** arriba a la derecha. Click ahí.
+5. Se abre un form:
+   - **Name:** escribe `APP_URL` (en mayúsculas, con guión bajo).
+   - **Secret:** pega el valor de tu dominio de Vercel. Ejemplo: `https://invensa-web.vercel.app` (sin slash al final).
+   - Click en el botón verde **"Add secret"** abajo.
+6. Repite los pasos 4-5 para el segundo secret:
+   - **Name:** `CRON_SECRET`
+   - **Secret:** pega el MISMO valor hex de 64 caracteres que generaste con `openssl rand -hex 32` y que ya está en tu `.env.local` y en Vercel. Si no lo recuerdas, ábrelo en Vercel → Settings → Environment Variables → busca `CRON_SECRET` → click en el ojo para ver el valor → cópialo.
+7. Listo. Los dos secrets quedan guardados. Si te equivocas, en la lista de secrets puedes click en el nombre para editarlo o en la papelera para borrarlo.
+
+**Cómo verificar que funciona:**
+
+1. En el repo, ve al tab **Actions** (está entre Projects y Security, arriba).
+2. En el menú lateral izquierdo debería aparecer el workflow "Daily summary email".
+3. Click en él. Verás una lista de runs (puede estar vacía si todavía no se ejecutó).
+4. Para forzar una ejecución de prueba: click en "Run workflow" → botón verde "Run workflow". Espera ~10 segundos.
+5. Click en el run que aparece. Verás dos steps:
+   - "Trigger daily summary endpoint" — debería tener palomita verde ✅
+6. Si falla (X roja), click en el step para ver el error. Lo más común: APP_URL mal escrito (slash al final, http vs https, typo).
+
+**Si todo se ve verde:** a las 21:00 Mexico (03:00 UTC) el workflow corre solo y manda el email diario.
+
+### Resumen visual del flujo
+
+```
+.github/workflows/daily-summary.yml
+        ↓ (lee secrets)
+CRON_SECRET + APP_URL
+        ↓ (curl con Bearer)
+https://invensa-web.vercel.app/api/cron/daily-summary
+        ↓ (route handler valida Bearer)
+Resend sendEmail() → Gmail SMTP
+        ↓
+📧 Gmail del admin y empleado a las 9pm Mexico
+```
+
+### Cuando agregues más crons en el futuro
+
+Si en algún momento necesitas un 3er o 4to cron (ej. recordatorio semanal de inventario), el patrón es el mismo:
+1. Nuevo workflow `.github/workflows/<nombre>.yml` con su `on.schedule.cron`.
+2. Secrets nuevos si los necesita, o reusa `CRON_SECRET` + `APP_URL` que ya están.
+3. El endpoint en Vercel puede ser uno nuevo o uno existente.
+
+Vercel se queda con los crons que necesitan respuesta inmediata (low-stock, cash-closing-reminder — ambos disparan UI in-app). GitHub Actions se queda con los batch (daily-summary, futuros semanales/mensuales).
+
+
+
+**Fase 14 (cierre de caja).** Empezar por:
+1. Migración `0006_cash_closings.sql` + aplicar a Supabase local.
+2. `src/lib/schemas/cash-closing.ts` (zod).
+3. `src/app/actions/cash-closing.ts` (open/close/getToday).
+4. `src/app/(app)/cash-closing/page.tsx` + componentes.
+5. Side-nav item + dashboard widget.
+6. Después: Fase 15 (cron + email + Resend).
+7. Después: Fase 16 (cron + email + Resend, reusando infra de 15).
+

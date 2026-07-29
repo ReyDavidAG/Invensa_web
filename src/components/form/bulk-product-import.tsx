@@ -1,16 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/form/bulk-product-import.tsx
- * Three-step Dialog for bulk product import from CSV/paste.
- *
- *   1. Paste   — textarea or file upload; user pastes CSV text
- *   2. Preview — table of parsed rows; invalid rows in red with the error
- *   3. Result  — per-row success / failure summary
- *
- * Rows are sent as a JSON-encoded `rows` FormData field. Server Action
- * processes them sequentially with per-row error reporting.
- */
-
 import {
   CheckCircle2,
   CircleAlert,
@@ -36,7 +25,10 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { BulkTemplateButton } from "@/components/form/bulk-template-button";
-import { useBulkCreateProducts, usePreviewBulkTaxonomy } from "@/lib/query/mutations";
+import {
+  useBulkCreateProducts,
+  usePreviewBulkTaxonomy,
+} from "@/lib/query/mutations";
 import { parseCsv } from "@/lib/csv/parser";
 import {
   BULK_CSV_COLUMNS,
@@ -129,9 +121,7 @@ export function BulkProductImport({ open, onOpenChange }: Props) {
           newCategories: new Set(
             res.categories.new.map((n) => n.toLowerCase()),
           ),
-          newUnits: new Set(
-            res.units.new.map((u) => u.toLowerCase()),
-          ),
+          newUnits: new Set(res.units.new.map((u) => u.toLowerCase())),
         });
       }
     } catch {
@@ -165,9 +155,7 @@ export function BulkProductImport({ open, onOpenChange }: Props) {
         {step === "paste" ? (
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <Label htmlFor="bulk-csv">
-                Filas CSV (incluye encabezado)
-              </Label>
+              <Label htmlFor="bulk-csv">Filas CSV (incluye encabezado)</Label>
               <div className="flex items-center gap-1">
                 <BulkTemplateButton />
                 <Button
@@ -178,7 +166,7 @@ export function BulkProductImport({ open, onOpenChange }: Props) {
                   disabled={bulkCreate.isPending}
                 >
                   <FileUp aria-hidden className="size-3.5" />
-                Subir .csv
+                  Subir .csv
                 </Button>
               </div>
               <input
@@ -422,7 +410,9 @@ export function BulkProductImport({ open, onOpenChange }: Props) {
                 Importar más
               </Button>
               <DialogClose
-                render={<Button type="button" disabled={bulkCreate.isPending} />}
+                render={
+                  <Button type="button" disabled={bulkCreate.isPending} />
+                }
               >
                 Cerrar
               </DialogClose>
@@ -442,8 +432,12 @@ function parsePreview(text: string): ParsedRow[] {
   if (rows.length === 0) return [];
   // First row is the header. Validate it matches the expected columns.
   const [header, ...dataRows] = rows;
-  const headerMatches = header.length === BULK_CSV_COLUMNS.length &&
-    header.every((cell, i) => normaliseHeader(cell) === normaliseHeader(BULK_CSV_COLUMNS[i]));
+  const headerMatches =
+    header.length === BULK_CSV_COLUMNS.length &&
+    header.every(
+      (cell, i) =>
+        normaliseHeader(cell) === normaliseHeader(BULK_CSV_COLUMNS[i]),
+    );
   if (!headerMatches) {
     // Be lenient: still try to parse as data, but mark all rows as invalid with a clear error.
     return dataRows.map((raw, idx) => ({
@@ -460,7 +454,11 @@ function parsePreview(text: string): ParsedRow[] {
     }
     const parsed = bulkCsvRowSchema.safeParse(obj);
     if (parsed.success) {
-      return { ok: true, index: idx, row: parsed.data as unknown as Record<string, unknown> };
+      return {
+        ok: true,
+        index: idx,
+        row: parsed.data as unknown as Record<string, unknown>,
+      };
     }
     const first = parsed.error.issues[0];
     return {
@@ -509,9 +507,5 @@ function formatCell(key: string, value: unknown): string {
 }
 
 function normaliseHeader(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }

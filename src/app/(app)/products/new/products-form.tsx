@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/app/(app)/products/new/products-form.tsx
- * New-product form. RHF for validation + react-query useMutation for the
- * submit + inline-create comboboxes. Sonner toasts for success/error.
- * Every control disables while a mutation is in-flight.
- */
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, Loader2, Save, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -150,7 +144,8 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
 
     // Queue missing items for the create-new confirmation dialog.
     const pending: { category?: string; unit?: string } = {};
-    if (parsed.categoryName && !matchedCategoryId) pending.category = parsed.categoryName;
+    if (parsed.categoryName && !matchedCategoryId)
+      pending.category = parsed.categoryName;
     if (parsed.unitCode && !matchedUnitId) pending.unit = parsed.unitCode;
     if (pending.category || pending.unit) {
       setPendingNewItems(pending);
@@ -200,390 +195,402 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
 
   return (
     <>
-    <FadeUp>
-    <form
-      onSubmit={onSubmit}
-      className="flex flex-col gap-6"
-      noValidate
-      aria-busy={isBusy}
-    >
-      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft aria-hidden className="size-3.5" />
-            Productos
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
-            Nuevo producto
-          </h1>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setAiSheetOpen(true)}
-          disabled={isBusy}
+      <FadeUp>
+        <form
+          onSubmit={onSubmit}
+          className="flex flex-col gap-6"
+          noValidate
+          aria-busy={isBusy}
         >
-          <Sparkles aria-hidden className="size-4 text-primary" />
-          Importar con foto
-        </Button>
-      </div>
-
-      <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
-
-      {submitError ? (
-        <div
-          role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-        >
-          {submitError}
-        </div>
-      ) : null}
-
-      <fieldset disabled={isBusy} className="contents">
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Left column — image */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-semibold tracking-tight">
-                Imagen
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProductImageDropzone
-                onUploaded={(url) =>
-                  setValue("imageUrl", url, { shouldValidate: true })
-                }
-                disabled={isBusy}
-              />
-              <Field
-                label="URL de imagen"
-                hint="Se llena al subir la imagen. Puedes pegar otra URL manualmente si ya tienes una."
-                error={errors.imageUrl?.message ?? fieldErrors?.imageUrl?.[0]}
-                className="mt-3"
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
               >
-                <input
-                  type="url"
-                  inputMode="url"
-                  autoComplete="off"
-                  placeholder="https://…"
-                  {...register("imageUrl")}
-                  className={inputClass}
-                />
-              </Field>
-            </CardContent>
-          </Card>
+                <ChevronLeft aria-hidden className="size-3.5" />
+                Productos
+              </Link>
+              <h1 className="mt-2 text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
+                Nuevo producto
+              </h1>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAiSheetOpen(true)}
+              disabled={isBusy}
+            >
+              <Sparkles aria-hidden className="size-4 text-primary" />
+              Importar con foto
+            </Button>
+          </div>
 
-          {/* Right column — fields */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-semibold tracking-tight">
-                Detalles
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <Field
-                label="SKU"
-                error={errors.code?.message ?? fieldErrors?.code?.[0]}
-              >
-                <input
-                  type="text"
-                  inputMode="text"
-                  autoComplete="off"
-                  placeholder="PZA-001"
-                  {...register("code")}
-                  className={inputClass}
-                />
-              </Field>
+          <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
 
-              <Field
-                label="Nombre"
-                error={errors.name?.message ?? fieldErrors?.name?.[0]}
-              >
-                <input
-                  type="text"
-                  inputMode="text"
-                  autoComplete="off"
-                  placeholder="Fab Ultra 1L"
-                  {...register("name")}
-                  className={inputClass}
-                />
-              </Field>
+          {submitError ? (
+            <div
+              role="alert"
+              className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+            >
+              {submitError}
+            </div>
+          ) : null}
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Categoría"
-                  error={
-                    errors.categoryId?.message ?? fieldErrors?.categoryId?.[0]
-                  }
-                >
-                  <CreatableCombobox
-                    value={categoryId}
-                    onChange={(v) =>
-                      setValue("categoryId", v, { shouldValidate: true })
+          <fieldset disabled={isBusy} className="contents">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Left column — image */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold tracking-tight">
+                    Imagen
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ProductImageDropzone
+                    onUploaded={(url) =>
+                      setValue("imageUrl", url, { shouldValidate: true })
                     }
-                    options={categoryOptions}
-                    onCreate={async (name) => {
-                      try {
-                        const result = await createCategory.mutateAsync(name);
-                        if (result.ok) {
-                          setCategoryOptions((prev) => [
-                            ...prev,
-                            result.option,
-                          ]);
-                          toast.success(
-                            `Categoría "${result.option.name}" creada`,
-                          );
-                        }
-                        return result;
-                      } catch (err) {
-                        return {
-                          ok: false,
-                          error:
-                            err instanceof Error
-                              ? err.message
-                              : "Error desconocido",
-                        };
-                      }
-                    }}
-                    placeholder="Selecciona o crea una categoría…"
-                    createNoun="categoría"
+                    disabled={isBusy}
                   />
-                </Field>
-
-                <Field
-                  label="Unidad"
-                  error={errors.unitId?.message ?? fieldErrors?.unitId?.[0]}
-                >
-                  <CreatableCombobox
-                    value={unitId}
-                    onChange={(v) =>
-                      setValue("unitId", v, { shouldValidate: true })
+                  <Field
+                    label="URL de imagen"
+                    hint="Se llena al subir la imagen. Puedes pegar otra URL manualmente si ya tienes una."
+                    error={
+                      errors.imageUrl?.message ?? fieldErrors?.imageUrl?.[0]
                     }
-                    options={unitOptions}
-                    onCreate={async (name) => {
-                      try {
-                        const result = await createUnit.mutateAsync(name);
-                        if (result.ok) {
-                          setUnitOptions((prev) => [...prev, result.option]);
-                          toast.success(
-                            `Unidad "${result.option.name}" creada`,
-                          );
-                        }
-                        return result;
-                      } catch (err) {
-                        return {
-                          ok: false,
-                          error:
-                            err instanceof Error
-                              ? err.message
-                              : "Error desconocido",
-                        };
+                    className="mt-3"
+                  >
+                    <input
+                      type="url"
+                      inputMode="url"
+                      autoComplete="off"
+                      placeholder="https://…"
+                      {...register("imageUrl")}
+                      className={inputClass}
+                    />
+                  </Field>
+                </CardContent>
+              </Card>
+
+              {/* Right column — fields */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold tracking-tight">
+                    Detalles
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <Field
+                    label="SKU"
+                    error={errors.code?.message ?? fieldErrors?.code?.[0]}
+                  >
+                    <input
+                      type="text"
+                      inputMode="text"
+                      autoComplete="off"
+                      placeholder="PZA-001"
+                      {...register("code")}
+                      className={inputClass}
+                    />
+                  </Field>
+
+                  <Field
+                    label="Nombre"
+                    error={errors.name?.message ?? fieldErrors?.name?.[0]}
+                  >
+                    <input
+                      type="text"
+                      inputMode="text"
+                      autoComplete="off"
+                      placeholder="Fab Ultra 1L"
+                      {...register("name")}
+                      className={inputClass}
+                    />
+                  </Field>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field
+                      label="Categoría"
+                      error={
+                        errors.categoryId?.message ??
+                        fieldErrors?.categoryId?.[0]
                       }
-                    }}
-                    placeholder="Selecciona o crea una unidad…"
-                    createNoun="unidad"
-                    renderSelected={(u) => (
-                      <>
-                        <span className="truncate">{u.name}</span>
-                        <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
-                          {u.code}
-                        </span>
-                      </>
-                    )}
-                    renderOption={(u) => (
-                      <>
-                        <span className="truncate">{u.name}</span>
-                        <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
-                          {u.code}
-                        </span>
-                      </>
-                    )}
-                  />
-                </Field>
-              </div>
+                    >
+                      <CreatableCombobox
+                        value={categoryId}
+                        onChange={(v) =>
+                          setValue("categoryId", v, { shouldValidate: true })
+                        }
+                        options={categoryOptions}
+                        onCreate={async (name) => {
+                          try {
+                            const result =
+                              await createCategory.mutateAsync(name);
+                            if (result.ok) {
+                              setCategoryOptions((prev) => [
+                                ...prev,
+                                result.option,
+                              ]);
+                              toast.success(
+                                `Categoría "${result.option.name}" creada`,
+                              );
+                            }
+                            return result;
+                          } catch (err) {
+                            return {
+                              ok: false,
+                              error:
+                                err instanceof Error
+                                  ? err.message
+                                  : "Error desconocido",
+                            };
+                          }
+                        }}
+                        placeholder="Selecciona o crea una categoría…"
+                        createNoun="categoría"
+                      />
+                    </Field>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Precio compra (MXN)"
-                  error={errors.priceBuy?.message ?? fieldErrors?.priceBuy?.[0]}
-                >
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    {...register("priceBuy")}
-                    className={cn(inputClass, "font-mono tabular-nums")}
-                  />
-                </Field>
+                    <Field
+                      label="Unidad"
+                      error={errors.unitId?.message ?? fieldErrors?.unitId?.[0]}
+                    >
+                      <CreatableCombobox
+                        value={unitId}
+                        onChange={(v) =>
+                          setValue("unitId", v, { shouldValidate: true })
+                        }
+                        options={unitOptions}
+                        onCreate={async (name) => {
+                          try {
+                            const result = await createUnit.mutateAsync(name);
+                            if (result.ok) {
+                              setUnitOptions((prev) => [
+                                ...prev,
+                                result.option,
+                              ]);
+                              toast.success(
+                                `Unidad "${result.option.name}" creada`,
+                              );
+                            }
+                            return result;
+                          } catch (err) {
+                            return {
+                              ok: false,
+                              error:
+                                err instanceof Error
+                                  ? err.message
+                                  : "Error desconocido",
+                            };
+                          }
+                        }}
+                        placeholder="Selecciona o crea una unidad…"
+                        createNoun="unidad"
+                        renderSelected={(u) => (
+                          <>
+                            <span className="truncate">{u.name}</span>
+                            <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+                              {u.code}
+                            </span>
+                          </>
+                        )}
+                        renderOption={(u) => (
+                          <>
+                            <span className="truncate">{u.name}</span>
+                            <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+                              {u.code}
+                            </span>
+                          </>
+                        )}
+                      />
+                    </Field>
+                  </div>
 
-                <Field
-                  label="Precio venta (MXN)"
-                  error={
-                    errors.priceSale?.message ?? fieldErrors?.priceSale?.[0]
-                  }
-                >
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    {...register("priceSale")}
-                    className={cn(inputClass, "font-mono tabular-nums")}
-                  />
-                </Field>
-              </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field
+                      label="Precio compra (MXN)"
+                      error={
+                        errors.priceBuy?.message ?? fieldErrors?.priceBuy?.[0]
+                      }
+                    >
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        {...register("priceBuy")}
+                        className={cn(inputClass, "font-mono tabular-nums")}
+                      />
+                    </Field>
 
-              <Field
-                label="Umbral de stock bajo"
-                hint="Te avisamos cuando el stock quede en o por debajo de este número."
-                error={
-                  errors.stockLowThreshold?.message ??
-                  fieldErrors?.stockLowThreshold?.[0]
-                }
-              >
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  {...register("stockLowThreshold")}
-                  className={cn(inputClass, "font-mono tabular-nums")}
-                />
-              </Field>
+                    <Field
+                      label="Precio venta (MXN)"
+                      error={
+                        errors.priceSale?.message ?? fieldErrors?.priceSale?.[0]
+                      }
+                    >
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        {...register("priceSale")}
+                        className={cn(inputClass, "font-mono tabular-nums")}
+                      />
+                    </Field>
+                  </div>
 
-              <Field
-                label="Inventario inicial (opcional)"
-                hint="Si es mayor a 0, se registra automáticamente como una entrada."
-                error={
-                  errors.initialStock?.message ??
-                  fieldErrors?.initialStock?.[0]
-                }
-              >
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  {...register("initialStock")}
-                  className={cn(inputClass, "font-mono tabular-nums")}
-                />
-              </Field>
+                  <Field
+                    label="Umbral de stock bajo"
+                    hint="Te avisamos cuando el stock quede en o por debajo de este número."
+                    error={
+                      errors.stockLowThreshold?.message ??
+                      fieldErrors?.stockLowThreshold?.[0]
+                    }
+                  >
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      {...register("stockLowThreshold")}
+                      className={cn(inputClass, "font-mono tabular-nums")}
+                    />
+                  </Field>
 
-              <div className="mt-2 flex items-center justify-end gap-2">
+                  <Field
+                    label="Inventario inicial (opcional)"
+                    hint="Si es mayor a 0, se registra automáticamente como una entrada."
+                    error={
+                      errors.initialStock?.message ??
+                      fieldErrors?.initialStock?.[0]
+                    }
+                  >
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      {...register("initialStock")}
+                      className={cn(inputClass, "font-mono tabular-nums")}
+                    />
+                  </Field>
+
+                  <div className="mt-2 flex items-center justify-end gap-2">
+                    <Button
+                      render={<Link href="/products" />}
+                      nativeButton={false}
+                      type="button"
+                      variant="outline"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button type="submit" disabled={isBusy}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2
+                            aria-hidden
+                            className="size-4 animate-spin"
+                          />
+                          Guardando…
+                        </>
+                      ) : (
+                        <>
+                          <Save aria-hidden className="size-4" />
+                          Guardar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </fieldset>
+        </form>
+      </FadeUp>
+
+      <AiPhotoImport
+        open={aiSheetOpen}
+        onOpenChange={setAiSheetOpen}
+        onApply={applyAiResult}
+      />
+
+      <Dialog
+        open={pendingNewItems !== null}
+        onOpenChange={(open) => {
+          if (!open) skipCreatingMissing();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Crear elementos nuevos</DialogTitle>
+            <DialogDescription>
+              La IA sugirió estos valores que aún no existen en tu catálogo.
+              ¿Los creo para que el producto se guarde con ellos?
+            </DialogDescription>
+          </DialogHeader>
+          <ul role="list" className="flex flex-col gap-2 text-sm">
+            {pendingNewItems?.category ? (
+              <li className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
+                <div className="flex flex-col">
+                  <span className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
+                    Categoría
+                  </span>
+                  <span className="font-medium text-foreground">
+                    {pendingNewItems.category}
+                  </span>
+                </div>
+                <span className="font-mono text-xs text-muted-foreground">
+                  nueva
+                </span>
+              </li>
+            ) : null}
+            {pendingNewItems?.unit ? (
+              <li className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
+                <div className="flex flex-col">
+                  <span className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
+                    Unidad
+                  </span>
+                  <span className="font-medium text-foreground">
+                    {pendingNewItems.unit}
+                  </span>
+                </div>
+                <span className="font-mono text-xs text-muted-foreground">
+                  nueva
+                </span>
+              </li>
+            ) : null}
+          </ul>
+          <DialogFooter className="gap-2">
+            <DialogClose
+              render={
                 <Button
-                  render={<Link href="/products" />}
-                  nativeButton={false}
                   type="button"
                   variant="outline"
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isBusy}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 aria-hidden className="size-4 animate-spin" />
-                      Guardando…
-                    </>
-                  ) : (
-                    <>
-                      <Save aria-hidden className="size-4" />
-                      Guardar
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </fieldset>
-    </form>
-    </FadeUp>
-
-    <AiPhotoImport
-      open={aiSheetOpen}
-      onOpenChange={setAiSheetOpen}
-      onApply={applyAiResult}
-    />
-
-    <Dialog
-      open={pendingNewItems !== null}
-      onOpenChange={(open) => {
-        if (!open) skipCreatingMissing();
-      }}
-    >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Crear elementos nuevos</DialogTitle>
-          <DialogDescription>
-            La IA sugirió estos valores que aún no existen en tu catálogo.
-            ¿Los creo para que el producto se guarde con ellos?
-          </DialogDescription>
-        </DialogHeader>
-        <ul role="list" className="flex flex-col gap-2 text-sm">
-          {pendingNewItems?.category ? (
-            <li className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
-              <div className="flex flex-col">
-                <span className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
-                  Categoría
-                </span>
-                <span className="font-medium text-foreground">
-                  {pendingNewItems.category}
-                </span>
-              </div>
-              <span className="font-mono text-xs text-muted-foreground">
-                nueva
-              </span>
-            </li>
-          ) : null}
-          {pendingNewItems?.unit ? (
-            <li className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-3 py-2">
-              <div className="flex flex-col">
-                <span className="text-xs uppercase tracking-[0.06em] text-muted-foreground">
-                  Unidad
-                </span>
-                <span className="font-medium text-foreground">
-                  {pendingNewItems.unit}
-                </span>
-              </div>
-              <span className="font-mono text-xs text-muted-foreground">
-                nueva
-              </span>
-            </li>
-          ) : null}
-        </ul>
-        <DialogFooter className="gap-2">
-          <DialogClose
-            render={
-              <Button
-                type="button"
-                variant="outline"
-                disabled={creatingItems}
-              />
-            }
-          >
-            Elegir manualmente
-          </DialogClose>
-          <Button
-            type="button"
-            onClick={confirmCreateMissing}
-            disabled={creatingItems}
-          >
-            {creatingItems ? (
-              <>
-                <Loader2 aria-hidden className="size-4 animate-spin" />
-                Creando…
-              </>
-            ) : (
-              "Crear y aplicar"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+                  disabled={creatingItems}
+                />
+              }
+            >
+              Elegir manualmente
+            </DialogClose>
+            <Button
+              type="button"
+              onClick={confirmCreateMissing}
+              disabled={creatingItems}
+            >
+              {creatingItems ? (
+                <>
+                  <Loader2 aria-hidden className="size-4 animate-spin" />
+                  Creando…
+                </>
+              ) : (
+                "Crear y aplicar"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

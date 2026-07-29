@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied · src/app/(app)/products/[id]/page.tsx
- * Product detail page. Server component: fetch product + category + unit +
- * current stock + last 20 inventory movements. Admin sees Edit / Archive;
- * everyone else sees read-only.
- */
-
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";

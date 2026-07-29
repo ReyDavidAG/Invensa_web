@@ -1,12 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied (Taller) · src/app/actions/profile.ts
- * Server Actions for the current user's own profile (the /account page).
- * Validates with zod, lets RLS be the final gate. The user can only
- * update their own full_name; email + role are system-managed and not
- * editable from the UI.
- */
-
 import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";

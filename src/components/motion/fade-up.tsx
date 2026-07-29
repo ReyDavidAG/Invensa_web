@@ -1,13 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/components/motion/fade-up.tsx
- * Reusable entrance animation primitive. Wraps children in a motion.div
- * with the design-system motion tokens (--dur-slow 240ms, --ease-out).
- *
- * Use as the page-level fade-up. Per-element motion (delays, staggers) is
- * done by composing multiple FadeUp instances with custom `transition.delay`.
- */
-
 import { motion, type HTMLMotionProps } from "motion/react";
 import { forwardRef } from "react";
 

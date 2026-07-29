@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/(app)/error.tsx
- * In-app error boundary. Catches errors thrown inside any (app)/* page
- * segment (including page.tsx + layout.tsx for that route). Keeps the
- * shell intact so the user can navigate elsewhere.
- */
-
 import { AlertTriangle, Home, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";

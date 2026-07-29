@@ -1,11 +1,3 @@
-/* Hallmark · locked system applied · src/lib/supabase/admin.ts
- * SERVICE-ROLE client. Bypasses RLS — only for trusted server-side jobs:
- *   - invitations (signUp with admin metadata)
- *   - audit log writes
- *   - cron-style maintenance
- * NEVER import from a client component. NEVER expose to the browser bundle.
- */
-
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";

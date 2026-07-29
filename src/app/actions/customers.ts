@@ -1,10 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied (Taller) · src/app/actions/customers.ts
- * Server Actions for the customers module. All writes go through here.
- * Validates with zod, checks the caller's role, lets RLS be the final gate.
- */
-
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/app/actions/_guards";

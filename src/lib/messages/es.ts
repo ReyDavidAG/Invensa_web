@@ -4,8 +4,6 @@
 export const es = {
   required: "Este campo es obligatorio",
   email: "Ingresa un correo válido",
-  minChars: (n: number) => `Mínimo ${n} caracteres`,
-  maxChars: (n: number) => `Máximo ${n} caracteres`,
   passwordWeak:
     "Debe tener 8+ caracteres, una mayúscula, una minúscula y un número",
   passwordMismatch: "Las contraseñas no coinciden",

@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/low-stock-alert", "schedule": "0 15 * * *" },
+    { "path": "/api/cron/cash-closing-reminder", "schedule": "0 17 * * *" }
+  ]
+}

@@ -1,10 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/app/(app)/products/[id]/inventory-movement-button.tsx
- * Trigger for the inventory-movement dialog. Visible to both admin and
- * employee (RLS allows both to insert movements, with created_by = auth.uid).
- */
-
 import { ArrowDownUp } from "lucide-react";
 import { useState } from "react";
 
@@ -21,11 +16,7 @@ export function InventoryMovementButton({ productId, productName }: Props) {
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => setOpen(true)}
-      >
+      <Button type="button" variant="outline" onClick={() => setOpen(true)}>
         <ArrowDownUp aria-hidden className="size-4" />
         Movimiento
       </Button>

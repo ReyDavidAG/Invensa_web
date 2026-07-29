@@ -1,9 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/not-found.tsx
- * In-app 404. Triggered when a route exists under (app) but the resource
- * (e.g., /products/<bad-uuid>) isn't found. Keeps the app shell so the
- * user can navigate back via the sidebar.
- */
-
 import { Compass, Home } from "lucide-react";
 import Link from "next/link";
 

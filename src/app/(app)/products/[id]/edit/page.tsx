@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/app/(app)/products/[id]/edit/page.tsx
- * Edit product page. Server component: fetch the product + lookups, check
- * admin, render the edit form pre-populated with current values.
- */
-
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

@@ -1,15 +1,11 @@
-/* Hallmark · locked system applied · src/components/nav/top-bar.tsx
- * Server component for the app shell topbar. Fetches the current user + profile
- * and renders SidebarTrigger + Breadcrumb + PageTitle (client) + ThemeToggle (client)
- * + AccountMenu (client). Sticky on top.
- */
-
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { getUnreadCountAction } from "@/app/actions/notifications";
 
 import { AccountMenu } from "./account-menu";
 import { Breadcrumb, PageTitle } from "./page-title";
+import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
 
 export async function TopBar() {
@@ -28,6 +24,7 @@ export async function TopBar() {
   }
 
   const email = user?.email ?? "";
+  const unread = user ? await getUnreadCountAction() : 0;
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-sidebar-border bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:gap-4 sm:px-4">
@@ -40,6 +37,7 @@ export async function TopBar() {
         <Breadcrumb />
         <PageTitle />
       </div>
+      {user ? <NotificationBell initialUnread={unread} /> : null}
       <ThemeToggle />
       {user ? <AccountMenu email={email} fullName={fullName} /> : null}
     </header>

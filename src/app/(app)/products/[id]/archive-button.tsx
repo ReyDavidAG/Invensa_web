@@ -1,11 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/app/(app)/products/[id]/archive-button.tsx
- * Soft-delete trigger for a product. Uses useArchiveProduct mutation so
- * the button shows its own loading state, and the success toast fires
- * before navigation.
- */
-
 import { Archive, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

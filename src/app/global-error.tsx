@@ -1,12 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied (Taller) · src/app/global-error.tsx
- * Last-resort error boundary. Fires only when the root layout itself
- * throws — meaning the entire Providers + Toaster tree broke. This
- * replaces <html>/<body> entirely (it must), so we re-declare them
- * inline and don't import anything beyond the absolute essentials.
- */
-
 import { AlertTriangle } from "lucide-react";
 
 export default function GlobalError({

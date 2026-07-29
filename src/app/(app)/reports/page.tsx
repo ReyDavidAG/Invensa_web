@@ -1,29 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/reports/page.tsx
- * Reports home. Server component. URL-driven period selector (?period=today|week|month).
- *
- * Sections:
- *  - 4 KPI tiles: total ventas, # ventas, ticket promedio, # clientes únicos
- *  - Bar chart: ventas por día (últimos 14 días, animado client-side)
- *  - Top productos (TOP 5 por revenue)
- *  - Stock bajo (top 10 más críticos)
- *  - Top clientes (TOP 5 por total gastado)
- *  - Métodos de pago (agregado)
- *  - Fiados pendientes: tarjeta placeholder (deshabilitado por ahora)
- */
-
-/* Hallmark · locked system applied (Taller) · src/app/(app)/reports/page.tsx
- * Reports home. Server component. URL-driven period selector (?period=today|week|month).
- *
- * Sections:
- *  - 4 KPI tiles: total ventas, # ventas, ticket promedio, # clientes únicos
- *  - Bar chart: ventas por día (últimos 14 días, animado client-side)
- *  - Top productos (TOP 5 por revenue)
- *  - Stock bajo (top 10 más críticos)
- *  - Top clientes (TOP 5 por total gastado)
- *  - Métodos de pago (agregado)
- *  - Fiados pendientes: tarjeta placeholder (deshabilitado por ahora)
- */
-
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
@@ -197,13 +171,15 @@ export default async function ReportsPage({
       .neq("status", "cancelled"),
   ]);
 
-  if (periodSalesError) console.error("[reports] period sales", periodSalesError);
+  if (periodSalesError)
+    console.error("[reports] period sales", periodSalesError);
   if (yesterdaySalesError)
     console.error("[reports] yesterday sales", yesterdaySalesError);
   if (chartSalesError) console.error("[reports] chart sales", chartSalesError);
   if (topSaleItemsError)
     console.error("[reports] top sale items", topSaleItemsError);
-  if (lowStockError) console.error("[reports] low stock products", lowStockError);
+  if (lowStockError)
+    console.error("[reports] low stock products", lowStockError);
   if (stockRowsError) console.error("[reports] stock rows", stockRowsError);
   if (paymentAggError) console.error("[reports] payment agg", paymentAggError);
 
@@ -439,7 +415,11 @@ export default async function ReportsPage({
           role="region"
           aria-label="Gráfica con scroll horizontal"
         >
-          <BarChart data={chartData} height={180} className="min-w-[420px] px-1 pb-7 pt-2" />
+          <BarChart
+            data={chartData}
+            height={180}
+            className="min-w-[420px] px-1 pb-7 pt-2"
+          />
         </div>
       </ChartCard>
 

@@ -1,19 +1,6 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/dashboard/page.tsx
- * Dashboard home. Server component. Fetches live data:
- *  - Own profile (for greeting + role)
- *  - Sales today + yesterday (for KPIs + ticket comparison)
- *  - Top 5 recent sales
- *  - Low stock count (joined via products + vw_product_stock)
- *
- * Animation: stagger fade-up via CSS `animate-fade-up` utility with
- * inline `animationDelay` for the stagger. Respects
- * prefers-reduced-motion via the global CSS override.
- *
- * Empty-data rule: tiles show `—` with « datos reales cuando se registren
- * ventas » until real numbers exist. Never invent metrics.
- */
-
 import {
+  Banknote,
+  BellRing,
   ChevronRight,
   Receipt,
   ShoppingCart,
@@ -27,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
+
+import { LowStockAlertTrigger } from "./low-stock-alert-trigger";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +88,14 @@ export default async function DashboardPage() {
   const yesterdayStart = new Date(todayStart);
   yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
+  // Today's date in Mexico City timezone (cash closing key).
+  const todayMx = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Mexico_City",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
   // Parallel fetches
   const [
     { data: profile, error: profileError },
@@ -106,6 +104,7 @@ export default async function DashboardPage() {
     { data: recentSales, error: recentSalesError },
     { data: stocks, error: stocksError },
     { data: productsForStock, error: productsForStockError },
+    { data: cashClosing, error: cashClosingError },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -139,17 +138,32 @@ export default async function DashboardPage() {
       .from("products")
       .select("id, stock_low_threshold, status")
       .eq("status", "active"),
+    supabase
+      .from("cash_closings")
+      .select("id, status, expected_cash, counted_cash, diff")
+      .eq("date", todayMx)
+      .maybeSingle(),
   ]);
 
-  if (profileError) console.error("[dashboard] profile", profileError);
-  if (salesTodayError) console.error("[dashboard] sales today", salesTodayError);
-  if (salesYesterdayError)
-    console.error("[dashboard] sales yesterday", salesYesterdayError);
-  if (recentSalesError)
-    console.error("[dashboard] recent sales", recentSalesError);
-  if (stocksError) console.error("[dashboard] stock view", stocksError);
-  if (productsForStockError)
-    console.error("[dashboard] products for stock", productsForStockError);
+  const logDbErr = (
+    scope: string,
+    err: { message?: string; code?: string; details?: string } | null,
+  ) => {
+    if (!err) return;
+    console.error(
+      `[dashboard] ${scope}:`,
+      err.message ?? "(no message)",
+      err.code ? `(code: ${err.code})` : "",
+      err.details ?? "",
+    );
+  };
+  logDbErr("profile", profileError);
+  logDbErr("sales today", salesTodayError);
+  logDbErr("sales yesterday", salesYesterdayError);
+  logDbErr("recent sales", recentSalesError);
+  logDbErr("stock view", stocksError);
+  logDbErr("products for stock", productsForStockError);
+  logDbErr("cash closing", cashClosingError);
 
   // ── Greeting ──────────────────────────────────────────────────
   const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0] || "";
@@ -266,6 +280,75 @@ export default async function DashboardPage() {
           }
         />
       </section>
+
+      {/* Cash closing widget — single row, full width on mobile */}
+      <section
+        aria-label="Cierre de caja del día"
+        className="animate-fade-up"
+        style={{ animationDelay: "120ms" }}
+      >
+        <Link
+          href={"/cash-closing" as Route}
+          className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          <Card
+            className={cn(
+              "flex flex-col gap-2 p-4 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between",
+              cashClosing?.status === "closed"
+                ? "border-success/30 bg-success/5"
+                : "border-border bg-card",
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "grid size-10 shrink-0 place-items-center rounded-md",
+                  cashClosing?.status === "closed"
+                    ? "bg-success/15 text-success"
+                    : "bg-secondary text-secondary-foreground",
+                )}
+              >
+                <Banknote aria-hidden className="size-5" />
+              </span>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-foreground">
+                  Cierre de caja del día
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {cashClosing?.status === "closed"
+                    ? `Cerrada · ${esMXCurrency.format(Number(cashClosing.expected_cash))} esperado · contado ${esMXCurrency.format(Number(cashClosing.counted_cash))}`
+                    : "Pendiente de cierre"}
+                </span>
+              </div>
+            </div>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 self-start rounded-full px-2.5 py-1 text-xs font-semibold sm:self-auto",
+                cashClosing?.status === "closed"
+                  ? "bg-success/15 text-success ring-1 ring-inset ring-success/30"
+                  : "bg-warning/15 text-warning ring-1 ring-inset ring-warning/30",
+              )}
+            >
+              {cashClosing?.status === "closed"
+                ? cashClosing.diff === null || Number(cashClosing.diff) === 0
+                  ? "Cuadra"
+                  : esMXCurrency.format(Number(cashClosing.diff))
+                : "Abrir cierre"}
+            </span>
+          </Card>
+        </Link>
+      </section>
+
+      {/* Low-stock alert trigger — admin only */}
+      {profile?.role === "admin" ? (
+        <section
+          aria-label="Alerta de stock bajo"
+          className="animate-fade-up"
+          style={{ animationDelay: "140ms" }}
+        >
+          <LowStockAlertTrigger lowStockCount={lowStockCount} />
+        </section>
+      ) : null}
 
       {/* Recent sales + actions */}
       <section className="grid gap-4 lg:grid-cols-3">

@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied (Taller) · src/app/(app)/sales/page.tsx
- * Sales list — minimal, focused on getting to the POS fast. Filter by
- * date range and status. Recent sales at top, paginated below.
- */
-
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
@@ -116,10 +111,12 @@ export default async function SalesPage({
         ].map((f) => (
           <Link
             key={f.value}
-            href={buildUrl({
-              status: f.value === "all" ? undefined : f.value,
-              page: undefined,
-            }) as Route}
+            href={
+              buildUrl({
+                status: f.value === "all" ? undefined : f.value,
+                page: undefined,
+              }) as Route
+            }
             aria-current={statusFilter === f.value ? "page" : undefined}
             className={
               "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +

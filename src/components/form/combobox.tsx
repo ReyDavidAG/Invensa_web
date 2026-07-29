@@ -1,12 +1,5 @@
 "use client";
 
-/* Hallmark · locked system applied · src/components/form/combobox.tsx
- * Searchable single-select combobox for a fixed list of options. Same
- * visual pattern as CreatableCombobox but without the "Create X" footer —
- * use it for closed enums (e.g. movement types, payment methods) where
- * adding new values server-side would be a separate decision.
- */
-
 import { Check, ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -151,11 +144,7 @@ export function Combobox({
             filtered.map((o) => {
               const isSelected = o.value === value;
               return (
-                <li
-                  key={o.value}
-                  role="option"
-                  aria-selected={isSelected}
-                >
+                <li key={o.value} role="option" aria-selected={isSelected}>
                   <button
                     type="button"
                     onClick={() => {

@@ -1,18 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied (Taller) · src/app/actions/sales.ts
- * Server Actions for the sales module. The POS submits a cart + payment
- * here; we validate with zod, compute the authoritative total server-side
- * (never trust the client's subtotal), insert the sale + items + inventory
- * movements, and return the result.
- *
- * Inventory movements are inserted sequentially after sale_items. If the
- * third insert fails the sale is still saved — the user can re-run the
- * mutation after we add a Postgres RPC that wraps the whole thing in a
- * transaction. For the MVP this is acceptable; the sister can re-register
- * the movement manually if needed.
- */
-
 import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -92,6 +79,13 @@ export async function createSaleAction(
     0,
   );
 
+  // For cash sales, the client sends the actual received amount via
+  // paidAmount; the difference (max 0) is the change the cashier gave back.
+  const changeGiven =
+    data.paymentMethod === "cash" && data.status === "paid"
+      ? Math.max(0, data.paidAmount - total)
+      : 0;
+
   // Insert sale header
   const { data: sale, error: saleError } = await supabase
     .from("sales")
@@ -100,6 +94,7 @@ export async function createSaleAction(
       client_id: data.clientId ?? null,
       total,
       paid_amount: data.status === "credit" ? data.paidAmount : total,
+      change_given: changeGiven,
       status: data.status,
       payment_method: data.paymentMethod,
       notes: data.notes?.trim() ? data.notes.trim() : null,

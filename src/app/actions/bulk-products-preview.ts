@@ -1,14 +1,5 @@
 "use server";
 
-/* Hallmark · locked system applied (Taller) · src/app/actions/bulk-products-preview.ts
- * Server Action for the bulk-import preview step. For each unique
- * categoryName / unitCode in the parsed rows, returns whether it already
- * exists in the DB or will be created on submit.
- *
- * Mirrors the per-row creation logic in bulkCreateProductsAction so the
- * preview is accurate to what the submit will do.
- */
-
 import { requireAdmin } from "@/app/actions/_guards";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
@@ -47,10 +38,7 @@ export async function previewBulkTaxonomyAction(
 
   const [categoriesRes, unitsRes] = await Promise.all([
     categoryNames.length
-      ? supabase
-          .from("categories")
-          .select("name")
-          .in("name", categoryNames)
+      ? supabase.from("categories").select("name").in("name", categoryNames)
       : Promise.resolve({ data: [], error: null }),
     unitCodes.length
       ? supabase.from("units").select("code").in("code", unitCodes)

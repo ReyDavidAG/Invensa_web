@@ -1,8 +1,3 @@
-/* Hallmark · locked system applied · src/app/(app)/products/products-filter-chip.tsx
- * One filter chip — a link with active/inactive styling. Coral underline +
- * foreground when active, muted text + hover wash when not.
- */
-
 import Link from "next/link";
 import type { Route } from "next";
 import type { ReactNode } from "react";
