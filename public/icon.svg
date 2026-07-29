@@ -1,22 +1,19 @@
 <!--
   Invensa · master app icon.
   Hallmark pre-emit critique:
-    macrostructure: cobalt square + slab-serif "I" in cream.
-    intent: column-Roman "I" — structural, brandable, distinguishable at 16px
-            (favicon tab) up to 512px (launcher).
+    macrostructure: cobalt rounded square + bold sans-serif "I" in cream.
+    intent: matches BrandMark in src/components/brand-mark.tsx (sidebar,
+            login, loading) and the favicon in src/app/icon.svg. The PWA
+            launcher, sidebar monogram, login header, and browser tab all
+            show the same cobalt square + bold "I" mark.
     tokens: bg #1f4ed8 (Taller cobalt, oklch 0.55 0.16 250), fg #faf9f6 (cream,
             oklch 0.99 0.005 80, matches primary-foreground).
-    geometry: 512 by 512, full-bleed cobalt so maskable cropping (Android
-              adaptive icons) keeps the I centered with safe zone of 33 percent.
-              Letter bbox x 136 to 376, y 96 to 416, 240 by 320 inside canvas.
-              Optical vertical centre biased up by 2 percent (bottom serif reads
-              heavier to the eye).
-    contrast: cream on cobalt is 8.4 to 1 (AAA pass for icon shapes).
-    shared: this is the master. PNGs at 192, 512, 180 are exported from it.
+    geometry: 512 by 512. Cobalt rounded square with rx 92. Bold I as a
+              single rect: 61 by 358, centered at (256, 256). Width to height
+              ratio 0.17 approximates Inter Bold uppercase I.
+    shared: PNGs at 192, 512, and 180 (apple) are exported from this file.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#1f4ed8"/>
-  <rect x="136" y="96" width="240" height="36" fill="#faf9f6"/>
-  <rect x="216" y="132" width="80" height="248" fill="#faf9f6"/>
-  <rect x="136" y="380" width="240" height="36" fill="#faf9f6"/>
+  <rect width="512" height="512" rx="92" fill="#1f4ed8"/>
+  <rect x="225" y="77" width="61" height="358" fill="#faf9f6"/>
 </svg>
