@@ -69,6 +69,7 @@ export function AccountMenu({ email, fullName }: AccountMenuProps) {
         <DropdownMenuSeparator />
         <form action={signOutAction}>
           <DropdownMenuItem
+            nativeButton
             render={<button type="submit" className="w-full cursor-pointer" />}
           >
             <LogOut aria-hidden />

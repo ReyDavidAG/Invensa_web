@@ -1,18 +1,18 @@
-/* Hallmark · locked system applied (Mostrador) · src/app/(app)/dashboard/page.tsx
- * Dashboard home. Bento-on-shell: 4 stat tiles top (2 cols mobile, 4 cols md+),
- * 2/3 + 1/3 split below for recent sales + quick actions.
+/* Hallmark · locked system applied (Taller) · src/app/(app)/dashboard/page.tsx
+ * Dashboard home. Server component. Fetches live data:
+ *  - Own profile (for greeting + role)
+ *  - Sales today + yesterday (for KPIs + ticket comparison)
+ *  - Top 5 recent sales
+ *  - Low stock count (joined via products + vw_product_stock)
  *
- * Mostrador motion: stat tiles stagger fade-up on mount (40ms between each).
- * Cards lift on hover (translateY(-2px) + shadow). Respects user
- * prefers-reduced-motion via MotionConfig + the global CSS override.
+ * Animation: stagger fade-up via CSS `animate-fade-up` utility with
+ * inline `animationDelay` for the stagger. Respects
+ * prefers-reduced-motion via the global CSS override.
  *
- * Empty-data rule: tiles show `—` with « datos reales cuando se registren ventas »
- * until real numbers exist. Never invent metrics.
+ * Empty-data rule: tiles show `—` with « datos reales cuando se registren
+ * ventas » until real numbers exist. Never invent metrics.
  */
 
-"use client";
-
-import { motion } from "motion/react";
 import {
   ChevronRight,
   Receipt,
@@ -24,6 +24,9 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getSupabaseServer } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -31,99 +34,172 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 2,
 });
 
-type DashboardData = {
-  userName: string;
-  salesToday: { count: number; total: number };
-  ticketAvgToday: number | null;
-  ticketAvgYesterday: number | null;
-  lowStockCount: number;
-  pendingCreditClients: number;
-  recentSales: Array<{
-    id: string;
-    ticketNumber: number;
-    dateAt: string;
-    total: number;
-    clientName: string | null;
-    status: "paid" | "credit" | "cancelled";
-  }>;
+const esMXDateTime = new Intl.DateTimeFormat("es-MX", {
+  hour: "2-digit",
+  minute: "2-digit",
+  day: "2-digit",
+  month: "short",
+});
+
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+type QuickAction = {
+  href: string;
+  label: string;
+  hint: string;
+  icon: React.ReactNode;
 };
 
-const SAMPLE_DATA: DashboardData = {
-  userName: "Carolina",
-  salesToday: { count: 8, total: 1240 },
-  ticketAvgToday: 155,
-  ticketAvgYesterday: 142,
-  lowStockCount: 3,
-  pendingCreditClients: 4,
-  recentSales: [
-    {
-      id: "1",
-      ticketNumber: 1024,
-      dateAt: new Date().toISOString(),
-      total: 220,
-      clientName: "Don Memo",
-      status: "paid",
-    },
-    {
-      id: "2",
-      ticketNumber: 1023,
-      dateAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
-      total: 89,
-      clientName: null,
-      status: "credit",
-    },
-    {
-      id: "3",
-      ticketNumber: 1022,
-      dateAt: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
-      total: 415,
-      clientName: "Refaccionaria El Gordo",
-      status: "paid",
-    },
-    {
-      id: "4",
-      ticketNumber: 1021,
-      dateAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-      total: 60,
-      clientName: null,
-      status: "paid",
-    },
-    {
-      id: "5",
-      ticketNumber: 1020,
-      dateAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-      total: 156,
-      clientName: "Sra. Lupita",
-      status: "paid",
-    },
-  ],
-};
+const QUICK_ACTIONS: QuickAction[] = [
+  {
+    href: "/sales/new",
+    label: "Registrar venta",
+    hint: "POS · paso a paso",
+    icon: <ShoppingCart aria-hidden className="size-4" />,
+  },
+  {
+    href: "/products",
+    label: "Agregar producto",
+    hint: "Catálogo · alta rápida",
+    icon: <UserPlus aria-hidden className="size-4" />,
+  },
+  {
+    href: "/customers",
+    label: "Nuevo cliente",
+    hint: "Para registrar ventas",
+    icon: <Receipt aria-hidden className="size-4" />,
+  },
+  {
+    href: "/reports",
+    label: "Ver reportes",
+    hint: "Cortes y top productos",
+    icon: <Wallet aria-hidden className="size-4" />,
+  },
+];
 
-export default function DashboardPage() {
-  // Real data fetch is wired (the server-side version lives in the older
-  // server component). For the Mostrador preview build we render the
-  // shell with real-data slots so motion + tokens can be inspected
-  // without bootstrapping the admin.
-  const data = SAMPLE_DATA;
+export default async function DashboardPage() {
+  const supabase = await getSupabaseServer();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // Window boundaries
+  const todayStart = startOfDay(new Date());
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+  // Parallel fetches
+  const [
+    { data: profile },
+    { data: salesToday },
+    { data: salesYesterday },
+    { data: recentSales },
+    { data: stocks },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, email, full_name, role")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("sales")
+      .select("id, total, paid_amount, status, client_id, date_at")
+      .gte("date_at", todayStart.toISOString())
+      .lt("date_at", tomorrowStart.toISOString())
+      .neq("status", "cancelled"),
+    supabase
+      .from("sales")
+      .select("id, total")
+      .gte("date_at", yesterdayStart.toISOString())
+      .lt("date_at", todayStart.toISOString())
+      .neq("status", "cancelled"),
+    supabase
+      .from("sales")
+      .select(
+        "id, ticket_number, date_at, total, status, client_id, clients(name)",
+      )
+      .neq("status", "cancelled")
+      .order("date_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("vw_product_stock")
+      .select(
+        "product_id, stock_on_hand, products!inner(id, stock_low_threshold, status)",
+      ),
+  ]);
+
+  // ── Greeting ──────────────────────────────────────────────────
+  const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0] || "";
+
+  // ── KPIs ───────────────────────────────────────────────────────
+  const todayTotal = (salesToday ?? []).reduce(
+    (sum, s) => sum + Number(s.total),
+    0,
+  );
+  const todayCount = (salesToday ?? []).length;
+  const ticketToday = todayCount > 0 ? todayTotal / todayCount : null;
+
+  const yesterdayTotal = (salesYesterday ?? []).reduce(
+    (sum, s) => sum + Number(s.total),
+    0,
+  );
+  const yesterdayCount = (salesYesterday ?? []).length;
+  const ticketYesterday =
+    yesterdayCount > 0 ? yesterdayTotal / yesterdayCount : null;
+  const ticketDelta =
+    ticketYesterday && ticketToday
+      ? ((ticketToday - ticketYesterday) / ticketYesterday) * 100
+      : null;
+
+  // ── Low stock count ──────────────────────────────────────────
+  let lowStockCount = 0;
+  for (const row of stocks ?? []) {
+    const product = Array.isArray(row.products)
+      ? row.products[0]
+      : row.products;
+    if (!product || product.status !== "active") continue;
+    const stock = Number(row.stock_on_hand);
+    const threshold = Number(product.stock_low_threshold);
+    if (stock <= threshold) lowStockCount += 1;
+  }
+
+  // ── Recent sales (resolve client names) ─────────────────────
+  const recentSalesList = (recentSales ?? []).map((s) => {
+    const client = Array.isArray(s.clients) ? s.clients[0] : s.clients;
+    return {
+      id: s.id as string,
+      ticketNumber: Number(s.ticket_number),
+      dateAt: s.date_at as string,
+      total: Number(s.total),
+      clientName: (client?.name as string | null) ?? null,
+      status: s.status as "paid" | "credit" | "cancelled",
+    };
+  });
 
   return (
     <div className="flex flex-col gap-6">
       {/* Greeting */}
-      <motion.header
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col gap-1"
+      <header
+        className="animate-fade-up flex flex-col gap-1"
+        style={{ animationDelay: "0ms" }}
       >
         <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
-          Hola{data.userName ? `, ${data.userName.split(" ")[0]}` : ""}
+          Hola{firstName ? `, ${firstName}` : ""}
         </h1>
         <p className="text-sm text-muted-foreground">
           Resumen del día en tu tienda.
         </p>
-      </motion.header>
+      </header>
 
-      {/* Stat tiles — Mostrador motion: stagger fade-up */}
+      {/* Stat tiles — stagger via inline animationDelay */}
       <section
         aria-label="Indicadores del día"
         className="grid grid-cols-2 gap-4 md:grid-cols-4"
@@ -131,36 +207,52 @@ export default function DashboardPage() {
         <StatTile
           delay={0}
           label="Ventas hoy"
-          value={data.salesToday.count.toString()}
-          subtitle={`${data.salesToday.count} ventas · ${esMXCurrency.format(data.salesToday.total)}`}
+          value={todayCount > 0 ? todayCount.toString() : "—"}
+          subtitle={
+            todayCount > 0
+              ? `${esMXCurrency.format(todayTotal)}`
+              : "« datos reales cuando registres ventas »"
+          }
         />
         <StatTile
           delay={0.04}
           label="Ticket promedio"
-          value={esMXCurrency.format(data.ticketAvgToday ?? 0)}
-          subtitle={`vs ayer ${esMXCurrency.format(data.ticketAvgYesterday ?? 0)}`}
+          value={ticketToday !== null ? esMXCurrency.format(ticketToday) : "—"}
+          subtitle={
+            ticketYesterday !== null && ticketToday !== null
+              ? `${ticketDelta! >= 0 ? "+" : ""}${ticketDelta!.toFixed(0)}% vs ayer (${esMXCurrency.format(ticketYesterday)})`
+              : ticketToday !== null
+                ? `ayer: ${yesterdayCount} ${yesterdayCount === 1 ? "venta" : "ventas"}`
+                : "« datos reales cuando registres ventas »"
+          }
         />
         <StatTile
           delay={0.08}
           label="Stock bajo"
-          value={data.lowStockCount.toString()}
-          subtitle={`${data.lowStockCount} productos`}
+          value={lowStockCount > 0 ? lowStockCount.toString() : "—"}
+          subtitle={
+            lowStockCount > 0
+              ? `${lowStockCount} ${lowStockCount === 1 ? "producto" : "productos"}`
+              : "todo el inventario sobre el umbral"
+          }
         />
         <StatTile
           delay={0.12}
-          label="Fiados pendientes"
-          value={data.pendingCreditClients.toString()}
-          subtitle={`${data.pendingCreditClients} clientes con deuda`}
+          label="Ventas (count)"
+          value={todayCount > 0 ? todayCount.toString() : "—"}
+          subtitle={
+            yesterdayCount > 0
+              ? `ayer: ${yesterdayCount}`
+              : "« primer día de operación »"
+          }
         />
       </section>
 
       {/* Recent sales + actions */}
       <section className="grid gap-4 lg:grid-cols-3">
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-          className="lg:col-span-2"
+        <div
+          className="animate-fade-up lg:col-span-2"
+          style={{ animationDelay: "160ms" }}
         >
           <Card className="p-0 card-hover-lift">
             <header className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6">
@@ -175,7 +267,7 @@ export default function DashboardPage() {
                 <ChevronRight aria-hidden className="size-3" />
               </Link>
             </header>
-            {data.recentSales.length === 0 ? (
+            {recentSalesList.length === 0 ? (
               <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
                 <Receipt
                   aria-hidden
@@ -183,14 +275,14 @@ export default function DashboardPage() {
                 />
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">
-                    Aún no tienes ventas hoy
+                    Aún no tienes ventas registradas
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Cuando registres una venta aparecerá aquí.
                   </p>
                 </div>
                 <Button
-                  render={<Link href="/sales" />}
+                  render={<Link href="/sales/new" />}
                   nativeButton={false}
                   size="sm"
                   className="mt-2"
@@ -200,7 +292,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <ul role="list" className="divide-y divide-border">
-                {data.recentSales.map((sale) => (
+                {recentSalesList.map((sale) => (
                   <li
                     key={sale.id}
                     className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6"
@@ -220,12 +312,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <time className="hidden text-xs text-muted-foreground sm:block">
-                        {new Date(sale.dateAt).toLocaleString("es-MX", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          day: "2-digit",
-                          month: "short",
-                        })}
+                        {esMXDateTime.format(new Date(sale.dateAt))}
                       </time>
                       <span className="font-mono text-sm tabular-nums">
                         {esMXCurrency.format(sale.total)}
@@ -236,13 +323,9 @@ export default function DashboardPage() {
               </ul>
             )}
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        >
+        <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
           <Card className="p-0 card-hover-lift">
             <header className="border-b border-border px-4 py-3 sm:px-6">
               <h2 className="text-sm font-semibold tracking-tight">
@@ -250,36 +333,36 @@ export default function DashboardPage() {
               </h2>
             </header>
             <ul role="list" className="flex flex-col">
-              <QuickAction
-                href="/sales"
-                icon={<ShoppingCart aria-hidden className="size-4" />}
-                label="Registrar venta"
-                hint="POS · paso a paso"
-              />
-              <li aria-hidden className="h-px bg-border" />
-              <QuickAction
-                href="/products"
-                icon={<UserPlus aria-hidden className="size-4" />}
-                label="Agregar producto"
-                hint="Catálogo · alta rápida"
-              />
-              <li aria-hidden className="h-px bg-border" />
-              <QuickAction
-                href="/customers"
-                icon={<Receipt aria-hidden className="size-4" />}
-                label="Nuevo cliente"
-                hint="Para fiados"
-              />
-              <li aria-hidden className="h-px bg-border" />
-              <QuickAction
-                href="/reports"
-                icon={<Wallet aria-hidden className="size-4" />}
-                label="Ver reportes"
-                hint="Cortes y top productos"
-              />
+              {QUICK_ACTIONS.map((action, i) => (
+                <li key={action.href}>
+                  {i > 0 ? (
+                    <span aria-hidden className="block h-px bg-border" />
+                  ) : null}
+                  <Link
+                    href={action.href}
+                    className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent sm:px-6"
+                  >
+                    <span className="grid size-8 place-items-center rounded-md bg-secondary text-secondary-foreground">
+                      {action.icon}
+                    </span>
+                    <span className="flex min-w-0 flex-col">
+                      <span className="font-medium text-foreground">
+                        {action.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {action.hint}
+                      </span>
+                    </span>
+                    <ChevronRight
+                      aria-hidden
+                      className="ml-auto size-4 text-muted-foreground"
+                    />
+                  </Link>
+                </li>
+              ))}
             </ul>
           </Card>
-        </motion.div>
+        </div>
       </section>
     </div>
   );
@@ -297,13 +380,11 @@ function StatTile({
   subtitle: string;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.32, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -2 }}
+    <div
+      className="animate-fade-up card-hover-lift"
+      style={{ animationDelay: `${delay * 1000}ms` }}
     >
-      <Card className="card-hover-lift p-4">
+      <Card className="h-full p-4">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
@@ -314,39 +395,6 @@ function StatTile({
           {subtitle}
         </p>
       </Card>
-    </motion.div>
-  );
-}
-
-function QuickAction({
-  href,
-  icon,
-  label,
-  hint,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  hint: string;
-}) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent sm:px-6"
-      >
-        <span className="grid size-8 place-items-center rounded-md bg-secondary text-secondary-foreground">
-          {icon}
-        </span>
-        <span className="flex min-w-0 flex-col">
-          <span className="font-medium text-foreground">{label}</span>
-          <span className="text-xs text-muted-foreground">{hint}</span>
-        </span>
-        <ChevronRight
-          aria-hidden
-          className="ml-auto size-4 text-muted-foreground"
-        />
-      </Link>
-    </li>
+    </div>
   );
 }

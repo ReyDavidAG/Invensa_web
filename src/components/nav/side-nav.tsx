@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { BrandMark } from "@/components/brand-mark";
 import {
   Sidebar,
   SidebarContent,
@@ -63,12 +64,15 @@ export function SideNav({ userName }: { userName: string }) {
       <SidebarHeader>
         <Link
           href="/dashboard"
-          className="flex items-center gap-2.5 px-3 py-3 text-base font-semibold tracking-tight text-foreground"
+          aria-label="Invensa · inicio"
+          className="flex items-center gap-2.5 rounded-md px-3 py-3 text-base font-semibold tracking-tight text-foreground transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm">
-            I
+          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm group-data-[collapsible=icon]:size-7">
+            <BrandMark className="size-5 group-data-[collapsible=icon]:size-3.5" />
           </span>
-          <span className="group-data-[collapsible=icon]:hidden">Invensa</span>
+          <span className="truncate group-data-[collapsible=icon]:hidden">
+            Invensa
+          </span>
         </Link>
       </SidebarHeader>
       <SidebarContent className="px-2 pt-2">
@@ -81,7 +85,7 @@ export function SideNav({ userName }: { userName: string }) {
                   render={<Link href={item.href} />}
                   isActive={isActive(pathname, item.href)}
                   tooltip={item.label}
-                  className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary [&_svg]:size-5"
+                  className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:data-[active=true]:border-l-0 group-data-[collapsible=icon]:data-[active=true]:bg-primary group-data-[collapsible=icon]:data-[active=true]:text-primary-foreground [&_svg]:size-5 [&>span:last-child]:group-data-[collapsible=icon]:hidden"
                 >
                   <item.icon aria-hidden />
                   <span className="text-sm">{item.label}</span>
@@ -100,7 +104,7 @@ export function SideNav({ userName }: { userName: string }) {
               render={<Link href={accountNav.href} />}
               isActive={isActive(pathname, accountNav.href)}
               tooltip={accountNav.label}
-              className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary [&_svg]:size-5"
+              className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:data-[active=true]:border-l-0 group-data-[collapsible=icon]:data-[active=true]:bg-primary group-data-[collapsible=icon]:data-[active=true]:text-primary-foreground [&_svg]:size-5 [&>span:last-child]:group-data-[collapsible=icon]:hidden"
             >
               <accountNav.icon aria-hidden />
               <span className="text-sm">{accountNav.label}</span>
