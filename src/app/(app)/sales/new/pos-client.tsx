@@ -150,7 +150,9 @@ export function PosClient({
   const paidAmount = Number(paidAmountInput) || 0;
   const showChange = paidAmount > total;
   const change = showChange ? paidAmount - total : 0;
-  const canSubmit = cart.length > 0 && !createSale.isPending;
+  const shortfall = total - paidAmount;
+  const canSubmit =
+    cart.length > 0 && paidAmount >= total && !createSale.isPending;
 
   // ─── Handlers ──────────────────────────────────────────────────────
   const addToCart = useCallback((p: PosProduct) => {
@@ -574,6 +576,18 @@ export function PosClient({
                   </span>
                   <span className="font-mono text-base font-semibold tabular-nums text-success">
                     {esMXCurrency.format(change)}
+                  </span>
+                </div>
+              ) : paidAmount > 0 && shortfall > 0 ? (
+                <div
+                  role="alert"
+                  className="flex items-center justify-between rounded-md bg-destructive/10 px-3 py-2"
+                >
+                  <span className="text-xs font-medium text-destructive">
+                    Falta
+                  </span>
+                  <span className="font-mono text-base font-semibold tabular-nums text-destructive">
+                    {esMXCurrency.format(shortfall)}
                   </span>
                 </div>
               ) : null}
