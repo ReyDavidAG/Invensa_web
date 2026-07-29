@@ -21,12 +21,21 @@ export type ParseProductPhotoResult =
   | { ok: true; parsed: import("@/lib/schemas/ai-product").AiProductParsed }
   | { ok: false; error: string };
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB (MiniMax accepts up to 10 MB)
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-const SYSTEM_PROMPT = `Eres un asistente que extrae datos de productos de una tienda mexicana (productos de limpieza y refacciones de moto) a partir de la foto del empaque o producto.
+const SYSTEM_PROMPT = `Eres un asistente que extrae datos de productos de una tienda mexicana (limpieza y refacciones de moto) a partir de una foto del empaque o producto.
 
-Devuelve SOLO un objeto JSON válido (sin texto adicional, sin markdown) con esta forma exacta:
+REGLAS DE SALIDA — no las ignores:
+1. Tu respuesta completa debe ser ÚNICAMENTE un objeto JSON válido. Nada más.
+2. NO escribas texto antes del JSON. NO escribas texto después del JSON.
+3. NO uses bloques de markdown (nada de \`\`\`json).
+4. NO incluyas razonamiento, thinking, análisis ni commentary de ningún tipo.
+5. NO expliques lo que estás haciendo. Solo el JSON final.
+6. Si un dato no es visible o no estás seguro, usa null. NUNCA inventes valores.
+7. Los números van sin comas, sin símbolos de moneda, sin espacios.
+
+Esquema exacto (respeta los tipos y los nombres de campo):
 {
   "name": string|null,
   "code": string|null,
@@ -37,16 +46,27 @@ Devuelve SOLO un objeto JSON válido (sin texto adicional, sin markdown) con est
   "confidence": number
 }
 
-Reglas:
-- name: nombre comercial del producto que se lee en el empaque.
-- code: SKU o código de barras visible. Si no hay, null.
-- unitCode: unidad de venta (PZA, L, KG, ML, GAL). Si no estás seguro, null.
-- priceSale: precio de venta al público en MXN, sin signo de moneda, solo el número.
-- priceBuy: precio de costo si aparece visible. Si no, null.
-- categoryName: una sola palabra o frase corta, e.g. "Limpieza", "Refacciones", "Moto".
-- confidence: número entre 0 y 1; tu confianza global en la extracción. Si casi no se ve nada, 0.1.
-- Si no puedes leer un dato con claridad, déjalo null. No inventes valores.
-- Números sin comas ni símbolo de moneda.`;
+Guía de cada campo:
+- name: nombre comercial legible del empaque (ej. "Fabuloso Fresca Activa 2L").
+- code: SKU o código de barras visible. null si no se ve.
+- unitCode: unidad de venta inferida (PZA, L, KG, ML, GAL). null si no sabes.
+- priceSale: precio de venta al público en MXN, solo el número. null si no es visible.
+- priceBuy: precio de costo si aparece visible. null si no.
+- categoryName: una palabra o frase corta ("Limpieza", "Refacciones", "Moto", etc.).
+- confidence: número entre 0 y 1 con tu confianza global.
+  · 0.9-1.0: producto claro, todos los campos visibles.
+  · 0.5-0.8: legible pero faltan 1-2 campos.
+  · 0.2-0.4: producto borroso o solo parcial.
+  · <0.2: no se distingue nada, devuelve todo null con confidence 0.1.
+
+Ejemplo de respuesta CORRECTA (esto es todo lo que debes devolver):
+{"name":"Fabuloso Fresca Activa 2L","code":null,"unitCode":"L","priceSale":null,"priceBuy":null,"categoryName":"Limpieza","confidence":0.7}
+
+Ejemplo de respuesta INCORRECTA (no hagas esto):
+- "Aquí está el JSON:" seguido del JSON.
+- \`\`\`json ... \`\`\`
+- Análisis previo en lenguaje natural.
+- Cualquier texto fuera del objeto.`;
 
 export async function parseProductPhotoAction(
   _state: unknown,
@@ -93,7 +113,11 @@ export async function parseProductPhotoAction(
       messages,
       responseFormat: { type: "json_object" },
       temperature: 0.2,
-      maxTokens: 600,
+      maxTokens: 800,
+      // MiniMax-specific: separates reasoning from final answer so the JSON
+      // comes back clean in `content` instead of being prefixed with
+      // `<think>…</think>` blocks.
+      reasoningSplit: true,
     });
   } catch (err) {
     if (err instanceof MiniMaxError) {
@@ -105,11 +129,16 @@ export async function parseProductPhotoAction(
     };
   }
 
-  // The model sometimes wraps the JSON in ```json fences; strip them.
+  // Strip any leaked reasoning, markdown fences, or preamble. The AI is
+  // instructed to return JSON only, but some models leak <think>…</think>
+  // blocks or prefix with conversational text. Aggressive cleaning.
   const cleaned = text
-    .trim()
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, "")
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/i, "")
+    .replace(/^[^{[\s]*/, "")
+    .replace(/[^}\]]*$/, "")
     .trim();
 
   let parsedJson: unknown;

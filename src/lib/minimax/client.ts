@@ -1,12 +1,22 @@
 /* Hallmark · locked system applied · src/lib/minimax/client.ts
- * Server-only MiniMax API client. Thin wrapper over chat completions; the
- * vision layer uses the same endpoint with image_url message parts.
+ * Server-only MiniMax API client. Thin wrapper over the OpenAI-compatible
+ * chat completions endpoint that backs MiniMax's M-series models
+ * (including vision via MiniMax-M3).
  *
- * Endpoint: POST https://api.minimax.chat/v1/text/chatcompletion_v2
- * Auth: Bearer MINIMAX_API_KEY
- * Structured output: response_format = { type: "json_object" }
+ * SECURITY:
+ *   - `import "server-only"` guarantees the bundle is never sent to the
+ *     browser. Importing this from a Client Component fails the build.
+ *   - The API key never leaves the server: it's read once via
+ *     getServerEnv() and only attached as `Authorization: Bearer …` in
+ *     the outbound fetch.
+ *   - Console logging is redacted via redactSecrets() so a malformed
+ *     MiniMax response cannot accidentally echo the key.
+ *   - Errors returned to the client are sanitised: only the HTTP status
+ *     and the MiniMax `status_msg` (a server-controlled string) are
+ *     surfaced; the raw response body is logged server-side only.
  *
- * Returns the assistant text. Callers validate with zod.
+ * Endpoint: POST https://api.minimax.io/v1/chat/completions
+ * Auth:     Authorization: Bearer <MINIMAX_API_KEY>
  */
 
 import "server-only";
@@ -14,11 +24,14 @@ import "server-only";
 import { getServerEnv } from "@/lib/env";
 
 const MINIMAX_CHAT_COMPLETIONS_URL =
-  "https://api.minimax.chat/v1/text/chatcompletion_v2";
+  "https://api.minimax.io/v1/chat/completions";
 
 export type MiniMaxMessageContent =
   | string
-  | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
+  | Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    >;
 
 export type MiniMaxMessage = {
   role: "system" | "user" | "assistant";
@@ -31,6 +44,8 @@ export type MiniMaxChatOptions = {
   responseFormat?: { type: "json_object" };
   temperature?: number;
   maxTokens?: number;
+  /** MiniMax-specific: separates reasoning from final answer. */
+  reasoningSplit?: boolean;
 };
 
 export class MiniMaxError extends Error {
@@ -40,6 +55,19 @@ export class MiniMaxError extends Error {
     this.name = "MiniMaxError";
     this.status = status;
   }
+}
+
+/**
+ * Redact any token-shaped strings (sk-…, Bearer …, x-api-key: …) so a
+ * defensive log line never echoes a credential. Matches on substring
+ * shape — conservative.
+ */
+function redactSecrets(input: unknown): string {
+  const text = typeof input === "string" ? input : JSON.stringify(input);
+  return text
+    .replace(/(sk-[A-Za-z0-9_\-]{16,})/g, "[REDACTED:api_key]")
+    .replace(/(Bearer\s+)[A-Za-z0-9_\-./=]+/gi, "$1[REDACTED:bearer]")
+    .replace(/(x-api-key["']?\s*:\s*["']?)[A-Za-z0-9_\-]+/gi, "$1[REDACTED:api_key]");
 }
 
 export async function miniMaxChat(opts: MiniMaxChatOptions): Promise<string> {
@@ -57,6 +85,9 @@ export async function miniMaxChat(opts: MiniMaxChatOptions): Promise<string> {
     ...(opts.responseFormat ? { response_format: opts.responseFormat } : {}),
     ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
     ...(opts.maxTokens !== undefined ? { max_tokens: opts.maxTokens } : {}),
+    ...(opts.reasoningSplit !== undefined
+      ? { reasoning_split: opts.reasoningSplit }
+      : {}),
   };
 
   const res = await fetch(MINIMAX_CHAT_COMPLETIONS_URL, {
@@ -66,29 +97,66 @@ export async function miniMaxChat(opts: MiniMaxChatOptions): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-    // MiniMax responses are slow on first-token; cache-friendly default.
     cache: "no-store",
   });
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    console.error("[minimax] non-2xx", res.status, detail.slice(0, 500));
+    console.error(
+      "[minimax] non-2xx",
+      res.status,
+      redactSecrets(detail.slice(0, 500)),
+    );
     throw new MiniMaxError(
-      `MiniMax respondió ${res.status}. Revisa la consola del servidor.`,
+      `MiniMax respondió ${res.status}. Intenta de nuevo.`,
       res.status,
     );
   }
 
-  const json = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string | Array<{ text?: string }> } }>;
+  let json: {
+    base_resp?: { status_code?: number; status_msg?: string };
+    choices?: Array<{
+      message?: { content?: string | Array<{ text?: string }> };
+    }>;
+    [k: string]: unknown;
   };
+  try {
+    json = (await res.json()) as typeof json;
+  } catch {
+    throw new MiniMaxError(
+      "MiniMax devolvió una respuesta no-JSON.",
+      res.status,
+    );
+  }
+
+  // MiniMax wraps its own errors in base_resp even on 200 OK.
+  const apiError = json.base_resp;
+  if (apiError && apiError.status_code && apiError.status_code !== 0) {
+    console.error(
+      "[minimax] api error",
+      apiError.status_code,
+      redactSecrets(apiError.status_msg ?? ""),
+    );
+    throw new MiniMaxError(
+      apiError.status_msg ?? `MiniMax error ${apiError.status_code}`,
+      apiError.status_code,
+    );
+  }
+
   const content = json.choices?.[0]?.message?.content;
-  if (typeof content === "string") return content;
-  if (Array.isArray(content)) {
-    return content
-      .map((part) => (typeof part === "object" && "text" in part ? part.text : ""))
+  if (typeof content === "string" && content.length > 0) return content;
+  if (Array.isArray(content) && content.length > 0) {
+    const joined = content
+      .map((part) =>
+        typeof part === "object" && "text" in part ? part.text : "",
+      )
       .filter(Boolean)
       .join("");
+    if (joined) return joined;
   }
+  console.error(
+    "[minimax] empty content. redacted body:",
+    redactSecrets(JSON.stringify(json).slice(0, 1000)),
+  );
   throw new MiniMaxError("MiniMax no devolvió contenido.", res.status);
 }
