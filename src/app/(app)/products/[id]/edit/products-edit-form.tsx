@@ -22,6 +22,7 @@ import {
   type CreatableOption,
 } from "@/components/form/creatable-combobox";
 import { ProductImageDropzone } from "@/components/form/product-image-dropzone";
+import { FadeUp } from "@/components/motion/fade-up";
 import {
   useCreateCategory,
   useCreateUnit,
@@ -94,6 +95,7 @@ export function EditProductForm({
   });
 
   return (
+    <FadeUp>
     <form
       onSubmit={onSubmit}
       className="flex flex-col gap-6"
@@ -366,6 +368,7 @@ export function EditProductForm({
         </div>
       </fieldset>
     </form>
+    </FadeUp>
   );
 }
 

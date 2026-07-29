@@ -3,6 +3,7 @@
 
 import * as React from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { FadeUp } from "@/components/motion/fade-up";
 import { APP_VERSION } from "@/lib/version";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +23,8 @@ export function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center px-4 py-16 sm:py-24">
-      <div className={cn("w-full max-w-[420px] flex flex-col gap-8")}>
+    <main className="flex min-h-svh flex-col items-center justify-center px-4 py-8 sm:py-24">
+      <FadeUp className={cn("w-full max-w-[420px] flex flex-col gap-8")}>
         <header className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
             <span
@@ -49,10 +50,12 @@ export function AuthShell({
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
             {eyebrow}
           </p>
-          <h1 className="text-3xl font-bold tracking-[-0.025em] text-foreground">
+          <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground sm:text-3xl">
             {heading}
           </h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">{sub}</p>
+          <p className="overflow-wrap-anywhere text-sm leading-relaxed text-muted-foreground">
+            {sub}
+          </p>
         </header>
 
         <section className="flex flex-col gap-5">{children}</section>
@@ -62,7 +65,7 @@ export function AuthShell({
             {footer}
           </footer>
         ) : null}
-      </div>
+      </FadeUp>
     </main>
   );
 }

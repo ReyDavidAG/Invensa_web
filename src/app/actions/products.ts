@@ -202,3 +202,38 @@ export async function archiveProductAction(
   revalidatePath("/products");
   return { ok: true, id: productId };
 }
+
+export type BulkSetProductImageResult = {
+  ok: boolean;
+  updated: number;
+  error?: string;
+};
+
+export async function bulkSetProductImageAction(
+  productIds: string[],
+  publicUrl: string,
+): Promise<BulkSetProductImageResult> {
+  const auth = await requireAdmin({ actionLabel: "actualizar imágenes" });
+  if ("ok" in auth) {
+    return { ok: false, updated: 0, error: auth.error };
+  }
+  if (productIds.length === 0) {
+    return { ok: false, updated: 0, error: "No hay productos seleccionados." };
+  }
+  if (!publicUrl) {
+    return { ok: false, updated: 0, error: "URL de imagen vacía." };
+  }
+
+  const supabase = await getSupabaseServer();
+  const { data, error } = await supabase
+    .from("products")
+    .update({ image_url: publicUrl })
+    .in("id", productIds)
+    .select("id");
+
+  if (error) {
+    return { ok: false, updated: 0, error: error.message };
+  }
+  revalidatePath("/products");
+  return { ok: true, updated: data?.length ?? 0 };
+}

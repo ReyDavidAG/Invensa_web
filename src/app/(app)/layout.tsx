@@ -37,7 +37,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <div className="print:hidden">
           <TopBar />
         </div>
-        <main className="mx-auto w-full max-w-screen-2xl px-4 py-4 md:px-8 md:py-6">
+        <main className="mx-auto w-full max-w-screen-2xl px-4 py-4 md:px-4 md:py-6 lg:px-8">
           {children}
         </main>
       </SidebarInset>

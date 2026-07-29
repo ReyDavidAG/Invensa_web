@@ -41,6 +41,7 @@ import {
 import { BarChart, type BarDatum } from "./bar-chart";
 import { KpiTile } from "./kpi-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeUp } from "@/components/motion/fade-up";
 
 export const metadata: Metadata = {
   title: "Reportes",
@@ -340,7 +341,7 @@ export default async function ReportsPage({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <FadeUp className="flex flex-col gap-6">
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -359,7 +360,7 @@ export default async function ReportsPage({
               href={buildUrl(p)}
               aria-current={period === p ? "page" : undefined}
               className={
-                "inline-flex h-8 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+                "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
                 (period === p
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")
@@ -432,7 +433,13 @@ export default async function ReportsPage({
         subtitle="Últimos 14 días"
         total={chartData.reduce((sum, d) => sum + d.total, 0)}
       >
-        <BarChart data={chartData} height={180} className="px-1 pb-7 pt-2" />
+        <div
+          className="overflow-x-auto"
+          role="region"
+          aria-label="Gráfica con scroll horizontal"
+        >
+          <BarChart data={chartData} height={180} className="min-w-[420px] px-1 pb-7 pt-2" />
+        </div>
       </ChartCard>
 
       {/* ── Top productos + Stock bajo ─────────────────────────── */}
@@ -627,7 +634,7 @@ export default async function ReportsPage({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </FadeUp>
   );
 }
 
