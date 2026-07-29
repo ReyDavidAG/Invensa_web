@@ -19,10 +19,10 @@ export const registerSchema = z
     fullName: z
       .string()
       .min(2, { message: es.fullNameShort })
-      .max(80, { message: es.maxChars(80) }),
+      .max(80, "Máximo 80 caracteres"),
     password: z
       .string()
-      .min(8, { message: es.minChars(8) })
+      .min(8, "Mínimo 8 caracteres")
       .regex(/[A-Z]/, { message: es.passwordWeak })
       .regex(/[a-z]/, { message: es.passwordWeak })
       .regex(/[0-9]/, { message: es.passwordWeak }),
@@ -51,7 +51,7 @@ export const resetPasswordSchema = z
   .object({
     password: z
       .string()
-      .min(8, { message: es.minChars(8) })
+      .min(8, "Mínimo 8 caracteres")
       .regex(/[A-Z]/, { message: es.passwordWeak })
       .regex(/[a-z]/, { message: es.passwordWeak })
       .regex(/[0-9]/, { message: es.passwordWeak }),
@@ -70,7 +70,7 @@ export const profileUpdateSchema = z.object({
     .string()
     .trim()
     .min(1, { message: es.required })
-    .max(120, { message: es.maxChars(120) }),
+    .max(120, "Máximo 120 caracteres"),
 });
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type ProfileUpdateFormValues = z.input<typeof profileUpdateSchema>;
