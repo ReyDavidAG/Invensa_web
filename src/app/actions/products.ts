@@ -54,6 +54,7 @@ export async function createProductAction(
       "priceSale",
       "priceBuy",
       "stockLowThreshold",
+      "initialStock",
       "imageUrl",
     ]),
   );
@@ -95,8 +96,27 @@ export async function createProductAction(
     return { ok: false, error: `No pudimos guardar: ${error.message}` };
   }
 
+  // Initial inventory: log an 'in' movement with note "Inventario inicial".
+  // Mirrors createSaleAction's soft-success pattern: if this insert fails the
+  // product still exists and the admin can re-register via the dialog.
+  let warning: string | undefined;
+  if (parsed.data.initialStock > 0) {
+    const { error: movementError } = await supabase
+      .from("inventory_movements")
+      .insert({
+        product_id: data.id,
+        movement_type: "in",
+        quantity: parsed.data.initialStock,
+        note: "Inventario inicial",
+        created_by: auth.userId,
+      });
+    if (movementError) {
+      warning = `Producto creado pero no se registró el inventario inicial: ${movementError.message}`;
+    }
+  }
+
   revalidatePath("/products");
-  return { ok: true, id: data.id };
+  return { ok: true, id: data.id, warning };
 }
 
 export async function updateProductAction(
