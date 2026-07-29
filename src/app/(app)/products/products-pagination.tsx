@@ -4,6 +4,7 @@
  */
 
 import Link from "next/link";
+import type { Route } from "next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -129,7 +130,7 @@ function PageLink({
   }
   return (
     <Link
-      href={href}
+      href={href as Route}
       scroll={false}
       className={cn(
         "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",

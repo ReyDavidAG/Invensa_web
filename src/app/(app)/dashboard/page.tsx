@@ -21,6 +21,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -49,7 +50,7 @@ function startOfDay(d: Date): Date {
 }
 
 type QuickAction = {
-  href: string;
+  href: Route;
   label: string;
   hint: string;
   icon: React.ReactNode;

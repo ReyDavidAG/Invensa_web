@@ -11,6 +11,7 @@
  */
 
 import type { Metadata } from "next";
+import type { Route } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { BulkImportTrigger } from "./bulk-import-trigger";
