@@ -35,6 +35,10 @@ import {
   createCustomerAction,
   updateCustomerAction,
 } from "@/app/actions/customers";
+import {
+  type ProfileActionResult,
+  updateProfileAction,
+} from "@/app/actions/profile";
 
 export function useCreateProduct() {
   return useMutation<ProductActionResult, Error, FormData>({
@@ -93,5 +97,11 @@ export function useUpdateCustomer(customerId: string) {
 export function useArchiveCustomer() {
   return useMutation<CustomerActionResult, Error, string>({
     mutationFn: (customerId) => archiveCustomerAction(customerId),
+  });
+}
+
+export function useUpdateProfile() {
+  return useMutation<ProfileActionResult, Error, FormData>({
+    mutationFn: (formData) => updateProfileAction(null, formData),
   });
 }
