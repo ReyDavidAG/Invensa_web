@@ -57,7 +57,7 @@ const serverEnvSchema = clientEnvSchema.extend({
 
   // MiniMax (foto → producto)
   MINIMAX_API_KEY: optionalString,
-  MINIMAX_MODEL: z.string().default("MiniMax-VL-01"),
+  MINIMAX_MODEL: z.string().default("MiniMax-M3"),
 
   APP_BASE_URL: optionalString,
 });
