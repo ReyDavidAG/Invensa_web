@@ -24,24 +24,17 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = await getSupabaseServer();
-  // Active products whose stock_on_hand <= stock_low_threshold (and threshold > 0).
-  const { data: stocks } = await supabase
-    .from("vw_product_stock")
-    .select("product_id, stock_on_hand");
-  const lowIds = (stocks ?? [])
-    .filter((s) => Number(s.stock_on_hand) <= 0)
-    .map((s) => s.product_id as string);
 
-  if (lowIds.length === 0) {
-    // Even with no rows, the cron should 200 so Vercel doesn't retry.
-    return NextResponse.json({ sent: 0, rows: 0 });
-  }
-
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, code, name, stock_low_threshold, status")
-    .in("id", lowIds)
-    .eq("status", "active");
+  // Fetch active products with threshold > 0 plus current stock, then filter
+  // in code. The view alone can't filter by per-product threshold.
+  const [{ data: products }, { data: stocks }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, code, name, stock_low_threshold")
+      .eq("status", "active")
+      .gt("stock_low_threshold", 0),
+    supabase.from("vw_product_stock").select("product_id, stock_on_hand"),
+  ]);
 
   const stockById = new Map(
     (stocks ?? []).map((s) => [
@@ -57,10 +50,11 @@ export async function GET(req: NextRequest) {
       stock: stockById.get(p.id as string) ?? 0,
       threshold: Number(p.stock_low_threshold),
     }))
-    .filter((r) => r.stock <= r.threshold && r.threshold > 0)
+    .filter((r) => r.stock <= r.threshold)
     .sort((a, b) => a.stock - b.stock);
 
   if (rows.length === 0) {
+    // 200 even with no rows so Vercel doesn't retry.
     return NextResponse.json({ sent: 0, rows: 0 });
   }
 

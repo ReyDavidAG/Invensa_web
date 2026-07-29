@@ -17,23 +17,18 @@ export async function sendLowStockAlertAction(): Promise<LowStockAlertResult> {
   if ("ok" in auth) return auth;
 
   const supabase = await getSupabaseServer();
-  const { data: stocks } = await supabase
-    .from("vw_product_stock")
-    .select("product_id, stock_on_hand");
 
-  const lowIds = (stocks ?? [])
-    .filter((s) => Number(s.stock_on_hand) <= 0)
-    .map((s) => s.product_id as string);
-
-  if (lowIds.length === 0) {
-    return { ok: true, rows: 0, recipients: 0 };
-  }
-
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, code, name, stock_low_threshold, status")
-    .in("id", lowIds)
-    .eq("status", "active");
+  // Fetch all active products with their threshold; join with current stock
+  // and filter in code so we can compare stock against threshold (the view
+  // alone doesn't know the per-product threshold).
+  const [{ data: products }, { data: stocks }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, code, name, stock_low_threshold")
+      .eq("status", "active")
+      .gt("stock_low_threshold", 0),
+    supabase.from("vw_product_stock").select("product_id, stock_on_hand"),
+  ]);
 
   const stockById = new Map(
     (stocks ?? []).map((s) => [
@@ -49,7 +44,7 @@ export async function sendLowStockAlertAction(): Promise<LowStockAlertResult> {
       stock: stockById.get(p.id as string) ?? 0,
       threshold: Number(p.stock_low_threshold),
     }))
-    .filter((r) => r.stock <= r.threshold && r.threshold > 0)
+    .filter((r) => r.stock <= r.threshold)
     .sort((a, b) => a.stock - b.stock);
 
   if (rows.length === 0) {
