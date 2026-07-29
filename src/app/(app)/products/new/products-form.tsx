@@ -7,7 +7,7 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, Loader2, Save } from "lucide-react";
+import { ChevronLeft, Loader2, Save, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,6 +21,7 @@ import {
   type CreatableOption,
 } from "@/components/form/creatable-combobox";
 import { ProductImageDropzone } from "@/components/form/product-image-dropzone";
+import { AiPhotoImport } from "@/components/form/ai-photo-import";
 import {
   useCreateCategory,
   useCreateProduct,
@@ -31,6 +32,7 @@ import {
   type ProductCreateFormValues,
   productCreateSchema,
 } from "@/lib/schemas/products";
+import type { AiProductParsed } from "@/lib/schemas/ai-product";
 
 type ProductsFormProps = {
   categories: CreatableOption[];
@@ -41,6 +43,7 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   const router = useRouter();
   const [categoryOptions, setCategoryOptions] = useState(categories);
   const [unitOptions, setUnitOptions] = useState(units);
+  const [aiSheetOpen, setAiSheetOpen] = useState(false);
 
   const createProduct = useCreateProduct();
   const createCategory = useCreateCategory();
@@ -98,7 +101,35 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
     }
   });
 
+  function applyAiResult(parsed: AiProductParsed) {
+    if (parsed.name) setValue("name", parsed.name, { shouldValidate: true });
+    if (parsed.code) setValue("code", parsed.code, { shouldValidate: true });
+    if (parsed.priceSale !== null)
+      setValue("priceSale", parsed.priceSale, { shouldValidate: true });
+    if (parsed.priceBuy !== null)
+      setValue("priceBuy", parsed.priceBuy, { shouldValidate: true });
+    if (parsed.categoryName) {
+      const match = categoryOptions.find(
+        (c) => c.name.toLowerCase() === parsed.categoryName!.toLowerCase(),
+      );
+      if (match) {
+        setValue("categoryId", match.id, { shouldValidate: true });
+      }
+      // If no match, leave the field alone — sister picks manually.
+    }
+    if (parsed.unitCode) {
+      const match = unitOptions.find(
+        (u) => u.code.toLowerCase() === parsed.unitCode!.toLowerCase(),
+      );
+      if (match) {
+        setValue("unitId", match.id, { shouldValidate: true });
+      }
+    }
+    toast.success("Campos aplicados. Revisa y guarda.");
+  }
+
   return (
+    <>
     <form
       onSubmit={onSubmit}
       className="flex flex-col gap-6"
@@ -118,6 +149,15 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
             Nuevo producto
           </h1>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setAiSheetOpen(true)}
+          disabled={isBusy}
+        >
+          <Sparkles aria-hidden className="size-4 text-primary" />
+          Importar con foto
+        </Button>
       </div>
 
       <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
@@ -390,6 +430,13 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
         </div>
       </fieldset>
     </form>
+
+    <AiPhotoImport
+      open={aiSheetOpen}
+      onOpenChange={setAiSheetOpen}
+      onApply={applyAiResult}
+    />
+    </>
   );
 }
 

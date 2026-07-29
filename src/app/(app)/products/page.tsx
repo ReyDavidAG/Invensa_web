@@ -14,6 +14,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { ImageIcon } from "lucide-react";
+import { BulkImportTrigger } from "./bulk-import-trigger";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -152,10 +153,13 @@ export default async function ProductsPage({
         <div className="flex items-center gap-3">
           <ProductsSearch defaultValue={q} />
           {isAdmin ? (
-            <Button render={<Link href="/products/new" />} nativeButton={false}>
-              <Plus aria-hidden />
-              <span>Nuevo</span>
-            </Button>
+            <>
+              <BulkImportTrigger />
+              <Button render={<Link href="/products/new" />} nativeButton={false}>
+                <Plus aria-hidden />
+                <span>Nuevo</span>
+              </Button>
+            </>
           ) : null}
         </div>
       </header>
