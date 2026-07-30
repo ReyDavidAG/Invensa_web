@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -16,12 +15,9 @@ type KpiTileProps = {
 
 export function KpiTile({ delay, label, value, subtitle, icon }: KpiTileProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.32, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -2 }}
-      className="contents"
+    <div
+      className="contents animate-fade-up"
+      style={{ animationDelay: `${delay}ms` } as CSSProperties}
     >
       <Card className={cn("card-hover-lift h-full p-4")}>
         <div className="flex items-center justify-between">
@@ -37,6 +33,6 @@ export function KpiTile({ delay, label, value, subtitle, icon }: KpiTileProps) {
           {subtitle}
         </p>
       </Card>
-    </motion.div>
+    </div>
   );
 }
