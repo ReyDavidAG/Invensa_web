@@ -18,17 +18,14 @@ export type ListNotificationsResult = {
 
 export type MarkResult = { ok: true } | { ok: false; error: string };
 
+// ponytail: thin wrapper kept for backward compat with existing callers; the
+// real work now lives in lib/supabase/profile.ts so layout + TopBar share one
+// roundtrip via React.cache().
 export async function getUnreadCountAction(): Promise<number> {
-  const supabase = await getSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return 0;
-  const { count } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .is("read_at", null);
-  return count ?? 0;
+  const { getUnreadNotificationsCount } = await import(
+    "@/lib/supabase/profile"
+  );
+  return getUnreadNotificationsCount();
 }
 
 export async function listNotificationsAction(
