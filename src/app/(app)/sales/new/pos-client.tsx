@@ -268,7 +268,7 @@ export function PosClient({
         </div>
 
         {/* Cliente */}
-        <Card className="p-4">
+        <Card className="p-4" data-tour="sale-client">
           <div className="flex flex-col gap-2">
             <span className="flex items-center gap-2 text-xs font-medium text-foreground">
               <User aria-hidden className="size-3.5" />
@@ -331,7 +331,7 @@ export function PosClient({
         </Card>
 
         {/* Search — autocomplete dropdown */}
-        <div className="relative" ref={searchContainerRef}>
+        <div className="relative" ref={searchContainerRef} data-tour="sale-search">
           <Search
             aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground"
@@ -463,7 +463,7 @@ export function PosClient({
 
       {/* ─── RIGHT: Cart + Payment + Submit ─────────────────────────── */}
       <div className="lg:sticky lg:top-20 lg:self-start">
-        <Card className="flex flex-col p-0">
+        <Card className="flex flex-col p-0" data-tour="sale-cart">
           {/* Cart header */}
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-baseline gap-2">
@@ -512,7 +512,7 @@ export function PosClient({
           </div>
 
           {/* Payment + Total + Submit */}
-          <div className="flex flex-col gap-3 border-t border-border p-4">
+          <div className="flex flex-col gap-3 border-t border-border p-4" data-tour="sale-payment">
             {/* Error banner */}
             {createSale.data &&
             !createSale.data.ok &&
@@ -610,6 +610,7 @@ export function PosClient({
               onClick={onSubmit}
               disabled={!canSubmit}
               size="lg"
+              data-tour="sale-submit"
               className="h-14 w-full text-base font-semibold"
             >
               {createSale.isPending ? (
