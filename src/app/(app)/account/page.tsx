@@ -86,7 +86,7 @@ export default async function AccountPage() {
       <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
 
       {/* Profile card */}
-      <Card className="card-hover-lift">
+      <Card className="card-hover-lift" data-tour="account-profile">
         <CardContent className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="size-16">
@@ -114,10 +114,12 @@ export default async function AccountPage() {
       </Card>
 
       {/* Edit name form */}
-      <ProfileForm
-        fullName={profile.full_name ?? ""}
-        email={profile.email ?? ""}
-      />
+      <div data-tour="account-edit-name">
+        <ProfileForm
+          fullName={profile.full_name ?? ""}
+          email={profile.email ?? ""}
+        />
+      </div>
 
       {/* Security card */}
       <Card>
@@ -134,7 +136,9 @@ export default async function AccountPage() {
         </CardContent>
       </Card>
 
-      <SecurityCard email={profile.email ?? ""} />
+      <div data-tour="account-password">
+        <SecurityCard email={profile.email ?? ""} />
+      </div>
 
       <p className="text-center text-xs text-muted-foreground">
         ¿Algo raro con tu cuenta? Avísale a la hermana con el ID{" "}

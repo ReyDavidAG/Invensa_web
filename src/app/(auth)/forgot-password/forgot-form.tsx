@@ -73,13 +73,15 @@ export function ForgotForm() {
           description="Te enviaremos un enlace para crear una contraseña nueva."
         />
 
-        <SubmitButton
-          loading={form.formState.isSubmitting}
-          loadingLabel="Enviando…"
-          className="mt-2 w-full"
+        <div data-tour="forgot-submit">
+          <SubmitButton
+            loading={form.formState.isSubmitting}
+            loadingLabel="Enviando…"
+            className="mt-2 w-full"
         >
           Enviar enlace
         </SubmitButton>
+        </div>
       </form>
     </Form>
   );

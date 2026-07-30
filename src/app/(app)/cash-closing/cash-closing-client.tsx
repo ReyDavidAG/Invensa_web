@@ -131,6 +131,7 @@ export function CashClosingClient({
 
       {/* Status banner */}
       <Card
+        data-tour="cash-status"
         className={cn(
           "flex items-center gap-3 p-4",
           isClosed
@@ -194,7 +195,7 @@ export function CashClosingClient({
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card className="flex flex-col gap-1 p-4">
+        <Card className="flex flex-col gap-1 p-4" data-tour="cash-expected">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Esperado en caja
           </span>
@@ -205,7 +206,7 @@ export function CashClosingClient({
             Suma de ventas en efectivo hoy
           </span>
         </Card>
-        <Card className="flex flex-col gap-1 p-4">
+        <Card className="flex flex-col gap-1 p-4" data-tour="cash-counted">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Contado en caja
           </span>
@@ -330,6 +331,7 @@ export function CashClosingClient({
               type="submit"
               size="lg"
               disabled={close.isPending}
+              data-tour="cash-submit"
               className="h-12 w-full text-base font-semibold"
             >
               {close.isPending ? (

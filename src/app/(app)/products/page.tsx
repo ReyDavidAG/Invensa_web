@@ -165,6 +165,7 @@ export default async function ProductsPage({
               <Button
                 render={<Link href="/products/new" />}
                 nativeButton={false}
+                data-tour="product-create"
               >
                 <Plus aria-hidden />
                 <span>Nuevo</span>
@@ -180,6 +181,7 @@ export default async function ProductsPage({
       {/* Filter chips */}
       <nav
         aria-label="Filtros de categoría"
+        data-tour="product-filters"
         className="flex flex-wrap items-center gap-2"
       >
         <span className="text-xs font-medium text-muted-foreground">
