@@ -41,6 +41,11 @@ import {
   parseProductPhotoAction,
 } from "@/app/actions/ai-product";
 import {
+  type SuggestProductFromTextResult,
+  type SuggestProductFromTextInput,
+  suggestProductFromTextAction,
+} from "@/app/actions/ai-product-text";
+import {
   type BulkCreateProductsResult,
   bulkCreateProductsAction,
 } from "@/app/actions/bulk-products";
@@ -151,6 +156,16 @@ export function useCreateInventoryMovement() {
 export function useParseProductPhoto() {
   return useMutation<ParseProductPhotoResult, Error, FormData>({
     mutationFn: (formData) => parseProductPhotoAction(null, formData),
+  });
+}
+
+export function useSuggestProductFromText() {
+  return useMutation<
+    SuggestProductFromTextResult,
+    Error,
+    SuggestProductFromTextInput
+  >({
+    mutationFn: (input) => suggestProductFromTextAction(input),
   });
 }
 

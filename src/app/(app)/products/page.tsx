@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { Route } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { BulkImportTrigger } from "./bulk-import-trigger";
@@ -21,12 +20,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 20;
-
-const esMXCurrency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  maximumFractionDigits: 2,
-});
 
 type SearchParams = Promise<{
   q?: string;

@@ -21,12 +21,6 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 2,
 });
 
-const esMXCurrencyNoCents = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  maximumFractionDigits: 0,
-});
-
 const esMXDate = new Intl.DateTimeFormat("es-MX", {
   dateStyle: "long",
 });

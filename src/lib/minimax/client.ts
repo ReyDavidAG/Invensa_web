@@ -127,20 +127,75 @@ export async function miniMaxChat(opts: MiniMaxChatOptions): Promise<string> {
     );
   }
 
-  const content = json.choices?.[0]?.message?.content;
-  if (typeof content === "string" && content.length > 0) return content;
-  if (Array.isArray(content) && content.length > 0) {
-    const joined = content
-      .map((part) =>
-        typeof part === "object" && "text" in part ? part.text : "",
-      )
-      .filter(Boolean)
-      .join("");
-    if (joined) return joined;
+  // Extract content with multiple fallbacks — MiniMax's `reasoning_split`
+  // mode occasionally leaves `content` empty when the model exhausts its
+  // reasoning budget on the thinking trace instead of the final answer.
+  // In that case the JSON often ends up in the `reasoning` field.
+  function extractContent(
+    message: { content?: unknown; reasoning?: unknown } | undefined,
+  ): string {
+    if (!message) return "";
+    const c = message.content;
+    if (typeof c === "string" && c.length > 0) return c;
+    if (Array.isArray(c) && c.length > 0) {
+      const joined = c
+        .map((part) =>
+          typeof part === "object" && part !== null && "text" in part
+            ? (part as { text?: unknown }).text
+            : "",
+        )
+        .filter((s): s is string => Boolean(s))
+        .join("");
+      if (joined) return joined;
+    }
+    // Fallback: reasoning field. Common when reasoning_split is on and the
+    // model puts the JSON payload there.
+    const r = message.reasoning;
+    if (typeof r === "string" && r.length > 0) return r;
+    if (Array.isArray(r) && r.length > 0) {
+      const joined = r
+        .map((part) =>
+          typeof part === "object" && part !== null && "text" in part
+            ? (part as { text?: unknown }).text
+            : "",
+        )
+        .filter((s): s is string => Boolean(s))
+        .join("");
+      if (joined) return joined;
+    }
+    return "";
+  }
+
+  const content = extractContent(json.choices?.[0]?.message);
+  if (content.length > 0) return content;
+
+  // DEBUG: dump the actual message shape so we can see what MiniMax returned.
+  // This is a regression-helper — when this branch fires, the caller logs
+  // the message body so we can extend extractContent() to cover it.
+  const message = json.choices?.[0]?.message as
+    Record<string, unknown> | undefined;
+  const messageKeys = message ? Object.keys(message) : [];
+  const sample: Record<string, unknown> = {};
+  if (message) {
+    for (const key of messageKeys) {
+      const value = message[key];
+      if (typeof value === "string") {
+        sample[key] = value.slice(0, 200);
+      } else {
+        sample[key] = value;
+      }
+    }
   }
   console.error(
-    "[minimax] empty content. redacted body:",
-    redactSecrets(JSON.stringify(json).slice(0, 1000)),
+    "[minimax] empty content after all fallbacks. messageKeys:",
+    messageKeys,
+    "sampledMessage:",
+    redactSecrets(JSON.stringify(sample).slice(0, 1500)),
+    "fullRedactedBody:",
+    redactSecrets(JSON.stringify(json).slice(0, 1500)),
   );
-  throw new MiniMaxError("MiniMax no devolvió contenido.", res.status);
+  throw new MiniMaxError(
+    "MiniMax no devolvió contenido útil. Intenta con una descripción más corta.",
+    res.status,
+  );
 }

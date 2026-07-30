@@ -1,6 +1,5 @@
 import {
   Banknote,
-  BellRing,
   ChevronRight,
   Receipt,
   ShoppingCart,
@@ -347,7 +346,7 @@ export default async function DashboardPage() {
       {profile?.role === "admin" ? (
         <section
           aria-label="Alerta de stock bajo"
-        data-tour="dashboard-lowstock"
+          data-tour="dashboard-lowstock"
           className="animate-fade-up"
           style={{ animationDelay: "140ms" }}
         >

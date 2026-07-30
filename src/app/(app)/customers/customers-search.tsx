@@ -10,6 +10,11 @@ export function CustomersSearch({ defaultValue }: { defaultValue: string }) {
   const [value, setValue] = useState(defaultValue);
 
   useEffect(() => {
+    // Sync the local input to the URL-driven `defaultValue` prop so back/
+    // forward and external links land in the same field. We intentionally
+    // call setState here — the rule's "set during render" alternative
+    // would discard user focus on every URL change.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValue(defaultValue);
   }, [defaultValue]);
 

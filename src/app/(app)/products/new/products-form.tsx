@@ -1,11 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, Loader2, Save, Sparkles } from "lucide-react";
+import {
+  ChevronLeft,
+  CircleCheck,
+  ListChecks,
+  Loader2,
+  Save,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +32,7 @@ import {
 } from "@/components/form/creatable-combobox";
 import { ProductImageDropzone } from "@/components/form/product-image-dropzone";
 import { AiPhotoImport } from "@/components/form/ai-photo-import";
+import { AiTextSuggest } from "@/components/form/ai-text-suggest";
 import { FadeUp } from "@/components/motion/fade-up";
 import {
   useCreateCategory,
@@ -54,15 +62,40 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   } | null>(null);
   const [creatingItems, setCreatingItems] = useState(false);
 
+  // Post-create modal: instead of auto-navigating after a successful
+  // submit, we offer sister a choice — create another product (clean
+  // slate: image + SKU always reset), wipe the whole form, or go see the
+  // one she just made.
+  const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
+  const [postCreateOpen, setPostCreateOpen] = useState(false);
+
+  // SKU suggestion: track the SKU sister just saved so the next entry can
+  // suggest the next number in the sequence.
+  const [lastSavedSku, setLastSavedSku] = useState<string>("");
+  const [skuFocused, setSkuFocused] = useState(false);
+
+  function nextSkuSuggestion(prev: string): string | null {
+    if (!prev) return null;
+    const match = prev.match(/^(.*?)(\d+)$/);
+    if (!match) return null;
+    const [, prefix, num] = match;
+    const width = num.length;
+    const next = String(parseInt(num, 10) + 1).padStart(width, "0");
+    return `${prefix}${next}`;
+  }
+
+  const skuSuggestion = lastSavedSku ? nextSkuSuggestion(lastSavedSku) : null;
+
   const createProduct = useCreateProduct();
   const createCategory = useCreateCategory();
   const createUnit = useCreateUnit();
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
-    watch,
+    reset,
     formState: { errors },
   } = useForm<ProductCreateFormValues>({
     resolver: zodResolver(productCreateSchema),
@@ -90,8 +123,9 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   const fieldErrors = result && !result.ok ? result.fieldErrors : undefined;
   const submitError = result && !result.ok ? result.error : null;
 
-  const categoryId = watch("categoryId") ?? "";
-  const unitId = watch("unitId") ?? "";
+  const categoryId = useWatch({ control, name: "categoryId" }) ?? "";
+  const unitId = useWatch({ control, name: "unitId" }) ?? "";
+  const currentCode = useWatch({ control, name: "code" }) ?? "";
 
   const onSubmit = handleSubmit(async (data) => {
     const fd = new FormData();
@@ -102,13 +136,48 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
     const res = await createProduct.mutateAsync(fd);
     if (res.ok) {
       toast.success("Producto creado");
-      router.push(`/products/${res.id}`);
+      setLastSavedSku(typeof data.code === "string" ? data.code : "");
+      setLastCreatedId(res.id);
+      setPostCreateOpen(true);
       return;
     }
     if (!res.fieldErrors) {
       toast.error(res.error);
     }
   });
+
+  function resetForAnotherProduct(clearAll: boolean) {
+    setPostCreateOpen(false);
+    setLastCreatedId(null);
+    // Always-clear fields: image + SKU. These are "of the new product"
+    // so reusing them from the previous one would be a mistake.
+    setValue("code", "", { shouldValidate: false });
+    setValue("imageUrl", "", { shouldValidate: false });
+    if (clearAll) {
+      reset({
+        name: "",
+        code: "",
+        categoryId: "",
+        unitId: "",
+        priceBuy: undefined,
+        priceSale: undefined,
+        initialStock: undefined,
+        stockLowThreshold: undefined,
+        imageUrl: "",
+      });
+    }
+    // Focus the name field so sister can start typing immediately.
+    setTimeout(() => {
+      const nameInput =
+        document.querySelector<HTMLInputElement>('input[name="name"]');
+      nameInput?.focus();
+    }, 0);
+  }
+
+  function goToCreatedProduct() {
+    if (!lastCreatedId) return;
+    router.push(`/products/${lastCreatedId}`);
+  }
 
   function applyAiResult(parsed: AiProductParsed) {
     if (parsed.name) setValue("name", parsed.name, { shouldValidate: true });
@@ -153,6 +222,53 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
     }
 
     toast.success("Campos aplicados. Revisa y guarda.");
+  }
+
+  // Per-field apply for the text-suggest path. Mirrors applyAiResult's
+  // match-or-create logic but for a single field at a time, called by the
+  // AiTextSuggest component's per-field "Usar" button.
+  function applyAiName(name: string) {
+    setValue("name", name, { shouldValidate: true });
+    toast.success("Nombre aplicado.");
+  }
+
+  function applyAiCategory(categoryName: string) {
+    const match = categoryOptions.find(
+      (c) => c.name.toLowerCase() === categoryName.toLowerCase(),
+    );
+    if (match) {
+      setValue("categoryId", match.id, { shouldValidate: true });
+      toast.success("Categoría aplicada.");
+    } else {
+      setPendingNewItems({ category: categoryName });
+    }
+  }
+
+  function applyAiUnit(unitCode: string) {
+    const match = unitOptions.find(
+      (u) => u.code.toLowerCase() === unitCode.toLowerCase(),
+    );
+    if (match) {
+      setValue("unitId", match.id, { shouldValidate: true });
+      toast.success("Unidad aplicada.");
+    } else {
+      setPendingNewItems({ unit: unitCode });
+    }
+  }
+
+  function applyAiPriceBuy(price: number) {
+    setValue("priceBuy", price, { shouldValidate: true });
+    toast.success("Precio de compra aplicado.");
+  }
+
+  function applyAiPriceSale(price: number) {
+    setValue("priceSale", price, { shouldValidate: true });
+    toast.success("Precio de venta aplicado.");
+  }
+
+  function applyAiInitialStock(stock: number) {
+    setValue("initialStock", stock, { shouldValidate: true });
+    toast.success("Inventario inicial aplicado.");
   }
 
   async function confirmCreateMissing() {
@@ -228,6 +344,24 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
 
           <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
 
+          <AiTextSuggest
+            categories={categoryOptions.map((c) => ({
+              id: c.id,
+              name: c.name,
+            }))}
+            units={unitOptions.map((u) => ({
+              id: u.id,
+              code: u.code,
+              name: u.name,
+            }))}
+            onApplyName={applyAiName}
+            onApplyCategory={applyAiCategory}
+            onApplyUnit={applyAiUnit}
+            onApplyPriceBuy={applyAiPriceBuy}
+            onApplyPriceSale={applyAiPriceSale}
+            onApplyInitialStock={applyAiInitialStock}
+          />
+
           {submitError ? (
             <div
               role="alert"
@@ -290,9 +424,32 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
                       inputMode="text"
                       autoComplete="off"
                       placeholder="PZA-001"
-                      {...register("code")}
+                      {...register("code", {
+                        onBlur: () => setSkuFocused(false),
+                      })}
+                      onFocus={() => setSkuFocused(true)}
                       className={inputClass}
                     />
+                    {/* SKU suggestion: only while the field is focused,
+                        empty, and a previous SKU has a numeric suffix. */}
+                    {skuFocused && !currentCode.trim() && skuSuggestion ? (
+                      <button
+                        type="button"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() =>
+                          setValue("code", skuSuggestion, {
+                            shouldValidate: true,
+                          })
+                        }
+                        className="inline-flex w-fit items-center gap-1.5 rounded-md border border-dashed border-border bg-muted/40 px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <Sparkles aria-hidden className="size-3" />
+                        Sugerencia:{" "}
+                        <span className="font-mono tabular-nums text-foreground">
+                          {skuSuggestion}
+                        </span>
+                      </button>
+                    ) : null}
                   </Field>
 
                   <Field
@@ -486,7 +643,11 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
                     >
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isBusy} data-tour="product-form-submit">
+                    <Button
+                      type="submit"
+                      disabled={isBusy}
+                      data-tour="product-form-submit"
+                    >
                       {isSubmitting ? (
                         <>
                           <Loader2
@@ -587,6 +748,52 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
               ) : (
                 "Crear y aplicar"
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post-create modal: shown after a successful createProduct. Three
+          options: keep going with image+SKU cleared (default), wipe
+          everything, or go see the one she just made. */}
+      <Dialog open={postCreateOpen} onOpenChange={setPostCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="inline-flex items-center gap-2">
+              <CircleCheck aria-hidden className="size-5 text-success" />
+              Producto creado
+            </DialogTitle>
+            <DialogDescription>
+              ¿Quieres registrar otro producto? El SKU y la foto siempre se
+              limpian para que no se repitan por error.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => resetForAnotherProduct(false)}
+              className="w-full"
+            >
+              <ListChecks aria-hidden className="size-4" />
+              Crear otro producto
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              onClick={() => resetForAnotherProduct(true)}
+              className="w-full"
+            >
+              Limpiar todo y crear otro
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={goToCreatedProduct}
+              className="w-full"
+            >
+              Ir al producto creado
             </Button>
           </DialogFooter>
         </DialogContent>
