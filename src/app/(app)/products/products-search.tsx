@@ -32,7 +32,7 @@ export function ProductsSearch({ defaultValue }: { defaultValue: string }) {
   }, [value]);
 
   return (
-    <div className="relative w-full sm:w-64">
+    <div className="relative w-full sm:w-64" data-tour="product-search">
       <label htmlFor="products-search" className="sr-only">
         Buscar productos
       </label>
