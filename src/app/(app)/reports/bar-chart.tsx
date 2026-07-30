@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -65,7 +64,7 @@ export function BarChart({ data, height = 180, className }: Props) {
           const opacity = isZero ? 0.55 : isHover ? 1 : 0.7;
           return (
             <g key={d.date}>
-              <motion.rect
+              <rect
                 x={barX}
                 y={y}
                 width={barW}
@@ -73,12 +72,13 @@ export function BarChart({ data, height = 180, className }: Props) {
                 rx={0.15}
                 fill="var(--primary)"
                 fillOpacity={opacity}
-                initial={{ height: 0, y: height - 0.5 }}
-                animate={{ height: Math.max(h, isZero ? 0.6 : 0), y }}
-                transition={{
-                  duration: 0.42,
-                  delay: i * 0.022,
-                  ease: [0.16, 1, 0.3, 1],
+                className="bar-chart-bar"
+                style={{
+                  // Stagger via CSS animation-delay (motion's delay was i * 0.022s).
+                  animationDelay: `${i * 22}ms`,
+                  // Preserve the final y/h as the animation target via CSS variables.
+                  ["--bar-y" as string]: y,
+                  ["--bar-h" as string]: Math.max(h, isZero ? 0.6 : 0),
                 }}
                 vectorEffect="non-scaling-stroke"
               />

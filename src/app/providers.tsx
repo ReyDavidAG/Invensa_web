@@ -1,42 +1,41 @@
 "use client";
 
-import { MotionConfig } from "motion/react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import type { ReactNode } from "react";
 
 import { QueryProvider } from "@/lib/query/client";
 
-/** Client-only providers. Theme + global toaster + React Query + Motion. */
+/** Client-only providers. Theme + global toaster + React Query.
+ *  Animations are CSS-driven (see globals.css); prefers-reduced-motion is
+ *  handled by the global CSS media rule, so no JS MotionConfig is needed. */
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryProvider>
-      <MotionConfig reducedMotion="user">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster
-            position="bottom-right"
-            richColors
-            closeButton
-            duration={4000}
-            toastOptions={{
-              classNames: {
-                toast:
-                  "border border-border bg-card text-card-foreground rounded-lg shadow-sm",
-                title: "text-sm font-medium",
-                description: "text-xs text-muted-foreground",
-                success: "border-success/40",
-                error: "border-destructive/40",
-              },
-            }}
-          />
-        </ThemeProvider>
-      </MotionConfig>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+        <Toaster
+          position="bottom-right"
+          richColors
+          closeButton
+          duration={4000}
+          toastOptions={{
+            classNames: {
+              toast:
+                "border border-border bg-card text-card-foreground rounded-lg shadow-sm",
+              title: "text-sm font-medium",
+              description: "text-xs text-muted-foreground",
+              success: "border-success/40",
+              error: "border-destructive/40",
+            },
+          }}
+        />
+      </ThemeProvider>
     </QueryProvider>
   );
 }
