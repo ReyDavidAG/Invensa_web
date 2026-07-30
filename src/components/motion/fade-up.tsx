@@ -1,25 +1,36 @@
 "use client";
 
-import { motion, type HTMLMotionProps } from "motion/react";
-import { forwardRef } from "react";
+import { forwardRef, type CSSProperties, type HTMLAttributes } from "react";
 
-const DEFAULT_TRANSITION = {
-  duration: 0.24,
-  ease: [0.16, 1, 0.3, 1] as const,
+import { cn } from "@/lib/utils";
+
+type FadeUpProps = HTMLAttributes<HTMLDivElement> & {
+  /** Stagger delay in ms. Renders as `animation-delay`. */
+  delay?: number;
+  /** Optional style merged after the generated animation-delay. */
+  style?: CSSProperties;
 };
 
-export const FadeUp = forwardRef<HTMLDivElement, HTMLMotionProps<"div">>(
-  function FadeUp({ children, transition, ...rest }, ref) {
+/**
+ * Fade-up entrance animation backed by the existing CSS keyframe in
+ * `globals.css` (`.animate-fade-up`). Replaces the motion/react wrapper.
+ * Honours `prefers-reduced-motion` via the global CSS rule (no JS needed).
+ */
+export const FadeUp = forwardRef<HTMLDivElement, FadeUpProps>(
+  function FadeUp({ children, className, delay, style, ...rest }, ref) {
     return (
-      <motion.div
+      <div
         ref={ref}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...DEFAULT_TRANSITION, ...transition }}
+        className={cn("animate-fade-up", className)}
+        style={
+          delay
+            ? { animationDelay: `${delay}ms`, ...style }
+            : style
+        }
         {...rest}
       >
         {children}
-      </motion.div>
+      </div>
     );
   },
 );
