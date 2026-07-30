@@ -7,6 +7,7 @@ import { AccountMenu } from "./account-menu";
 import { Breadcrumb, PageTitle } from "./page-title";
 import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
+import { HelpMenu } from "@/components/help-menu";
 
 export async function TopBar() {
   const supabase = await getSupabaseServer();
@@ -38,6 +39,7 @@ export async function TopBar() {
         <PageTitle />
       </div>
       {user ? <NotificationBell initialUnread={unread} /> : null}
+      {user ? <HelpMenu /> : null}
       <ThemeToggle />
       {user ? <AccountMenu email={email} fullName={fullName} /> : null}
     </header>

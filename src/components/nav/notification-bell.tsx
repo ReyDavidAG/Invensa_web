@@ -111,6 +111,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
                 ? `Notificaciones (${unread} sin leer)`
                 : "Notificaciones"
             }
+            data-tour="bell"
             className="relative"
           />
         }
