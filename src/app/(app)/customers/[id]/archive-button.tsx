@@ -58,7 +58,7 @@ export function ArchiveCustomerButton({
       />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Archivar "{customerName}"?</DialogTitle>
+          <DialogTitle>Archivar &quot;{customerName}&quot;?</DialogTitle>
           <DialogDescription>
             El cliente deja de aparecer en listados y en el selector del POS. El
             historial de compras se conserva.

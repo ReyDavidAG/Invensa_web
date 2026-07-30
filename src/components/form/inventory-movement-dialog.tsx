@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Save } from "lucide-react";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -46,11 +46,11 @@ export function InventoryMovementDialog({
   const createMovement = useCreateInventoryMovement();
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<InventoryMovementCreateFormValues>({
     resolver: zodResolver(inventoryMovementCreateSchema),
@@ -62,7 +62,7 @@ export function InventoryMovementDialog({
     },
   });
 
-  const movementType = watch("movementType");
+  const movementType = useWatch({ control, name: "movementType" });
 
   // Reset the form every time the dialog re-opens.
   useEffect(() => {

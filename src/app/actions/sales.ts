@@ -22,17 +22,6 @@ async function requireUser(): Promise<
   return { userId: user.id };
 }
 
-function fromFormData<T extends Record<string, FormDataEntryValue | null>>(
-  formData: FormData,
-  keys: (keyof T)[],
-): T {
-  const out = {} as T;
-  for (const key of keys) {
-    out[key] = formData.get(String(key)) as T[keyof T];
-  }
-  return out;
-}
-
 export async function createSaleAction(
   _state: unknown,
   formData: FormData,

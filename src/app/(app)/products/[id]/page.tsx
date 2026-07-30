@@ -152,6 +152,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             {product.image_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={product.image_url}
                 alt={product.name}
