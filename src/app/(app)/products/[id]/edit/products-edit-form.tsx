@@ -5,7 +5,7 @@ import { ChevronLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -49,10 +49,10 @@ export function EditProductForm({
   const createUnit = useCreateUnit();
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ProductUpdateFormValues>({
     resolver: zodResolver(productUpdateSchema),
@@ -67,8 +67,8 @@ export function EditProductForm({
   const fieldErrors = result && !result.ok ? result.fieldErrors : undefined;
   const submitError = result && !result.ok ? result.error : null;
 
-  const categoryId = watch("categoryId") ?? "";
-  const unitId = watch("unitId") ?? "";
+  const categoryId = useWatch({ control, name: "categoryId" }) ?? "";
+  const unitId = useWatch({ control, name: "unitId" }) ?? "";
 
   const onSubmit = handleSubmit(async (data) => {
     const fd = new FormData();
@@ -344,7 +344,11 @@ export function EditProductForm({
                   >
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={isBusy} data-tour="product-form-submit">
+                  <Button
+                    type="submit"
+                    disabled={isBusy}
+                    data-tour="product-form-submit"
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 aria-hidden className="size-4 animate-spin" />

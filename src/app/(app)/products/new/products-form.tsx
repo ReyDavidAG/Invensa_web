@@ -95,7 +95,6 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
     register,
     handleSubmit,
     setValue,
-    watch,
     reset,
     formState: { errors },
   } = useForm<ProductCreateFormValues>({
@@ -124,8 +123,8 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   const fieldErrors = result && !result.ok ? result.fieldErrors : undefined;
   const submitError = result && !result.ok ? result.error : null;
 
-  const categoryId = watch("categoryId") ?? "";
-  const unitId = watch("unitId") ?? "";
+  const categoryId = useWatch({ control, name: "categoryId" }) ?? "";
+  const unitId = useWatch({ control, name: "unitId" }) ?? "";
   const currentCode = useWatch({ control, name: "code" }) ?? "";
 
   const onSubmit = handleSubmit(async (data) => {
