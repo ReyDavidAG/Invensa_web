@@ -124,7 +124,7 @@ export function EditProductForm({
         <fieldset disabled={isBusy} className="contents">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Left column — image */}
-            <Card>
+            <Card data-tour="product-form-image">
               <CardHeader>
                 <CardTitle className="text-sm font-semibold tracking-tight">
                   Imagen
@@ -344,7 +344,7 @@ export function EditProductForm({
                   >
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={isBusy}>
+                  <Button type="submit" disabled={isBusy} data-tour="product-form-submit">
                     {isSubmitting ? (
                       <>
                         <Loader2 aria-hidden className="size-4 animate-spin" />

@@ -161,7 +161,10 @@ export default async function SaleDetailPage({ params }: PageProps) {
 
       <FadeUp className="flex flex-col gap-8">
         {/* ─── Hero header (hidden on print) ──────────────────────── */}
-        <header className="flex flex-col gap-4 print:hidden sm:flex-row sm:items-start sm:justify-between">
+        <header
+          className="flex flex-col gap-4 print:hidden sm:flex-row sm:items-start sm:justify-between"
+          data-tour="sale-detail-header"
+        >
           <div className="flex flex-col gap-3">
             <Link
               href="/sales"
@@ -193,7 +196,11 @@ export default async function SaleDetailPage({ params }: PageProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {sale.status === "paid" ? <PrintButton /> : null}
+            {sale.status === "paid" ? (
+              <span data-tour="sale-detail-print">
+                <PrintButton />
+              </span>
+            ) : null}
           </div>
         </header>
 
@@ -202,7 +209,10 @@ export default async function SaleDetailPage({ params }: PageProps) {
         {/* ─── Main grid (hidden on print) ─────────────────────────── */}
         <div className="grid gap-6 print:hidden lg:grid-cols-3">
           {/* Productos card — col-span-2 on lg+ */}
-          <Card className="lg:col-span-2 overflow-hidden p-0">
+          <Card
+            className="lg:col-span-2 overflow-hidden p-0"
+            data-tour="sale-detail-items"
+          >
             <CardHeader className="border-b border-border bg-muted/20 px-4 py-3 sm:px-6">
               <div className="flex items-baseline justify-between gap-3">
                 <CardTitle className="text-sm font-semibold tracking-tight">
@@ -303,7 +313,7 @@ export default async function SaleDetailPage({ params }: PageProps) {
           {/* Sidebar — Cliente, Pago, Inventario */}
           <div className="flex flex-col gap-4">
             {/* Cliente */}
-            <Card className="p-0">
+            <Card className="p-0" data-tour="sale-detail-client">
               <CardHeader className="px-4 pb-2 pt-4 sm:px-6 sm:pt-5">
                 <CardTitle className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                   Cliente
@@ -334,7 +344,7 @@ export default async function SaleDetailPage({ params }: PageProps) {
             </Card>
 
             {/* Pago */}
-            <Card className="p-0">
+            <Card className="p-0" data-tour="sale-detail-totals">
               <CardHeader className="px-4 pb-2 pt-4 sm:px-6 sm:pt-5">
                 <CardTitle className="text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                   Pago

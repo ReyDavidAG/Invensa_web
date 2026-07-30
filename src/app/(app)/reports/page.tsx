@@ -330,7 +330,7 @@ export default async function ReportsPage({
           </p>
         </div>
         {/* Period selector */}
-        <nav aria-label="Período" className="flex flex-wrap items-center gap-2">
+        <nav aria-label="Período" data-tour="report-period" className="flex flex-wrap items-center gap-2">
           {(["today", "week", "month"] as const).map((p) => (
             <Link
               key={p}
@@ -354,6 +354,7 @@ export default async function ReportsPage({
       {/* ── KPI tiles ──────────────────────────────────────────── */}
       <section
         aria-label="Indicadores del período"
+        data-tour="report-kpis"
         className="grid grid-cols-2 gap-4 md:grid-cols-4"
       >
         <KpiTile
@@ -409,6 +410,7 @@ export default async function ReportsPage({
         title="Ventas por día"
         subtitle="Últimos 14 días"
         total={chartData.reduce((sum, d) => sum + d.total, 0)}
+        tourId="report-chart"
       >
         <div
           className="overflow-x-auto"
@@ -430,6 +432,7 @@ export default async function ReportsPage({
           icon={
             <Package aria-hidden className="size-4 text-muted-foreground" />
           }
+          tourId="report-top-products"
         >
           {topProducts.length === 0 ? (
             <Empty message="Sin ventas en este período." />
@@ -473,6 +476,7 @@ export default async function ReportsPage({
         <ReportCard
           title="Stock bajo"
           icon={<AlertTriangle aria-hidden className="size-4 text-warning" />}
+          tourId="report-stock"
           badge={
             lowStockList.length > 0 ? (
               <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning">
@@ -626,14 +630,16 @@ function ChartCard({
   subtitle,
   total,
   children,
+  tourId,
 }: {
   title: string;
   subtitle?: string;
   total?: number;
   children: React.ReactNode;
+  tourId?: string;
 }) {
   return (
-    <Card>
+    <Card data-tour={tourId}>
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold tracking-tight">
@@ -663,14 +669,16 @@ function ReportCard({
   icon,
   badge,
   children,
+  tourId,
 }: {
   title: string;
   icon: React.ReactNode;
   badge?: React.ReactNode;
   children: React.ReactNode;
+  tourId?: string;
 }) {
   return (
-    <Card>
+    <Card data-tour={tourId}>
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight">

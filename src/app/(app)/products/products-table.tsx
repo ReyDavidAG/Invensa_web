@@ -85,7 +85,7 @@ export function ProductsTable({ products }: Props) {
 
   return (
     <>
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="overflow-x-auto rounded-lg border border-border" data-tour="product-table">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

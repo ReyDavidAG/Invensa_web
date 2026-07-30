@@ -13,6 +13,7 @@ import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
+import { DashboardTourTrigger } from "@/components/dashboard-tour-trigger";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -219,6 +220,7 @@ export default async function DashboardPage() {
 
   return (
     <FadeUp className="flex flex-col gap-6">
+      <DashboardTourTrigger />
       {/* Greeting */}
       <header
         className="animate-fade-up flex flex-col gap-1"
@@ -235,6 +237,7 @@ export default async function DashboardPage() {
       {/* Stat tiles — stagger via inline animationDelay */}
       <section
         aria-label="Indicadores del día"
+        data-tour="dashboard-cards"
         className="grid grid-cols-2 gap-4 md:grid-cols-4"
       >
         <StatTile
@@ -284,6 +287,7 @@ export default async function DashboardPage() {
       {/* Cash closing widget — single row, full width on mobile */}
       <section
         aria-label="Cierre de caja del día"
+        data-tour="dashboard-cash"
         className="animate-fade-up"
         style={{ animationDelay: "120ms" }}
       >
@@ -343,6 +347,7 @@ export default async function DashboardPage() {
       {profile?.role === "admin" ? (
         <section
           aria-label="Alerta de stock bajo"
+        data-tour="dashboard-lowstock"
           className="animate-fade-up"
           style={{ animationDelay: "140ms" }}
         >
@@ -356,7 +361,7 @@ export default async function DashboardPage() {
           className="animate-fade-up lg:col-span-2"
           style={{ animationDelay: "160ms" }}
         >
-          <Card className="p-0 card-hover-lift">
+          <Card className="p-0 card-hover-lift" data-tour="dashboard-top">
             <header className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6">
               <h2 className="text-sm font-semibold tracking-tight">
                 Ventas recientes

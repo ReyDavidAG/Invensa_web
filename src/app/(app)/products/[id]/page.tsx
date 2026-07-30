@@ -108,16 +108,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* Visible to both admin and employee — RLS enforces created_by. */}
-          <InventoryMovementButton
-            productId={product.id}
-            productName={product.name}
-          />
+          <span data-tour="product-movement">
+            <InventoryMovementButton
+              productId={product.id}
+              productName={product.name}
+            />
+          </span>
           {isAdmin ? (
             <>
               <Button
                 render={<Link href={`/products/${product.id}/edit`} />}
                 nativeButton={false}
                 variant="outline"
+                data-tour="product-edit"
               >
                 <Pencil aria-hidden className="size-4" />
                 Editar
@@ -172,7 +175,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </Card>
 
         {/* Right column — details */}
-        <Card>
+        <Card data-tour="product-detail">
           <CardHeader>
             <CardTitle className="text-sm font-semibold tracking-tight">
               Detalles
@@ -214,7 +217,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       </div>
 
       {/* Movements */}
-      <Card>
+      <Card data-tour="product-movements">
         <CardHeader>
           <CardTitle className="text-sm font-semibold tracking-tight">
             Movimientos recientes

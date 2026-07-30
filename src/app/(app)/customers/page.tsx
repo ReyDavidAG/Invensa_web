@@ -114,7 +114,11 @@ export default async function CustomersPage({
         </h1>
         <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
           <CustomersSearch defaultValue={q} />
-          <Button render={<Link href="/customers/new" />} nativeButton={false}>
+          <Button
+            render={<Link href="/customers/new" />}
+            nativeButton={false}
+            data-tour="customer-create"
+          >
             <Plus aria-hidden className="size-4" />
             <span>Nuevo</span>
           </Button>
@@ -126,6 +130,7 @@ export default async function CustomersPage({
       {/* Status filter */}
       <nav
         aria-label="Filtros de estado"
+        data-tour="customer-filters"
         className="flex flex-wrap items-center gap-2"
       >
         {[
@@ -183,7 +188,7 @@ export default async function CustomersPage({
         </Card>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="overflow-x-auto rounded-lg border border-border" data-tour="customer-table">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
