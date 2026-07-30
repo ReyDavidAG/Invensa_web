@@ -82,7 +82,12 @@ export function SecurityCard({ email }: { email: string }) {
             </div>
           </div>
           <form action={signOutAction}>
-            <Button type="submit" variant="destructive" size="sm">
+            <Button
+              type="submit"
+              variant="destructive"
+              size="sm"
+              data-tour="account-signout"
+            >
               <LogOut aria-hidden className="size-4" />
               Cerrar sesión
             </Button>
