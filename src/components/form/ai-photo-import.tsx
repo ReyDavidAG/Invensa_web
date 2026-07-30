@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, ImageIcon, Loader2, Save, Sparkles, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -65,13 +65,17 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   // Reset transient state when the sheet closes.
-  useEffect(() => {
-    if (open) return;
+  function clearImage() {
     setImageFile(null);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImagePreview(null);
     setParsed(null);
-  }, [open, imagePreview]);
+  }
+
+  function handleSheetOpenChange(next: boolean) {
+    if (!next) clearImage();
+    onOpenChange(next);
+  }
 
   async function handleFile(file: File) {
     // Resize client-side to keep the Server Action body under 1 MB.
@@ -107,13 +111,6 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
     }
   }
 
-  function clearImage() {
-    setImageFile(null);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImagePreview(null);
-    setParsed(null);
-  }
-
   function applyToForm() {
     if (!parsed) return;
     onApply(parsed);
@@ -123,7 +120,7 @@ export function AiPhotoImport({ open, onOpenChange, onApply }: Props) {
   const isPending = parsePhoto.isPending;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent
         side="right"
         className="flex w-full flex-col gap-0 sm:max-w-md"

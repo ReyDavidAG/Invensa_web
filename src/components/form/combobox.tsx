@@ -40,13 +40,11 @@ export function Combobox({
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Reset transient state whenever the popover opens/closes.
+  // Focus the search input on next tick whenever the popover opens.
   useEffect(() => {
-    if (open) {
-      setSearch("");
-      const t = setTimeout(() => inputRef.current?.focus(), 0);
-      return () => clearTimeout(t);
-    }
+    if (!open) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 0);
+    return () => clearTimeout(t);
   }, [open]);
 
   const filtered = useMemo(() => {
@@ -62,7 +60,13 @@ export function Combobox({
   const selected = options.find((o) => o.value === value) ?? null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setSearch("");
+      }}
+    >
       <PopoverTrigger
         render={
           <button

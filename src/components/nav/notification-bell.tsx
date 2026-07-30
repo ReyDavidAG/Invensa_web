@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Banknote, Bell, BellRing, Loader2, Package } from "lucide-react";
 import { toast } from "sonner";
@@ -54,11 +54,12 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
     }
   }
 
-  useEffect(() => {
-    if (open) {
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (next) {
       void refresh();
     }
-  }, [open]);
+  }
 
   async function handleItemClick(n: Notification) {
     if (n.read_at === null) {
@@ -100,7 +101,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   const hasUnread = unread > 0;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger
         render={
           <Button

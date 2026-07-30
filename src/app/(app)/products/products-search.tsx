@@ -11,6 +11,7 @@ export function ProductsSearch({ defaultValue }: { defaultValue: string }) {
 
   // Keep the input in sync if the URL changes externally (back/forward, link).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValue(defaultValue);
   }, [defaultValue]);
 
