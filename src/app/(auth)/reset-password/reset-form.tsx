@@ -57,6 +57,7 @@ export function ResetForm() {
           autoComplete="new-password"
         />
 
+        <div data-tour="reset-submit">
         <SubmitButton
           loading={form.formState.isSubmitting}
           loadingLabel="Guardando…"
@@ -64,6 +65,7 @@ export function ResetForm() {
         >
           Guardar contraseña
         </SubmitButton>
+        </div>
       </form>
     </Form>
   );
