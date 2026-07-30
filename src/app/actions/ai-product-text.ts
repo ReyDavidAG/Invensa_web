@@ -53,11 +53,6 @@ function checkRate(userId: string): boolean {
   return true;
 }
 
-const esMXCurrency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-});
-
 function buildSystemPrompt(
   categories: ExistingCategory[],
   units: ExistingUnit[],

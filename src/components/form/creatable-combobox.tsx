@@ -53,15 +53,11 @@ export function CreatableCombobox({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Reset transient state whenever the popover opens/closes.
+  // Focus the search input on next tick whenever the popover opens.
   useEffect(() => {
-    if (open) {
-      setSearch("");
-      setError(null);
-      // Focus the search input on next tick.
-      const t = setTimeout(() => inputRef.current?.focus(), 0);
-      return () => clearTimeout(t);
-    }
+    if (!open) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 0);
+    return () => clearTimeout(t);
   }, [open]);
 
   const filtered = useMemo(() => {
@@ -102,7 +98,16 @@ export function CreatableCombobox({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) {
+          setSearch("");
+          setError(null);
+        }
+      }}
+    >
       <PopoverTrigger
         render={
           <button
@@ -241,7 +246,7 @@ export function CreatableCombobox({
                 <Plus aria-hidden className="size-4" />
               )}
               <span className="truncate">
-                Crear {createNoun} "{search.trim()}"
+                Crear {createNoun} &quot;{search.trim()}&quot;
               </span>
             </Button>
           </div>

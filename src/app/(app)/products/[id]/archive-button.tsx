@@ -55,7 +55,7 @@ export function ArchiveButton({ productId, productName }: ArchiveButtonProps) {
       />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Archivar "{productName}"?</DialogTitle>
+          <DialogTitle>Archivar &quot;{productName}&quot;?</DialogTitle>
           <DialogDescription>
             El producto deja de aparecer en ventas y listados nuevos. El
             historial de ventas anteriores se conserva.
