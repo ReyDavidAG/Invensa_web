@@ -180,7 +180,7 @@ export function NewCustomerForm() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isBusy}>
+                <Button type="submit" disabled={isBusy} data-tour="customer-form-submit">
                   {isBusy ? (
                     <>
                       <Loader2 aria-hidden className="size-4 animate-spin" />

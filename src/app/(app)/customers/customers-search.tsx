@@ -30,7 +30,7 @@ export function CustomersSearch({ defaultValue }: { defaultValue: string }) {
   }, [value]);
 
   return (
-    <div className="relative w-full sm:w-72">
+    <div className="relative w-full sm:w-72" data-tour="customer-search">
       <label htmlFor="customers-search" className="sr-only">
         Buscar clientes
       </label>
