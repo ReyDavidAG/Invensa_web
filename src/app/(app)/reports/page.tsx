@@ -90,6 +90,10 @@ export default async function ReportsPage({
 }: {
   searchParams: SearchParams;
 }) {
+  // periodRange()/chartRange() below call `new Date()` before any recognized
+  // dynamic API — without this, Cache Components rejects it as an unstable
+  // prerender value (see src/lib/supabase/server.ts for the same fix).
+  await connection();
   const sp = await searchParams;
   const period: Period =
     sp.period === "week" || sp.period === "month" ? sp.period : "today";
