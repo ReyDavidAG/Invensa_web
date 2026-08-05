@@ -39,7 +39,10 @@ Esquema exacto (respeta los tipos y los nombres de campo):
 
 Guía de cada campo:
 - name: nombre comercial legible del empaque (ej. "Fabuloso Fresca Activa 2L").
-- code: SKU o código de barras visible. null si no se ve.
+- code: SOLO si hay un código de barras o SKU IMPRESO Y LEGIBLE en el empaque.
+  Si no se distingue con certeza, null — el sistema genera un SKU automático,
+  así que null aquí es la respuesta correcta y esperada la mayoría de las veces.
+  NUNCA inventes ni completes dígitos que no puedas leer.
 - unitCode: unidad de venta inferida (PZA, L, KG, ML, GAL). null si no sabes.
 - priceSale: precio de venta al público en MXN, solo el número. null si no es visible.
 - priceBuy: precio de costo si aparece visible. null si no.
@@ -104,7 +107,12 @@ export async function parseProductPhotoAction(
       messages,
       responseFormat: { type: "json_object" },
       temperature: 0.2,
-      maxTokens: 800,
+      // ponytail: 2000 is a generous, unmeasured budget — raised from 800
+      // because the model was spending its whole token budget on the hidden
+      // reasoning trace and returning empty content (see client.ts's
+      // extractContent fallback comment). Tighten once real MiniMax usage
+      // data shows the actual p95 reasoning + answer length.
+      maxTokens: 2000,
       // MiniMax-specific: separates reasoning from final answer so the JSON
       // comes back clean in `content` instead of being prefixed with
       // `<think>…</think>` blocks.

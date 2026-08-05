@@ -82,6 +82,7 @@ export function PosClient({
   const [paidAmountInput, setPaidAmountInput] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const cartAnchorRef = useRef<HTMLDivElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
 
   // Close the search dropdown on outside click.
@@ -140,6 +141,18 @@ export function PosClient({
       )
       .slice(0, 12);
   }, [debouncedSearch, products]);
+
+  // A barcode scanner is a keyboard: it types the code then sends Enter.
+  // Matching on exact code + Enter is the whole scanning integration —
+  // nothing else changes once real scanner hardware shows up.
+  const findByExactCode = useCallback(
+    (raw: string) => {
+      const code = raw.trim().toLowerCase();
+      if (!code) return undefined;
+      return products.find((p) => p.code.toLowerCase() === code);
+    },
+    [products],
+  );
 
   const total = useMemo(
     () => cart.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0),
@@ -248,7 +261,9 @@ export function PosClient({
   const quickAmounts = [50, 100, 200, 500, 1000];
 
   return (
-    <FadeUp className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6">
+    <FadeUp
+      className={`flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6 ${cart.length > 0 ? "pb-20 lg:pb-0" : ""}`}
+    >
       {/* ─── LEFT: Customer + Search + Products ─────────────────────── */}
       <div className="flex flex-col gap-4">
         {/* Header */}
@@ -349,6 +364,16 @@ export function PosClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setSearchFocused(true)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              e.preventDefault();
+              const match = findByExactCode(search);
+              if (match) {
+                addToCart(match);
+              } else if (search.trim()) {
+                toast.error(`Sin coincidencia para "${search.trim()}"`);
+              }
+            }}
             className="h-12 pl-9 pr-10 text-base"
           />
           {search ? (
@@ -464,10 +489,14 @@ export function PosClient({
             </div>
           ) : null}
         </div>
+        <p className="-mt-2 px-1 text-xs text-muted-foreground">
+          Escanea el código de barras o escribe el SKU y presiona Enter para
+          agregarlo directo.
+        </p>
       </div>
 
       {/* ─── RIGHT: Cart + Payment + Submit ─────────────────────────── */}
-      <div className="lg:sticky lg:top-20 lg:self-start">
+      <div ref={cartAnchorRef} className="lg:sticky lg:top-20 lg:self-start">
         <Card className="flex flex-col p-0" data-tour="sale-cart">
           {/* Cart header */}
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -562,6 +591,12 @@ export function PosClient({
                   placeholder="0.00"
                   value={paidAmountInput}
                   onChange={(e) => setPaidAmountInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && canSubmit) {
+                      e.preventDefault();
+                      onSubmit();
+                    }
+                  }}
                   disabled={createSale.isPending}
                   className="h-12 pl-7 pr-4 font-mono tabular-nums text-base"
                 />
@@ -641,6 +676,30 @@ export function PosClient({
           </div>
         </Card>
       </div>
+
+      {/* Mobile-only: total stays reachable without scrolling past the search results. */}
+      {cart.length > 0 ? (
+        <button
+          type="button"
+          onClick={() =>
+            cartAnchorRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            })
+          }
+          className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-lg lg:hidden"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+              {totalQuantity}
+            </span>
+            Ver carrito
+          </span>
+          <span className="font-mono text-base font-bold tabular-nums text-foreground">
+            {esMXCurrency.format(total)}
+          </span>
+        </button>
+      ) : null}
     </FadeUp>
   );
 }

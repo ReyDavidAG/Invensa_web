@@ -171,7 +171,11 @@ export async function suggestProductFromTextAction(
       messages,
       responseFormat: { type: "json_object" },
       temperature: 0.2,
-      maxTokens: 500,
+      // ponytail: same fix as ai-product.ts — raised from 500 so the hidden
+      // reasoning trace doesn't eat the whole budget before the JSON answer.
+      // Text-only task needs less headroom than the vision endpoint; revisit
+      // once real usage data exists.
+      maxTokens: 1500,
       reasoningSplit: true,
     });
   } catch (err) {

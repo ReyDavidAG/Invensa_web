@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -45,16 +45,25 @@ import {
   productCreateSchema,
 } from "@/lib/schemas/products";
 import type { AiProductParsed } from "@/lib/schemas/ai-product";
+import { suggestSku } from "@/lib/sku";
 
 type ProductsFormProps = {
   categories: CreatableOption[];
   units: CreatableOption[];
+  existingCodes: string[];
 };
 
-export function NewProductForm({ categories, units }: ProductsFormProps) {
+export function NewProductForm({
+  categories,
+  units,
+  existingCodes,
+}: ProductsFormProps) {
   const router = useRouter();
   const [categoryOptions, setCategoryOptions] = useState(categories);
   const [unitOptions, setUnitOptions] = useState(units);
+  // Grows as products are saved this session so the next suggestion never
+  // repeats one just created (the server list is stale until reload).
+  const [knownCodes, setKnownCodes] = useState(existingCodes);
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [pendingNewItems, setPendingNewItems] = useState<{
     category?: string;
@@ -69,22 +78,7 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
   const [postCreateOpen, setPostCreateOpen] = useState(false);
 
-  // SKU suggestion: track the SKU sister just saved so the next entry can
-  // suggest the next number in the sequence.
-  const [lastSavedSku, setLastSavedSku] = useState<string>("");
   const [skuFocused, setSkuFocused] = useState(false);
-
-  function nextSkuSuggestion(prev: string): string | null {
-    if (!prev) return null;
-    const match = prev.match(/^(.*?)(\d+)$/);
-    if (!match) return null;
-    const [, prefix, num] = match;
-    const width = num.length;
-    const next = String(parseInt(num, 10) + 1).padStart(width, "0");
-    return `${prefix}${next}`;
-  }
-
-  const skuSuggestion = lastSavedSku ? nextSkuSuggestion(lastSavedSku) : null;
 
   const createProduct = useCreateProduct();
   const createCategory = useCreateCategory();
@@ -127,6 +121,17 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
   const unitId = useWatch({ control, name: "unitId" }) ?? "";
   const currentCode = useWatch({ control, name: "code" }) ?? "";
 
+  // Suggestion re-rolls whenever the unit changes or the known-codes set
+  // grows (a product was just saved), but only while the field is empty —
+  // no point generating one nobody asked for.
+  const selectedUnitCode =
+    unitOptions.find((u) => u.id === unitId)?.code ?? null;
+  const skuSuggestion = useMemo(
+    () =>
+      currentCode.trim() ? null : suggestSku(knownCodes, selectedUnitCode),
+    [currentCode, knownCodes, selectedUnitCode],
+  );
+
   const onSubmit = handleSubmit(async (data) => {
     const fd = new FormData();
     for (const [k, v] of Object.entries(data)) {
@@ -136,7 +141,9 @@ export function NewProductForm({ categories, units }: ProductsFormProps) {
     const res = await createProduct.mutateAsync(fd);
     if (res.ok) {
       toast.success("Producto creado");
-      setLastSavedSku(typeof data.code === "string" ? data.code : "");
+      if (typeof data.code === "string" && data.code.trim()) {
+        setKnownCodes((prev) => [...prev, data.code as string]);
+      }
       setLastCreatedId(res.id);
       setPostCreateOpen(true);
       return;
