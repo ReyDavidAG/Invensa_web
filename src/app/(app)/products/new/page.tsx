@@ -26,16 +26,20 @@ export default async function NewProductPage() {
     notFound();
   }
 
-  const [{ data: categories }, { data: units }] = await Promise.all([
-    supabase
-      .from("categories")
-      .select("id, code, name")
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("units")
-      .select("id, code, name")
-      .order("name", { ascending: true }),
-  ]);
+  const [{ data: categories }, { data: units }, { data: products }] =
+    await Promise.all([
+      supabase
+        .from("categories")
+        .select("id, code, name")
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("units")
+        .select("id, code, name")
+        .order("name", { ascending: true }),
+      // Just the SKU column — enough to keep suggestions collision-free
+      // without paying for the full product rows.
+      supabase.from("products").select("code"),
+    ]);
 
   return (
     <NewProductForm
@@ -49,6 +53,7 @@ export default async function NewProductPage() {
         code: u.code as string,
         name: u.name as string,
       }))}
+      existingCodes={(products ?? []).map((p) => p.code as string)}
     />
   );
 }
