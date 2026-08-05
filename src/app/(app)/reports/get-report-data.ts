@@ -266,10 +266,17 @@ export async function getReportData(period: Period): Promise<ReportData> {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([id]) => id);
-  const { data: clientRows } = await supabase
-    .from("clients")
-    .select("id, name, phone")
-    .in("id", topClientIds.length ? topClientIds : ["__none__"]);
+  // Skip the query entirely when there's nothing to look up — `clients.id`
+  // is a uuid column, and a placeholder string like "__none__" isn't a
+  // valid uuid, so `.in("id", [...])` with that sentinel throws a Postgres
+  // cast error every time no client bought in the period (e.g. "Hoy").
+  const { data: clientRows, error: clientRowsError } = topClientIds.length
+    ? await supabase
+        .from("clients")
+        .select("id, name, phone")
+        .in("id", topClientIds)
+    : { data: [], error: null };
+  if (clientRowsError) console.error("[reports] top clients", clientRowsError);
   const clientNameById = new Map<string, string>(
     (clientRows ?? []).map((c) => [c.id as string, c.name as string]),
   );
