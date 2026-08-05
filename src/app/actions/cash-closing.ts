@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { todayMexicoISODate } from "@/lib/datetime";
 import {
   type CashClosingRow,
   cashClosingCloseSchema,
@@ -23,17 +24,6 @@ async function requireUser(): Promise<
     return { ok: false, error: "Tu sesión expiró. Vuelve a iniciar sesión." };
   }
   return { userId: user.id };
-}
-
-function todayMexico(): string {
-  // YYYY-MM-DD in America/Mexico_City
-  const fmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return fmt.format(new Date());
 }
 
 async function computeExpectedCash(
@@ -87,7 +77,7 @@ export async function getTodayCashClosingAction(): Promise<{
   const auth = await requireUser();
   if ("ok" in auth) return auth;
   const supabase = await getSupabaseServer();
-  const date = todayMexico();
+  const date = todayMexicoISODate();
   try {
     const row = await loadOrOpen(supabase, auth.userId, date);
     return { ok: true, row };
@@ -124,7 +114,7 @@ export async function closeCashAction(
   }
 
   const supabase = await getSupabaseServer();
-  const date = todayMexico();
+  const date = todayMexicoISODate();
   const open = await loadOrOpen(supabase, auth.userId, date);
 
   if (open.status === "closed") {

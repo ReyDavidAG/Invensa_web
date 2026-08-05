@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { formatDateTimeShort } from "@/lib/datetime";
 
 import { ArchiveButton } from "./archive-button";
 import { InventoryMovementButton } from "./inventory-movement-button";
@@ -15,11 +16,6 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
   maximumFractionDigits: 2,
-});
-
-const esMXDateTime = new Intl.DateTimeFormat("es-MX", {
-  dateStyle: "short",
-  timeStyle: "short",
 });
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -264,7 +260,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         {delta}
                       </span>
                       <time className="hidden text-xs text-muted-foreground sm:block">
-                        {esMXDateTime.format(new Date(m.created_at))}
+                        {formatDateTimeShort(m.created_at)}
                       </time>
                     </div>
                   </li>

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { formatDateTimeShort, formatDayMonthYear } from "@/lib/datetime";
 
 import { ArchiveCustomerButton } from "./archive-button";
 
@@ -22,17 +23,6 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
   maximumFractionDigits: 2,
-});
-
-const esMXDate = new Intl.DateTimeFormat("es-MX", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-const esMXDateTime = new Intl.DateTimeFormat("es-MX", {
-  dateStyle: "short",
-  timeStyle: "short",
 });
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -175,7 +165,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
               </p>
               <p className="mt-1.5 text-xs text-muted-foreground">
                 {lastSale
-                  ? esMXDate.format(new Date(lastSale.date_at))
+                  ? formatDayMonthYear(lastSale.date_at)
                   : "« datos reales cuando registre ventas »"}
               </p>
             </Card>
@@ -205,7 +195,7 @@ export default async function CustomerDetailPage({ params }: PageProps) {
                           #{s.ticket_number}
                         </span>
                         <time className="hidden text-xs text-muted-foreground sm:block">
-                          {esMXDateTime.format(new Date(s.date_at))}
+                          {formatDateTimeShort(s.date_at)}
                         </time>
                       </div>
                       <Link

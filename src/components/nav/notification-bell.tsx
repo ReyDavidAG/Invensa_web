@@ -18,6 +18,7 @@ import type {
   NotificationType,
 } from "@/lib/schemas/notifications";
 import { cn } from "@/lib/utils";
+import { formatDayMonth } from "@/lib/datetime";
 
 const TYPE_ICON: Record<
   NotificationType,
@@ -259,8 +260,5 @@ function formatRelative(date: Date): string {
   if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minute");
   if (Math.abs(diffHr) < 24) return rtf.format(diffHr, "hour");
   if (Math.abs(diffDay) < 7) return rtf.format(diffDay, "day");
-  return new Intl.DateTimeFormat("es-MX", {
-    day: "2-digit",
-    month: "short",
-  }).format(date);
+  return formatDayMonth(date);
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { mexicoDayStartUTC } from "@/lib/datetime";
 import {
   type Notification,
   type NotificationCreateInput,
@@ -22,9 +23,8 @@ export type MarkResult = { ok: true } | { ok: false; error: string };
 // real work now lives in lib/supabase/profile.ts so layout + TopBar share one
 // roundtrip via React.cache().
 export async function getUnreadCountAction(): Promise<number> {
-  const { getUnreadNotificationsCount } = await import(
-    "@/lib/supabase/profile"
-  );
+  const { getUnreadNotificationsCount } =
+    await import("@/lib/supabase/profile");
   return getUnreadNotificationsCount();
 }
 
@@ -113,9 +113,7 @@ export async function createNotificationsDedupedAction(
   const input = parsed.data;
 
   const admin = await getSupabaseAdmin();
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayIso = todayStart.toISOString();
+  const todayIso = mexicoDayStartUTC(0).toISOString();
 
   // For each user, check if a notification of this type already exists today.
   const filtered: typeof input.userIds = [];

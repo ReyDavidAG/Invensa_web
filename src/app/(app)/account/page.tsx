@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { formatLongDate } from "@/lib/datetime";
 
 import { ProfileForm } from "./profile-form";
 import { SecurityCard } from "./security-card";
@@ -15,12 +16,6 @@ import { SecurityCard } from "./security-card";
 export const metadata: Metadata = {
   title: "Cuenta",
 };
-
-const esMXLongDate = new Intl.DateTimeFormat("es-MX", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
 
 const ROLE_META = {
   admin: {
@@ -62,7 +57,7 @@ export default async function AccountPage() {
     (profile.role as keyof typeof ROLE_META) in ROLE_META
       ? (profile.role as keyof typeof ROLE_META)
       : "employee";
-  const memberSince = esMXLongDate.format(new Date(profile.created_at));
+  const memberSince = formatLongDate(profile.created_at);
   const roleMeta = ROLE_META[role];
 
   return (
