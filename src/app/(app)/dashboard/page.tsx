@@ -1,10 +1,14 @@
 import {
+  AlertTriangle,
   Banknote,
+  BarChart3,
   ChevronRight,
+  Coins,
+  Package,
   Receipt,
   ShoppingCart,
+  TrendingUp,
   UserPlus,
-  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
@@ -54,24 +58,28 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "Registrar venta",
     hint: "POS · paso a paso",
     icon: <ShoppingCart aria-hidden className="size-4" />,
+    accent: "primary",
   },
   {
     href: "/products",
     label: "Agregar producto",
     hint: "Catálogo · alta rápida",
-    icon: <UserPlus aria-hidden className="size-4" />,
+    icon: <Package aria-hidden className="size-4" />,
+    accent: "teal",
   },
   {
     href: "/customers",
     label: "Nuevo cliente",
     hint: "Para registrar ventas",
-    icon: <Receipt aria-hidden className="size-4" />,
+    icon: <UserPlus aria-hidden className="size-4" />,
+    accent: "success",
   },
   {
     href: "/reports",
     label: "Ver reportes",
     hint: "Cortes y top productos",
-    icon: <Wallet aria-hidden className="size-4" />,
+    icon: <BarChart3 aria-hidden className="size-4" />,
+    accent: "warning",
   },
 ];
 
@@ -244,6 +252,8 @@ export default async function DashboardPage() {
               ? `${esMXCurrency.format(todayTotal)}`
               : "« datos reales cuando registres ventas »"
           }
+          icon={<Coins aria-hidden className="size-4" />}
+          accent="primary"
         />
         <StatTile
           delay={0.04}
@@ -256,6 +266,8 @@ export default async function DashboardPage() {
                 ? `ayer: ${yesterdayCount} ${yesterdayCount === 1 ? "venta" : "ventas"}`
                 : "« datos reales cuando registres ventas »"
           }
+          icon={<TrendingUp aria-hidden className="size-4" />}
+          accent="teal"
         />
         <StatTile
           delay={0.08}
@@ -266,6 +278,10 @@ export default async function DashboardPage() {
               ? `${lowStockCount} ${lowStockCount === 1 ? "producto" : "productos"}`
               : "todo el inventario sobre el umbral"
           }
+          icon={<AlertTriangle aria-hidden className="size-4" />}
+          // Only tile whose color reflects real severity, not a fixed
+          // category — amber when it actually needs attention.
+          accent={lowStockCount > 0 ? "warning" : "success"}
         />
         <StatTile
           delay={0.12}
@@ -276,6 +292,8 @@ export default async function DashboardPage() {
               ? `ayer: ${yesterdayCount}`
               : "« primer día de operación »"
           }
+          icon={<ShoppingCart aria-hidden className="size-4" />}
+          accent="success"
         />
       </section>
 
@@ -444,7 +462,12 @@ export default async function DashboardPage() {
                     href={action.href}
                     className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent sm:px-6"
                   >
-                    <span className="grid size-8 place-items-center rounded-md bg-secondary text-secondary-foreground">
+                    <span
+                      className={cn(
+                        "grid size-8 shrink-0 place-items-center rounded-md",
+                        ACCENT_CLASS[action.accent],
+                      )}
+                    >
                       {action.icon}
                     </span>
                     <span className="flex min-w-0 flex-col">
@@ -475,11 +498,15 @@ function StatTile({
   label,
   value,
   subtitle,
+  icon,
+  accent,
 }: {
   delay: number;
   label: string;
   value: string;
   subtitle: string;
+  icon: React.ReactNode;
+  accent: Accent;
 }) {
   return (
     <div
@@ -487,9 +514,19 @@ function StatTile({
       style={{ animationDelay: `${delay * 1000}ms` }}
     >
       <Card className="h-full p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "grid size-7 shrink-0 place-items-center rounded-md",
+              ACCENT_CLASS[accent],
+            )}
+          >
+            {icon}
+          </span>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
+        </div>
         <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
           {value}
         </p>
