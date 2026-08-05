@@ -38,11 +38,6 @@ function periodRange(period: Period): { from: Date; to: Date } {
   return { from: mexicoDayStartUTC(days - 1), to };
 }
 
-function chartRange(): { from: Date; to: Date } {
-  // Always show the last 14 calendar days for the chart.
-  return { from: mexicoDayStartUTC(13), to: new Date() };
-}
-
 export type TopProduct = {
   id: string;
   code: string;
@@ -85,14 +80,12 @@ export type ReportData = {
 
 export async function getReportData(period: Period): Promise<ReportData> {
   const range = periodRange(period);
-  const chart = chartRange();
   const supabase = await getSupabaseServer();
 
-  // Parallel fetch — all reads, scoped by date range and chart range.
+  // Parallel fetch — all reads scoped by the same selected-period range.
   const [
     { data: periodSales, error: periodSalesError },
     { data: yesterdaySales, error: yesterdaySalesError },
-    { data: chartSales, error: chartSalesError },
     { data: topSaleItems, error: topSaleItemsError },
     { data: lowStock, error: lowStockError },
     { data: stockRows, error: stockRowsError },
@@ -115,12 +108,6 @@ export async function getReportData(period: Period): Promise<ReportData> {
           .lt("date_at", mexicoDayStartUTC(0).toISOString())
           .neq("status", "cancelled")
       : Promise.resolve({ data: [] as Array<{ total: number }>, error: null }),
-    supabase
-      .from("sales")
-      .select("id, total, date_at")
-      .gte("date_at", chart.from.toISOString())
-      .lte("date_at", chart.to.toISOString())
-      .neq("status", "cancelled"),
     // Top products + profit: pull recent sale_items in the period, aggregate
     // client-side. price_buy is the product's CURRENT cost, not a historical
     // snapshot at time of sale — see the profit caveat below.
@@ -151,7 +138,6 @@ export async function getReportData(period: Period): Promise<ReportData> {
     console.error("[reports] period sales", periodSalesError);
   if (yesterdaySalesError)
     console.error("[reports] yesterday sales", yesterdaySalesError);
-  if (chartSalesError) console.error("[reports] chart sales", chartSalesError);
   if (topSaleItemsError)
     console.error("[reports] top sale items", topSaleItemsError);
   if (lowStockError)
@@ -183,17 +169,26 @@ export async function getReportData(period: Period): Promise<ReportData> {
       ? ((periodTotal - yesterdayTotal) / yesterdayTotal) * 100
       : null;
 
-  // ── Daily chart series (14 days, fill missing days with 0) ──────
-  const dayMap = new Map<string, number>();
-  for (const s of chartSales ?? []) {
+  // ── Daily chart series — same range as the rest of the report, not a
+  // fixed separate window, so "Ventas por día" always matches the period
+  // the user picked (Hoy = 1 day, 7 días, 30 días). Reuses `periodSales`
+  // (already scoped to `range`) instead of a second query.
+  const dayTotal = new Map<string, number>();
+  const dayCount = new Map<string, number>();
+  for (const s of periodSales ?? []) {
     const key = mexicoISODate(s.date_at);
-    dayMap.set(key, (dayMap.get(key) ?? 0) + Number(s.total));
+    dayTotal.set(key, (dayTotal.get(key) ?? 0) + Number(s.total));
+    dayCount.set(key, (dayCount.get(key) ?? 0) + 1);
   }
   const chartData: SalesTrendDatum[] = [];
-  const cursor = new Date(chart.from);
-  while (cursor <= chart.to) {
+  const cursor = new Date(range.from);
+  while (cursor <= range.to) {
     const key = mexicoISODate(cursor);
-    chartData.push({ date: key, total: dayMap.get(key) ?? 0 });
+    chartData.push({
+      date: key,
+      total: dayTotal.get(key) ?? 0,
+      count: dayCount.get(key) ?? 0,
+    });
     cursor.setDate(cursor.getDate() + 1);
   }
 

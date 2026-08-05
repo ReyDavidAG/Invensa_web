@@ -198,7 +198,7 @@ export default async function ReportsPage({
         {/* ── Sales trend ───────────────────────────────────────── */}
         <ChartCard
           title="Ventas por día"
-          subtitle="Últimos 14 días"
+          subtitle={PERIOD_LABEL[period]}
           total={chartData.reduce((sum, d) => sum + d.total, 0)}
           tourId="report-chart"
         >
