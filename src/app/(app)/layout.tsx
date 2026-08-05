@@ -3,7 +3,10 @@ import { Suspense, type ReactNode } from "react";
 import { SideNav } from "@/components/nav/side-nav";
 import { TopBar } from "@/components/nav/top-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getCurrentUserWithProfile, getUnreadNotificationsCount } from "@/lib/supabase/profile";
+import {
+  getCurrentUserWithProfile,
+  getUnreadNotificationsCount,
+} from "@/lib/supabase/profile";
 import { APP_VERSION } from "@/lib/version";
 
 // Split off so the sidebar/topbar chrome (this file's own JSX) never awaits —
@@ -23,7 +26,11 @@ async function TopBarData() {
   ]);
   const fullName = (profile?.full_name ?? "").trim();
   return (
-    <TopBar email={user?.email ?? ""} fullName={fullName || null} unread={unread} />
+    <TopBar
+      email={user?.email ?? ""}
+      fullName={fullName || null}
+      unread={unread}
+    />
   );
 }
 
