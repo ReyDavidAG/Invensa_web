@@ -27,6 +27,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -58,8 +59,15 @@ export function SideNav({
   appVersion: string;
 }) {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
   const accountLabel = userName.trim() || "Cuenta";
   const accountNav: NavItem = { ...ACCOUNT_NAV_BASE, label: accountLabel };
+  // On mobile the sidebar is a Sheet overlay — navigating doesn't close it on
+  // its own (a Link click isn't an "outside click"), so it's left covering
+  // the page you just navigated to. Close it explicitly on every nav click.
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -67,6 +75,7 @@ export function SideNav({
         <Link
           href="/dashboard"
           aria-label="Invensa · inicio"
+          onClick={closeMobileSidebar}
           className="flex items-center gap-2.5 rounded-md px-3 py-3 text-base font-semibold tracking-tight text-foreground transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0"
         >
           <BrandMark className="group-data-[collapsible=icon]:size-7" />
@@ -85,7 +94,12 @@ export function SideNav({
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   size="lg"
-                  render={<Link href={item.href as Route} />}
+                  render={
+                    <Link
+                      href={item.href as Route}
+                      onClick={closeMobileSidebar}
+                    />
+                  }
                   isActive={isActive(pathname, item.href)}
                   tooltip={item.label}
                   className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:data-[active=true]:border-l-0 group-data-[collapsible=icon]:data-[active=true]:bg-primary group-data-[collapsible=icon]:data-[active=true]:text-primary-foreground [&_svg]:size-5 [&>span:last-child]:group-data-[collapsible=icon]:hidden"
@@ -105,7 +119,12 @@ export function SideNav({
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={<Link href={accountNav.href as Route} />}
+              render={
+                <Link
+                  href={accountNav.href as Route}
+                  onClick={closeMobileSidebar}
+                />
+              }
               isActive={isActive(pathname, accountNav.href)}
               tooltip={accountNav.label}
               className="data-[active=true]:border-l-2 data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary group-data-[collapsible=icon]:data-[active=true]:border-l-0 group-data-[collapsible=icon]:data-[active=true]:bg-primary group-data-[collapsible=icon]:data-[active=true]:text-primary-foreground [&_svg]:size-5 [&>span:last-child]:group-data-[collapsible=icon]:hidden"

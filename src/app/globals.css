@@ -306,9 +306,10 @@
     background: #fff !important;
   }
   /* Browsers strip background-color/fill by default on print to save ink —
-   * the reports charts rely on those for meaning (colorimetría), so force
-   * them to actually print. Report-actions.tsx also forces light theme for
-   * the print itself; this alone wouldn't be enough against dark tokens. */
+   * the report tables rely on those for meaning (header band, zebra rows,
+   * the highlighted running-balance column), so force them to actually
+   * print. Report-actions.tsx also forces light theme for the print itself;
+   * this alone wouldn't be enough against dark tokens. */
   * {
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;

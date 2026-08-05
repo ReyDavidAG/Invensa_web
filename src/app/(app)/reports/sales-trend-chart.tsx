@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/chart";
 import { formatDayMonth } from "@/lib/datetime";
 
-export type SalesTrendDatum = { date: string; total: number };
+// `count` isn't plotted here (the on-screen chart only needs `total`) — it
+// rides along for the print view's detailed daily table (report-print-view.tsx).
+export type SalesTrendDatum = { date: string; total: number; count: number };
 
 const chartConfig = {
   total: { label: "Ventas", color: "var(--chart-1)" },
