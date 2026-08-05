@@ -82,6 +82,7 @@ export function PosClient({
   const [paidAmountInput, setPaidAmountInput] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const cartAnchorRef = useRef<HTMLDivElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
 
   // Close the search dropdown on outside click.
@@ -260,7 +261,9 @@ export function PosClient({
   const quickAmounts = [50, 100, 200, 500, 1000];
 
   return (
-    <FadeUp className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6">
+    <FadeUp
+      className={`flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6 ${cart.length > 0 ? "pb-20 lg:pb-0" : ""}`}
+    >
       {/* ─── LEFT: Customer + Search + Products ─────────────────────── */}
       <div className="flex flex-col gap-4">
         {/* Header */}
@@ -486,10 +489,14 @@ export function PosClient({
             </div>
           ) : null}
         </div>
+        <p className="-mt-2 px-1 text-xs text-muted-foreground">
+          Escanea el código de barras o escribe el SKU y presiona Enter para
+          agregarlo directo.
+        </p>
       </div>
 
       {/* ─── RIGHT: Cart + Payment + Submit ─────────────────────────── */}
-      <div className="lg:sticky lg:top-20 lg:self-start">
+      <div ref={cartAnchorRef} className="lg:sticky lg:top-20 lg:self-start">
         <Card className="flex flex-col p-0" data-tour="sale-cart">
           {/* Cart header */}
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -663,6 +670,30 @@ export function PosClient({
           </div>
         </Card>
       </div>
+
+      {/* Mobile-only: total stays reachable without scrolling past the search results. */}
+      {cart.length > 0 ? (
+        <button
+          type="button"
+          onClick={() =>
+            cartAnchorRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            })
+          }
+          className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-lg lg:hidden"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+              {totalQuantity}
+            </span>
+            Ver carrito
+          </span>
+          <span className="font-mono text-base font-bold tabular-nums text-foreground">
+            {esMXCurrency.format(total)}
+          </span>
+        </button>
+      ) : null}
     </FadeUp>
   );
 }
