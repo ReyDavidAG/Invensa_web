@@ -591,6 +591,12 @@ export function PosClient({
                   placeholder="0.00"
                   value={paidAmountInput}
                   onChange={(e) => setPaidAmountInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && canSubmit) {
+                      e.preventDefault();
+                      onSubmit();
+                    }
+                  }}
                   disabled={createSale.isPending}
                   className="h-12 pl-7 pr-4 font-mono tabular-nums text-base"
                 />
