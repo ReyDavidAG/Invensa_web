@@ -290,9 +290,16 @@ Filters live in URL via `useSearchParams()`: `?q=...&cat=limpieza&page=2`. Serve
 
 ### 6.6 Reports (`/reports`)
 
-Index page lists report cards: Ventas hoy · Stock bajo · Top productos · Fiados pendientes. Each card links to its own page.
+Single page, period selector top-right (Hoy / 7 días / 30 días), then in order:
 
-Report pages have a date range picker (top-right), 4 KPI tiles in a row, then one chart (simple line for sales over time, simple bar for top products), then a table.
+1. 4 KPI tiles (Ventas totales, Ticket promedio, Ventas, Clientes únicos).
+2. **Ventas por día** — smooth area/line chart, always the last 14 calendar days regardless of the selected period.
+3. **Productos más vendidos** (bar chart, top 5 by revenue) + **Stock bajo** (plain alert list — not charted, an actionable list reads better than a chart for this).
+4. **Top clientes** (bar chart, top 5 by spend) + **Métodos de pago** (donut chart).
+
+No "Fiados pendientes" card — the store does not extend credit, so a report for it has no data and no future. (The `sales.status = 'credit'` enum value and its UI badges elsewhere in the app are untouched; this is a reports-page-only removal, not a schema change.)
+
+**Charting**: Recharts via shadcn's `chart.tsx` wrapper (`pnpm dlx shadcn add chart`) — this is the approved charting library, added specifically to activate the `--chart-1`..`--chart-5` tokens in §4.1 (previously defined but unused). Not a §13 UI-library violation — it's the shadcn-registry path, not a competing kit. Ranked charts (top products/clients) color bars by **rank** (chart-1 → chart-5, cycling) since the identities change day to day; the payment-methods donut colors by **fixed category** (cash → chart-1, mixed → chart-2, transfer → chart-5) since those identities are stable across visits. Bar values render via `<LabelList>`, not tooltip-only — a hover-only value is invisible on touch.
 
 **Honesty rule**: until there is real data, reports show real placeholder text like `—` and a labelled grey block `« datos reales cuando se registren ventas »`. Never fake numbers.
 
@@ -684,7 +691,7 @@ Already shipped from §12.1. shadcn reads `bg-background`, `text-foreground`, `b
 ## 13. What this design.md is **NOT**
 
 - **NOT a marketing brand guide** — there is no logo treatment, no tagline, no social-media colour palette. Invensa_web has no public-facing brand surface; the sister and mom only ever see the running app.
-- **NOT a UI library audit** — the components listed in §7 are *defaults*. Do not import a new UI library (Mantine, Radix raw, MUI) on top. Use the shadcn primitives.
+- **NOT a UI library audit** — the components listed in §7 are *defaults*. Do not import a new UI library (Mantine, Radix raw, MUI) on top. Use the shadcn primitives. Recharts (via `src/components/ui/chart.tsx`, the shadcn registry's own wrapper — see §6.6) is the one approved exception; it's how the `--chart-*` tokens get consumed, not a competing kit.
 - **NOT frozen** — when a real need appears to add a token or variant, edit this file alongside the change in the repo. Hallmark reads `design.md` first on every run.
 
 ---

@@ -95,19 +95,6 @@
   }
 }
 
-/* Bar-chart grow-in (replaces motion.rect). Targets SVG attributes via
- * CSS variables set inline on each <rect>. */
-@keyframes bar-grow {
-  from {
-    y: var(--bar-h0, 0);
-    height: 0;
-  }
-  to {
-    y: var(--bar-y);
-    height: var(--bar-h);
-  }
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -291,11 +278,6 @@
   /* Pulse used in the global loading indicator */
   .animate-spin-slow {
     animation: var(--animate-spin-slow);
-  }
-  /* SVG bar grow-in (replaces motion.rect). Each <rect> passes:
-   *   style={{ animationDelay: `${i * 22}ms`, "--bar-h": h, "--bar-y": y }} */
-  .bar-chart-bar {
-    animation: bar-grow 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
 
