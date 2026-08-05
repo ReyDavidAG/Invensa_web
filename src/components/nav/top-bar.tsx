@@ -34,9 +34,7 @@ export function TopBar({
       {signedIn ? <NotificationBell initialUnread={unread} /> : null}
       {signedIn ? <HelpMenu /> : null}
       <ThemeToggle />
-      {signedIn ? (
-        <AccountMenu email={email} fullName={fullName} />
-      ) : null}
+      {signedIn ? <AccountMenu email={email} fullName={fullName} /> : null}
     </header>
   );
 }
