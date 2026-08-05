@@ -141,6 +141,18 @@ export function PosClient({
       .slice(0, 12);
   }, [debouncedSearch, products]);
 
+  // A barcode scanner is a keyboard: it types the code then sends Enter.
+  // Matching on exact code + Enter is the whole scanning integration —
+  // nothing else changes once real scanner hardware shows up.
+  const findByExactCode = useCallback(
+    (raw: string) => {
+      const code = raw.trim().toLowerCase();
+      if (!code) return undefined;
+      return products.find((p) => p.code.toLowerCase() === code);
+    },
+    [products],
+  );
+
   const total = useMemo(
     () => cart.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0),
     [cart],
@@ -349,6 +361,16 @@ export function PosClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onFocus={() => setSearchFocused(true)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              e.preventDefault();
+              const match = findByExactCode(search);
+              if (match) {
+                addToCart(match);
+              } else if (search.trim()) {
+                toast.error(`Sin coincidencia para "${search.trim()}"`);
+              }
+            }}
             className="h-12 pl-9 pr-10 text-base"
           />
           {search ? (
