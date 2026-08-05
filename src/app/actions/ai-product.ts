@@ -104,7 +104,12 @@ export async function parseProductPhotoAction(
       messages,
       responseFormat: { type: "json_object" },
       temperature: 0.2,
-      maxTokens: 800,
+      // ponytail: 2000 is a generous, unmeasured budget — raised from 800
+      // because the model was spending its whole token budget on the hidden
+      // reasoning trace and returning empty content (see client.ts's
+      // extractContent fallback comment). Tighten once real MiniMax usage
+      // data shows the actual p95 reasoning + answer length.
+      maxTokens: 2000,
       // MiniMax-specific: separates reasoning from final answer so the JSON
       // comes back clean in `content` instead of being prefixed with
       // `<think>…</think>` blocks.
