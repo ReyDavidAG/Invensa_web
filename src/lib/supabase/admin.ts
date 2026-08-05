@@ -1,9 +1,12 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getServerEnv } from "@/lib/env";
 
-let cached: ReturnType<typeof createClient> | null = null;
+// Not `ReturnType<typeof createClient>` — on the bare generic function that
+// resolves the schema type param to `never` instead of the default `any`,
+// which makes every `.from(table)` call below untypeable.
+let cached: SupabaseClient | null = null;
 
 export async function getSupabaseAdmin() {
   if (cached) return cached;
