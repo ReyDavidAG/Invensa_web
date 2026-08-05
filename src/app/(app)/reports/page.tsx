@@ -19,7 +19,6 @@ import { PaymentMethodsChart } from "./payment-methods-chart";
 import { KpiTile } from "./kpi-tile";
 import { ReportActions } from "./report-actions";
 import { ReportPrintView } from "./report-print-view";
-import { PrintRemount } from "./print-remount";
 import {
   getReportData,
   parsePeriod,
@@ -321,9 +320,7 @@ export default async function ReportsPage({
         </section>
       </div>
 
-      <PrintRemount>
-        <ReportPrintView data={reportData} />
-      </PrintRemount>
+      <ReportPrintView data={reportData} />
     </FadeUp>
   );
 }
