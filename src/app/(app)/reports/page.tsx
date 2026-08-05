@@ -7,15 +7,25 @@ import {
   Coins,
   CreditCard,
   Package,
+  PiggyBank,
   ShoppingCart,
   TrendingUp,
   Users,
 } from "lucide-react";
 
-import { SalesTrendChart, type SalesTrendDatum } from "./sales-trend-chart";
+import { SalesTrendChart } from "./sales-trend-chart";
 import { RankedBarChart } from "./ranked-bar-chart";
 import { PaymentMethodsChart } from "./payment-methods-chart";
 import { KpiTile } from "./kpi-tile";
+import { ReportActions } from "./report-actions";
+import { ReportPrintView } from "./report-print-view";
+import { PrintRemount } from "./print-remount";
+import {
+  getReportData,
+  parsePeriod,
+  PERIOD_DAYS,
+  PERIOD_LABEL,
+} from "./get-report-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 
@@ -36,53 +46,6 @@ const esMXCurrencyExact = new Intl.NumberFormat("es-MX", {
 });
 
 type Period = "today" | "week" | "month";
-
-const PERIOD_DAYS: Record<Period, number> = {
-  today: 1,
-  week: 7,
-  month: 30,
-};
-
-const PERIOD_LABEL: Record<Period, string> = {
-  today: "Hoy",
-  week: "Últimos 7 días",
-  month: "Últimos 30 días",
-};
-
-function startOfDay(d: Date): Date {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-}
-
-function periodRange(period: Period): { from: Date; to: Date } {
-  const now = new Date();
-  const to = now;
-  const from = startOfDay(now);
-  if (period === "today") {
-    return { from, to };
-  }
-  // For week/month, include N-1 days before today (so 7d = today + 6 prior).
-  const days = PERIOD_DAYS[period];
-  from.setDate(from.getDate() - (days - 1));
-  return { from, to };
-}
-
-function chartRange(): { from: Date; to: Date } {
-  // Always show the last 14 calendar days for the chart.
-  const to = new Date();
-  const from = startOfDay(to);
-  from.setDate(from.getDate() - 13);
-  return { from, to };
-}
-
-function isoDay(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 type SearchParams = Promise<{ period?: string }>;
 
 export default async function ReportsPage({
@@ -90,221 +53,29 @@ export default async function ReportsPage({
 }: {
   searchParams: SearchParams;
 }) {
-  // periodRange()/chartRange() below call `new Date()` before any recognized
-  // dynamic API — without this, Cache Components rejects it as an unstable
-  // prerender value (see src/lib/supabase/server.ts for the same fix).
+  // getReportData()'s periodRange()/chartRange() call `new Date()` before any
+  // recognized dynamic API — without this, Cache Components rejects it as an
+  // unstable prerender value (see src/lib/supabase/server.ts for the same fix).
   await connection();
   const sp = await searchParams;
-  const period: Period =
-    sp.period === "week" || sp.period === "month" ? sp.period : "today";
+  const period = parsePeriod(sp.period);
 
-  const range = periodRange(period);
-  const chart = chartRange();
-
-  const supabase = await (
-    await import("@/lib/supabase/server")
-  ).getSupabaseServer();
-
-  // Parallel fetch — all reads, scoped by date range and chart range.
-  const [
-    { data: periodSales, error: periodSalesError },
-    { data: yesterdaySales, error: yesterdaySalesError },
-    { data: chartSales, error: chartSalesError },
-    { data: topSaleItems, error: topSaleItemsError },
-    { data: lowStock, error: lowStockError },
-    { data: stockRows, error: stockRowsError },
-    { data: paymentAgg, error: paymentAggError },
-  ] = await Promise.all([
-    supabase
-      .from("sales")
-      .select(
-        "id, total, paid_amount, status, payment_method, client_id, date_at",
-      )
-      .gte("date_at", range.from.toISOString())
-      .lte("date_at", range.to.toISOString())
-      .neq("status", "cancelled"),
-    // For ticket comparison (only used in "today" period)
-    period === "today"
-      ? (() => {
-          const y = new Date();
-          const yStart = startOfDay(y);
-          yStart.setDate(yStart.getDate() - 1);
-          const yEnd = startOfDay(y);
-          return supabase
-            .from("sales")
-            .select("total")
-            .gte("date_at", yStart.toISOString())
-            .lt("date_at", yEnd.toISOString())
-            .neq("status", "cancelled");
-        })()
-      : Promise.resolve({ data: [] as Array<{ total: number }>, error: null }),
-    supabase
-      .from("sales")
-      .select("id, total, date_at")
-      .gte("date_at", chart.from.toISOString())
-      .lte("date_at", chart.to.toISOString())
-      .neq("status", "cancelled"),
-    // Top products: pull recent sale_items in the period, aggregate client-side.
-    supabase
-      .from("sale_items")
-      .select(
-        "quantity, unit_price, subtotal, sales!inner(date_at, status), products(id, code, name)",
-      )
-      .gte("sales.date_at", range.from.toISOString())
-      .lte("sales.date_at", range.to.toISOString())
-      .neq("sales.status", "cancelled"),
-    supabase
-      .from("products")
-      .select("id, code, name, stock_low_threshold, image_url")
-      .eq("status", "active"),
-    // Stock is a view; PostgREST cannot infer an embedded relationship, so
-    // query it directly and join in app code (mirrors /products/page.tsx).
-    supabase.from("vw_product_stock").select("product_id, stock_on_hand"),
-    supabase
-      .from("sales")
-      .select("payment_method, total")
-      .gte("date_at", range.from.toISOString())
-      .lte("date_at", range.to.toISOString())
-      .neq("status", "cancelled"),
-  ]);
-
-  if (periodSalesError)
-    console.error("[reports] period sales", periodSalesError);
-  if (yesterdaySalesError)
-    console.error("[reports] yesterday sales", yesterdaySalesError);
-  if (chartSalesError) console.error("[reports] chart sales", chartSalesError);
-  if (topSaleItemsError)
-    console.error("[reports] top sale items", topSaleItemsError);
-  if (lowStockError)
-    console.error("[reports] low stock products", lowStockError);
-  if (stockRowsError) console.error("[reports] stock rows", stockRowsError);
-  if (paymentAggError) console.error("[reports] payment agg", paymentAggError);
-
-  // ── KPIs ─────────────────────────────────────────────────────────
-  const periodTotal = (periodSales ?? []).reduce(
-    (sum, s) => sum + Number(s.total),
-    0,
-  );
-  const periodCount = (periodSales ?? []).length;
-  const ticketAvg = periodCount > 0 ? periodTotal / periodCount : 0;
-  const uniqueClients = new Set(
-    (periodSales ?? [])
-      .map((s) => s.client_id)
-      .filter((c): c is string => Boolean(c)),
-  ).size;
-
-  // vs ayer — only meaningful for "today" period
-  const yesterdayTotal = (yesterdaySales ?? []).reduce(
-    (sum, s) => sum + Number(s.total),
-    0,
-  );
-  const yesterdayCount = (yesterdaySales ?? []).length;
-  const deltaPct =
-    yesterdayTotal > 0
-      ? ((periodTotal - yesterdayTotal) / yesterdayTotal) * 100
-      : null;
-
-  // ── Daily chart series (14 days, fill missing days with 0) ──────
-  const dayMap = new Map<string, number>();
-  for (const s of chartSales ?? []) {
-    const key = isoDay(new Date(s.date_at));
-    dayMap.set(key, (dayMap.get(key) ?? 0) + Number(s.total));
-  }
-  const chartData: SalesTrendDatum[] = [];
-  const cursor = new Date(chart.from);
-  while (cursor <= chart.to) {
-    const key = isoDay(cursor);
-    chartData.push({ date: key, total: dayMap.get(key) ?? 0 });
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  // ── Top products (aggregate by product_id) ──────────────────────
-  const productAgg = new Map<
-    string,
-    { id: string; code: string; name: string; units: number; revenue: number }
-  >();
-  for (const item of topSaleItems ?? []) {
-    const product = Array.isArray(item.products)
-      ? item.products[0]
-      : item.products;
-    if (!product) continue;
-    const id = product.id as string;
-    const cur = productAgg.get(id) ?? {
-      id,
-      code: product.code as string,
-      name: product.name as string,
-      units: 0,
-      revenue: 0,
-    };
-    cur.units += Number(item.quantity);
-    cur.revenue += Number(item.subtotal);
-    productAgg.set(id, cur);
-  }
-  const topProducts = [...productAgg.values()]
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 5);
-
-  // ── Low stock (compare view.stock_on_hand with products.stock_low_threshold) ──
-  type LowStockRow = {
-    id: string;
-    code: string;
-    name: string;
-    imageUrl: string | null;
-    stock: number;
-    threshold: number;
-  };
-  const stockByProduct = new Map<string, number>(
-    (stockRows ?? []).map((s) => [
-      s.product_id as string,
-      Number(s.stock_on_hand),
-    ]),
-  );
-  const lowStockList: LowStockRow[] = (lowStock ?? [])
-    .map((p) => ({
-      id: p.id as string,
-      code: p.code as string,
-      name: p.name as string,
-      imageUrl: (p.image_url as string | null) ?? null,
-      stock: stockByProduct.get(p.id as string) ?? 0,
-      threshold: Number(p.stock_low_threshold),
-    }))
-    .filter((p) => p.stock <= p.threshold)
-    .sort((a, b) => a.stock - b.stock)
-    .slice(0, 10);
-
-  // ── Top clients (TOP 5 by total spent) ─────────────────────────
-  const clientAgg = new Map<string, number>();
-  for (const s of periodSales ?? []) {
-    if (!s.client_id) continue;
-    clientAgg.set(
-      s.client_id,
-      (clientAgg.get(s.client_id) ?? 0) + Number(s.total),
-    );
-  }
-  const topClientIds = [...clientAgg.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([id]) => id);
-  const { data: clientRows } = await supabase
-    .from("clients")
-    .select("id, name, phone")
-    .in("id", topClientIds.length ? topClientIds : ["__none__"]);
-  const clientNameById = new Map<string, string>(
-    (clientRows ?? []).map((c) => [c.id as string, c.name as string]),
-  );
-  const topClients = topClientIds.map((id) => ({
-    id,
-    name: clientNameById.get(id) ?? "Cliente",
-    total: clientAgg.get(id) ?? 0,
-  }));
-
-  // ── Payment methods aggregate ────────────────────────────────────
-  const methodAgg = new Map<string, number>();
-  for (const s of paymentAgg ?? []) {
-    const m = s.payment_method as "cash" | "transfer" | "mixed";
-    methodAgg.set(m, (methodAgg.get(m) ?? 0) + Number(s.total));
-  }
-  const methodEntries = [...methodAgg.entries()].sort((a, b) => b[1] - a[1]);
+  const reportData = await getReportData(period);
+  const {
+    periodTotal,
+    periodCount,
+    ticketAvg,
+    uniqueClients,
+    yesterdayCount,
+    deltaPct,
+    chartData,
+    topProducts,
+    lowStockList,
+    topClients,
+    methodEntries,
+    profitTotal,
+    profitMarginPct,
+  } = reportData;
 
   const buildUrl = (next: Period) => {
     const p = next === "today" ? undefined : next;
