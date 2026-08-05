@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
-
-function todayMexico(): string {
-  const fmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return fmt.format(new Date());
-}
+import { todayMexicoISODate } from "@/lib/datetime";
 
 export async function GET() {
   const supabase = await getSupabaseServer();
@@ -20,7 +11,7 @@ export async function GET() {
   if (!user)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const date = todayMexico();
+  const date = todayMexicoISODate();
   const { data: expected } = await supabase
     .from("vw_cash_sales_by_day")
     .select("net_cash")

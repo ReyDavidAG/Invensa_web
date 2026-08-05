@@ -226,23 +226,24 @@ The sidebar carries a **vertical gradient** (`--sidebar-gradient-from` → `--si
 
 ### 6.3 Dashboard (`/dashboard`) — Bento on shell
 
-Top row: 4 stat tiles in `grid-cols-2 md:grid-cols-4 gap-4`:
+Top row: 4 stat tiles in `grid-cols-2 md:grid-cols-4 gap-4` — Ventas hoy · Ticket promedio · Stock bajo · Ventas (count). No "Fiados pendientes" tile — the store does not extend credit (same reasoning as §6.6 Reports).
 
-```
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│ Ventas hoy   │ │ Ticket prom. │ │ Stock bajo   │ │ Fiados pend. │
-│      —       │ │      —       │ │      —       │ │      —       │
-│ 12 ventas    │ │ vs ayer      │ │ productos    │ │ 3 clientes   │
-│  « datos     │ │  « datos     │ │  « datos     │ │  « datos     │
-│    reales »  │ │    reales »  │ │    reales »  │ │    reales »  │
-└──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
-```
+Until real data exists, every cell that *would* hold a number shows `—` and the small muted line below says `« datos reales cuando registres ventas »`. **Never fabricate a number for the dashboard.** When the first sale lands, the tile flips to real data — never before.
 
-Until real data exists, every cell that *would* hold a number shows `—` and the small muted line below says `« datos reales cuando se registren ventas »`. The muted subtitle (`12 ventas / vs ayer / productos / 3 clientes`) is itself hidden when count is unknown. **Never fabricate a number for the dashboard.** When the first sale lands, the tile flips to real data — never before.
-
-Below the tiles: 2-column split. Left 2/3: recent sales list (table). Right 1/3: short-actions card (`Registrar venta` · `Agregar producto` · `Nuevo cliente`).
+Below the tiles: cash-closing status row, then a 2-column split. Left 2/3: recent sales list. Right 1/3: quick-actions card (`Registrar venta` · `Agregar producto` · `Nuevo cliente` · `Ver reportes`).
 
 Each tile: `--card` bg, `--border` 1px, `--radius-lg`, `p-4`. Single label + single value + tiny muted subtitle. **No chart on the dashboard home** — load-bearing numbers only. Real charts (if needed) live in `/reports`.
+
+**Colorimetría — icon-chip accent convention.** Every stat tile and quick-action gets a small colored icon chip (`size-7`/`size-8`, `rounded-md`, `bg-<token>/10-15 text-<token>`) instead of a uniform gray one, so the row reads at a glance instead of as an undifferentiated list. Four accents, reused verbatim (`ACCENT_CLASS` in `dashboard/page.tsx`):
+
+| Accent | Token | Meaning | Used by |
+| --- | --- | --- | --- |
+| `primary` | `--primary` (cobalt) | The #1 action — reserved per §3's genre rule, never reused for anything else | Ventas hoy tile · Registrar venta action |
+| `teal` | `--chart-5` | Neutral secondary metric/action | Ticket promedio tile · Agregar producto action |
+| `success` | `--success` | Positive/normal state | Ventas (count) tile · Nuevo cliente action · Stock bajo when count = 0 |
+| `warning` | `--warning` (amber) | Needs attention | Stock bajo when count > 0 · Ver reportes action |
+
+Stock bajo is the one tile whose accent is **computed from real severity**, not fixed by category — amber only when `lowStockCount > 0`. This is the pattern to follow for any future tile whose color should reflect actual state rather than a static role.
 
 ### 6.4 List pages (Products, Customers, Sales) — Filter rail + table
 

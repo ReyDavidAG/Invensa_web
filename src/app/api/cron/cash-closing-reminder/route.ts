@@ -3,21 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createNotificationsDedupedAction } from "@/app/actions/notifications";
 import { getRecipientIds } from "@/lib/email/recipients";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { todayMexicoISODate } from "@/lib/datetime";
 
 function isAuthorized(req: NextRequest): boolean {
   const expected = process.env.CRON_SECRET;
   if (!expected) return false;
   const got = req.headers.get("authorization");
   return got === `Bearer ${expected}`;
-}
-
-function todayMexico(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 }
 
 export async function GET(req: NextRequest) {
@@ -28,7 +20,7 @@ export async function GET(req: NextRequest) {
   // Service role, not the session-scoped client — this is a cron trigger
   // with no auth.uid(), so an RLS-gated read would silently come back empty.
   const supabase = await getSupabaseAdmin();
-  const date = todayMexico();
+  const date = todayMexicoISODate();
 
   const { data: closing } = await supabase
     .from("cash_closings")

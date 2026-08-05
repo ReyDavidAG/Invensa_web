@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { formatDateLong, formatTime } from "@/lib/datetime";
 
 import { NewSaleLink } from "./new-sale-link";
 import { PrintButton } from "./print-button";
@@ -17,15 +18,6 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
   maximumFractionDigits: 2,
-});
-
-const esMXDate = new Intl.DateTimeFormat("es-MX", {
-  dateStyle: "long",
-});
-
-const esMXTime = new Intl.DateTimeFormat("es-MX", {
-  hour: "2-digit",
-  minute: "2-digit",
 });
 
 const STATUS_META = {
@@ -183,7 +175,7 @@ export default async function SaleDetailPage({ params }: PageProps) {
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {esMXDate.format(saleDate)} · {esMXTime.format(saleDate)}
+              {formatDateLong(saleDate)} · {formatTime(saleDate)}
               {client ? ` · ${client.name}` : null}
             </p>
           </div>

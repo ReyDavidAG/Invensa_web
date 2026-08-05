@@ -7,32 +7,19 @@ import {
 } from "@/lib/email/templates/daily-summary";
 import { getRecipients } from "@/lib/email/recipients";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+  endOfMexicoDayUTC,
+  mexicoDayStartUTC,
+  mexicoISODate,
+  startOfMexicoDayUTC,
+  todayMexicoISODate,
+} from "@/lib/datetime";
 
 function isAuthorized(req: NextRequest): boolean {
   const expected = process.env.CRON_SECRET;
   if (!expected) return false;
   const got = req.headers.get("authorization");
   return got === `Bearer ${expected}`;
-}
-
-function todayMexico(): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
-
-function yesterdayMexico(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(d);
 }
 
 export async function GET(req: NextRequest) {
@@ -43,15 +30,12 @@ export async function GET(req: NextRequest) {
   // Service role, not the session-scoped client — this is a cron trigger
   // with no auth.uid(), so an RLS-gated read would silently come back empty.
   const supabase = await getSupabaseAdmin();
-  const date = todayMexico();
-  const yesterday = yesterdayMexico();
+  const date = todayMexicoISODate();
+  const yesterday = mexicoISODate(mexicoDayStartUTC(1));
 
   // Day boundaries in UTC (sales.date_at is timestamptz in UTC).
-  const startOfDay = (s: string) => new Date(`${s}T06:00:00Z`).toISOString(); // 00:00 CST = 06:00 UTC
-  const endOfDay = (s: string) =>
-    new Date(
-      new Date(`${s}T06:00:00Z`).getTime() + 24 * 3600 * 1000,
-    ).toISOString();
+  const startOfDay = (s: string) => startOfMexicoDayUTC(s).toISOString();
+  const endOfDay = (s: string) => endOfMexicoDayUTC(s).toISOString();
 
   const [
     { data: todaySales },

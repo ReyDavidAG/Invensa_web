@@ -1,3 +1,5 @@
+import { formatDateLong, formatTime } from "@/lib/datetime";
+
 type PrintReceiptProps = {
   ticketNumber: number;
   dateAt: string;
@@ -38,15 +40,6 @@ const formatMXN = (n: number) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(n);
-
-const formatDateLong = (iso: string) =>
-  new Intl.DateTimeFormat("es-MX", { dateStyle: "long" }).format(new Date(iso));
-
-const formatTimeHM = (iso: string) =>
-  new Intl.DateTimeFormat("es-MX", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
 
 // ─── Subcomponents (kept inline for print-only scope) ──────────
 
@@ -109,7 +102,7 @@ export function PrintReceipt({
           <span className="font-bold">Ticket</span> #{ticketNumber}
         </p>
         <p>{formatDateLong(dateAt)}</p>
-        <p>Hora: {formatTimeHM(dateAt)}</p>
+        <p>Hora: {formatTime(dateAt)}</p>
         <p className="mt-1 text-[9pt] font-bold uppercase tracking-[0.08em]">
           {STATUS_LABEL[status]}
         </p>

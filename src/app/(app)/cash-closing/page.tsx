@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { todayMexicoISODate } from "@/lib/datetime";
 
 import { CashClosingClient } from "./cash-closing-client";
 
@@ -8,19 +9,9 @@ export const metadata: Metadata = {
   title: "Cierre de caja",
 };
 
-function todayMexico(): string {
-  const fmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return fmt.format(new Date());
-}
-
 export default async function CashClosingPage() {
   const supabase = await getSupabaseServer();
-  const date = todayMexico();
+  const date = todayMexicoISODate();
 
   const { data: existing } = await supabase
     .from("cash_closings")

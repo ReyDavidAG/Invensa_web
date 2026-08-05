@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { formatDateTimeShort } from "@/lib/datetime";
 
 export const metadata: Metadata = {
   title: "Ventas",
@@ -16,11 +17,6 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
   maximumFractionDigits: 2,
-});
-
-const esMXDateTime = new Intl.DateTimeFormat("es-MX", {
-  dateStyle: "short",
-  timeStyle: "short",
 });
 
 const STATUS_LABELS = {
@@ -195,7 +191,7 @@ export default async function SalesPage({
                         #{s.ticket_number}
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
-                        <time>{esMXDateTime.format(new Date(s.date_at))}</time>
+                        <time>{formatDateTimeShort(s.date_at)}</time>
                       </td>
                       <td className="px-4 py-2.5">
                         {client?.name ?? (

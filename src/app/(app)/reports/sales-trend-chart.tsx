@@ -8,17 +8,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { formatDayMonth } from "@/lib/datetime";
 
 export type SalesTrendDatum = { date: string; total: number };
 
 const chartConfig = {
   total: { label: "Ventas", color: "var(--chart-1)" },
 } satisfies ChartConfig;
-
-const dayLabel = new Intl.DateTimeFormat("es-MX", {
-  day: "2-digit",
-  month: "short",
-});
 
 const esMXCurrencyShort = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -63,7 +59,7 @@ export function SalesTrendChart({
         <CartesianGrid vertical={false} strokeOpacity={0.5} />
         <XAxis
           dataKey="date"
-          tickFormatter={(v) => dayLabel.format(new Date(`${v}T12:00:00`))}
+          tickFormatter={(v) => formatDayMonth(`${v}T12:00:00Z`)}
           tickLine={false}
           axisLine={false}
           tickMargin={8}
@@ -78,7 +74,7 @@ export function SalesTrendChart({
         <ChartTooltip
           content={
             <ChartTooltipContent
-              labelFormatter={(v) => dayLabel.format(new Date(`${v}T12:00:00`))}
+              labelFormatter={(v) => formatDayMonth(`${v}T12:00:00Z`)}
               formatter={(value) => esMXCurrency.format(Number(value))}
             />
           }

@@ -1,10 +1,14 @@
 import {
+  AlertTriangle,
   Banknote,
+  BarChart3,
   ChevronRight,
+  Coins,
+  Package,
   Receipt,
   ShoppingCart,
+  TrendingUp,
   UserPlus,
-  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import type { Route } from "next";
@@ -15,6 +19,11 @@ import { FadeUp } from "@/components/motion/fade-up";
 import { DashboardTourTrigger } from "@/components/dashboard-tour-trigger";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import {
+  formatDayMonthTime,
+  mexicoDayStartUTC,
+  todayMexicoISODate,
+} from "@/lib/datetime";
 
 import { LowStockAlertTrigger } from "./low-stock-alert-trigger";
 
@@ -24,24 +33,23 @@ const esMXCurrency = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 2,
 });
 
-const esMXDateTime = new Intl.DateTimeFormat("es-MX", {
-  hour: "2-digit",
-  minute: "2-digit",
-  day: "2-digit",
-  month: "short",
-});
-
-function startOfDay(d: Date): Date {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-}
+// Accent tokens already defined in the Taller theme (design.md §4.1) — no
+// new colors, just applying the existing chart/semantic palette so each
+// tile/action reads as a distinct thing instead of a uniform gray list.
+const ACCENT_CLASS = {
+  primary: "bg-primary/10 text-primary", // reserved for the #1 action (design.md's cobalt rule)
+  teal: "bg-chart-5/10 text-chart-5",
+  success: "bg-success/15 text-success",
+  warning: "bg-warning/15 text-warning",
+} as const;
+type Accent = keyof typeof ACCENT_CLASS;
 
 type QuickAction = {
   href: Route;
   label: string;
   hint: string;
   icon: React.ReactNode;
+  accent: Accent;
 };
 
 const QUICK_ACTIONS: QuickAction[] = [
@@ -50,24 +58,28 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "Registrar venta",
     hint: "POS · paso a paso",
     icon: <ShoppingCart aria-hidden className="size-4" />,
+    accent: "primary",
   },
   {
     href: "/products",
     label: "Agregar producto",
     hint: "Catálogo · alta rápida",
-    icon: <UserPlus aria-hidden className="size-4" />,
+    icon: <Package aria-hidden className="size-4" />,
+    accent: "teal",
   },
   {
     href: "/customers",
     label: "Nuevo cliente",
     hint: "Para registrar ventas",
-    icon: <Receipt aria-hidden className="size-4" />,
+    icon: <UserPlus aria-hidden className="size-4" />,
+    accent: "success",
   },
   {
     href: "/reports",
     label: "Ver reportes",
     hint: "Cortes y top productos",
-    icon: <Wallet aria-hidden className="size-4" />,
+    icon: <BarChart3 aria-hidden className="size-4" />,
+    accent: "warning",
   },
 ];
 
@@ -79,20 +91,14 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Window boundaries
-  const todayStart = startOfDay(new Date());
-  const tomorrowStart = new Date(todayStart);
-  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-  const yesterdayStart = new Date(todayStart);
-  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  // Window boundaries (Mexico City civil days, not the server runtime's
+  // zone). Negative daysAgo = a day ahead of today.
+  const todayStart = mexicoDayStartUTC(0);
+  const tomorrowStart = mexicoDayStartUTC(-1);
+  const yesterdayStart = mexicoDayStartUTC(1);
 
   // Today's date in Mexico City timezone (cash closing key).
-  const todayMx = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  const todayMx = todayMexicoISODate();
 
   // Parallel fetches
   const [
@@ -246,6 +252,8 @@ export default async function DashboardPage() {
               ? `${esMXCurrency.format(todayTotal)}`
               : "« datos reales cuando registres ventas »"
           }
+          icon={<Coins aria-hidden className="size-4" />}
+          accent="primary"
         />
         <StatTile
           delay={0.04}
@@ -258,6 +266,8 @@ export default async function DashboardPage() {
                 ? `ayer: ${yesterdayCount} ${yesterdayCount === 1 ? "venta" : "ventas"}`
                 : "« datos reales cuando registres ventas »"
           }
+          icon={<TrendingUp aria-hidden className="size-4" />}
+          accent="teal"
         />
         <StatTile
           delay={0.08}
@@ -268,6 +278,10 @@ export default async function DashboardPage() {
               ? `${lowStockCount} ${lowStockCount === 1 ? "producto" : "productos"}`
               : "todo el inventario sobre el umbral"
           }
+          icon={<AlertTriangle aria-hidden className="size-4" />}
+          // Only tile whose color reflects real severity, not a fixed
+          // category — amber when it actually needs attention.
+          accent={lowStockCount > 0 ? "warning" : "success"}
         />
         <StatTile
           delay={0.12}
@@ -278,6 +292,8 @@ export default async function DashboardPage() {
               ? `ayer: ${yesterdayCount}`
               : "« primer día de operación »"
           }
+          icon={<ShoppingCart aria-hidden className="size-4" />}
+          accent="success"
         />
       </section>
 
@@ -409,14 +425,14 @@ export default async function DashboardPage() {
                         {sale.clientName ?? "Cliente ocasional"}
                       </span>
                       {sale.status === "credit" ? (
-                        <span className="rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-secondary-foreground">
+                        <span className="rounded-sm bg-warning/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning">
                           Fiado
                         </span>
                       ) : null}
                     </div>
                     <div className="flex items-center gap-3">
                       <time className="hidden text-xs text-muted-foreground sm:block">
-                        {esMXDateTime.format(new Date(sale.dateAt))}
+                        {formatDayMonthTime(sale.dateAt)}
                       </time>
                       <span className="font-mono text-sm tabular-nums">
                         {esMXCurrency.format(sale.total)}
@@ -446,7 +462,12 @@ export default async function DashboardPage() {
                     href={action.href}
                     className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent sm:px-6"
                   >
-                    <span className="grid size-8 place-items-center rounded-md bg-secondary text-secondary-foreground">
+                    <span
+                      className={cn(
+                        "grid size-8 shrink-0 place-items-center rounded-md",
+                        ACCENT_CLASS[action.accent],
+                      )}
+                    >
                       {action.icon}
                     </span>
                     <span className="flex min-w-0 flex-col">
@@ -477,11 +498,15 @@ function StatTile({
   label,
   value,
   subtitle,
+  icon,
+  accent,
 }: {
   delay: number;
   label: string;
   value: string;
   subtitle: string;
+  icon: React.ReactNode;
+  accent: Accent;
 }) {
   return (
     <div
@@ -489,9 +514,19 @@ function StatTile({
       style={{ animationDelay: `${delay * 1000}ms` }}
     >
       <Card className="h-full p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "grid size-7 shrink-0 place-items-center rounded-md",
+              ACCENT_CLASS[accent],
+            )}
+          >
+            {icon}
+          </span>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
+        </div>
         <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
           {value}
         </p>
