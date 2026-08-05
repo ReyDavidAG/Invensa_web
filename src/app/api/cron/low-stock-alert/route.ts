@@ -7,7 +7,7 @@ import {
 } from "@/lib/email/templates/low-stock-alert";
 import { getRecipientIds, getRecipients } from "@/lib/email/recipients";
 import { createNotificationsDedupedAction } from "@/app/actions/notifications";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 function isAuthorized(req: NextRequest): boolean {
   // Vercel Cron sends Authorization: Bearer ${CRON_SECRET}
@@ -22,7 +22,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const supabase = await getSupabaseServer();
+  // Service role, not the session-scoped client — this is a cron trigger
+  // with no auth.uid(), so an RLS-gated read would silently come back empty.
+  const supabase = await getSupabaseAdmin();
 
   // Fetch active products with threshold > 0 plus current stock, then filter
   // in code. The view alone can't filter by per-product threshold.
