@@ -13,8 +13,6 @@ import { NewSaleLink } from "./new-sale-link";
 import { PrintButton } from "./print-button";
 import { PrintReceipt } from "./print-receipt";
 
-export const dynamic = "force-dynamic";
-
 const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",

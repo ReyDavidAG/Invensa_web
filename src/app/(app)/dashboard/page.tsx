@@ -18,8 +18,6 @@ import { cn } from "@/lib/utils";
 
 import { LowStockAlertTrigger } from "./low-stock-alert-trigger";
 
-export const dynamic = "force-dynamic";
-
 const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",

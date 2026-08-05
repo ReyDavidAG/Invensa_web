@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typedRoutes: true,
+  cacheComponents: true,
+  partialPrefetching: true,
   experimental: {
     serverActions: {
       // Default 1 MB is too small for product photos even after the

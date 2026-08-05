@@ -22,8 +22,6 @@ export const metadata: Metadata = {
   title: "Reportes",
 };
 
-export const dynamic = "force-dynamic";
-
 const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",

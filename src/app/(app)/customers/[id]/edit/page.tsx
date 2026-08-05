@@ -5,8 +5,6 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 
 import { EditCustomerForm } from "./customers-edit-form";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({

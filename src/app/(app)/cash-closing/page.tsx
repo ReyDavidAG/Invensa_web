@@ -8,8 +8,6 @@ export const metadata: Metadata = {
   title: "Cierre de caja",
 };
 
-export const dynamic = "force-dynamic";
-
 function todayMexico(): string {
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Mexico_City",
