@@ -39,7 +39,10 @@ Esquema exacto (respeta los tipos y los nombres de campo):
 
 Guía de cada campo:
 - name: nombre comercial legible del empaque (ej. "Fabuloso Fresca Activa 2L").
-- code: SKU o código de barras visible. null si no se ve.
+- code: SOLO si hay un código de barras o SKU IMPRESO Y LEGIBLE en el empaque.
+  Si no se distingue con certeza, null — el sistema genera un SKU automático,
+  así que null aquí es la respuesta correcta y esperada la mayoría de las veces.
+  NUNCA inventes ni completes dígitos que no puedas leer.
 - unitCode: unidad de venta inferida (PZA, L, KG, ML, GAL). null si no sabes.
 - priceSale: precio de venta al público en MXN, solo el número. null si no es visible.
 - priceBuy: precio de costo si aparece visible. null si no.
