@@ -684,7 +684,7 @@ Already shipped from §12.1. shadcn reads `bg-background`, `text-foreground`, `b
 ## 13. What this design.md is **NOT**
 
 - **NOT a marketing brand guide** — there is no logo treatment, no tagline, no social-media colour palette. Invensa_web has no public-facing brand surface; the sister and mom only ever see the running app.
-- **NOT a UI library audit** — the components listed in §7 are *defaults*. Do not import a new UI library (Mantine, Radix raw, MUI) on top. Use the shadcn primitives.
+- **NOT a UI library audit** — the components listed in §7 are *defaults*. Do not import a new UI library (Mantine, Radix raw, MUI) on top. Use the shadcn primitives. Recharts (via `src/components/ui/chart.tsx`, the shadcn registry's own wrapper — see §6.6) is the one approved exception; it's how the `--chart-*` tokens get consumed, not a competing kit.
 - **NOT frozen** — when a real need appears to add a token or variant, edit this file alongside the change in the repo. Hallmark reads `design.md` first on every run.
 
 ---
