@@ -84,215 +84,246 @@ export default async function ReportsPage({
 
   return (
     <FadeUp className="flex flex-col gap-6">
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
-            Reportes
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Resumen de {PERIOD_LABEL[period].toLowerCase()}.
-          </p>
-        </div>
-        {/* Period selector */}
-        <nav
-          aria-label="Período"
-          data-tour="report-period"
-          className="flex flex-wrap items-center gap-2"
-        >
-          {(["today", "week", "month"] as const).map((p) => (
-            <Link
-              key={p}
-              href={buildUrl(p) as Route}
-              aria-current={period === p ? "page" : undefined}
-              className={
-                "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
-                (period === p
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")
-              }
+      {/* The interactive dashboard below is screen-only — printing/PDF uses
+          a separate, purpose-built document (ReportPrintView) rendered at
+          the end, not a screenshot of this page. */}
+      <div className="flex flex-col gap-6 print:hidden">
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
+              Reportes
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Resumen de {PERIOD_LABEL[period].toLowerCase()}.
+            </p>
+          </div>
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+            {/* Period selector */}
+            <nav
+              aria-label="Período"
+              data-tour="report-period"
+              className="flex flex-wrap items-center gap-2"
             >
-              {p === "today" ? "Hoy" : p === "week" ? "7 días" : "30 días"}
-            </Link>
-          ))}
-        </nav>
-      </header>
-
-      <div aria-hidden className="h-1 w-12 rounded-full bg-primary" />
-
-      {/* ── KPI tiles ──────────────────────────────────────────── */}
-      <section
-        aria-label="Indicadores del período"
-        data-tour="report-kpis"
-        className="grid grid-cols-2 gap-4 md:grid-cols-4"
-      >
-        <KpiTile
-          delay={0}
-          label="Ventas totales"
-          value={esMXCurrency.format(periodTotal)}
-          icon={<Coins aria-hidden className="size-4" />}
-          subtitle={
-            period === "today" && deltaPct !== null
-              ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(0)}% vs ayer · ${yesterdayCount} ${yesterdayCount === 1 ? "venta" : "ventas"}`
-              : `${periodCount} ${periodCount === 1 ? "venta" : "ventas"} registradas`
-          }
-        />
-        <KpiTile
-          delay={0.04}
-          label="Ticket promedio"
-          value={periodCount > 0 ? esMXCurrency.format(ticketAvg) : "—"}
-          icon={<TrendingUp aria-hidden className="size-4" />}
-          subtitle={
-            periodCount > 0
-              ? `Promedio por venta`
-              : "« datos reales cuando registre ventas »"
-          }
-        />
-        <KpiTile
-          delay={0.08}
-          label="Ventas (count)"
-          value={periodCount.toString()}
-          icon={<ShoppingCart aria-hidden className="size-4" />}
-          subtitle={
-            period === "today" && yesterdayCount > 0
-              ? `ayer: ${yesterdayCount}`
-              : period === "today"
-                ? "« primer día de operación »"
-                : `en ${PERIOD_DAYS[period]} días`
-          }
-        />
-        <KpiTile
-          delay={0.12}
-          label="Clientes únicos"
-          value={uniqueClients.toString()}
-          icon={<Users aria-hidden className="size-4" />}
-          subtitle={
-            uniqueClients > 0
-              ? "que compraron"
-              : "« datos reales cuando registre ventas »"
-          }
-        />
-      </section>
-
-      {/* ── Sales trend ───────────────────────────────────────── */}
-      <ChartCard
-        title="Ventas por día"
-        subtitle="Últimos 14 días"
-        total={chartData.reduce((sum, d) => sum + d.total, 0)}
-        tourId="report-chart"
-      >
-        <SalesTrendChart data={chartData} className="px-2 pb-2" />
-      </ChartCard>
-
-      {/* ── Top productos + Stock bajo ─────────────────────────── */}
-      <section className="grid gap-4 lg:grid-cols-2">
-        <ReportCard
-          title="Productos más vendidos"
-          icon={
-            <Package aria-hidden className="size-4 text-muted-foreground" />
-          }
-          tourId="report-top-products"
-        >
-          {topProducts.length === 0 ? (
-            <Empty message="Sin ventas en este período." />
-          ) : (
-            <RankedBarChart
-              data={topProducts.map((p) => ({
-                id: p.id,
-                label: p.name,
-                value: p.revenue,
-                sublabel: `${p.units} ${p.units === 1 ? "unidad" : "unidades"}`,
-              }))}
-              className="px-2 py-4"
-            />
-          )}
-        </ReportCard>
-
-        <ReportCard
-          title="Stock bajo"
-          icon={<AlertTriangle aria-hidden className="size-4 text-warning" />}
-          tourId="report-stock"
-          badge={
-            lowStockList.length > 0 ? (
-              <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning">
-                {lowStockList.length}
-              </span>
-            ) : null
-          }
-        >
-          {lowStockList.length === 0 ? (
-            <Empty message="Todo el inventario está sobre el umbral." />
-          ) : (
-            <ul className="flex flex-col">
-              {lowStockList.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center gap-3 border-t border-border px-4 py-2.5 first:border-t-0 sm:px-6"
+              {(["today", "week", "month"] as const).map((p) => (
+                <Link
+                  key={p}
+                  href={buildUrl(p) as Route}
+                  aria-current={period === p ? "page" : undefined}
+                  className={
+                    "inline-flex min-h-11 items-center rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+                    (period === p
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")
+                  }
                 >
-                  <span
-                    className={
-                      "grid size-9 shrink-0 place-items-center rounded-md font-mono text-xs font-semibold tabular-nums " +
-                      (p.stock <= 0
-                        ? "bg-destructive/10 text-destructive"
-                        : "bg-warning/15 text-warning")
-                    }
-                  >
-                    {p.stock}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {p.name}
-                    </p>
-                    <p className="font-mono text-[10px] tabular-nums text-muted-foreground">
-                      {p.code} · umbral {p.threshold}
-                    </p>
-                  </div>
-                </li>
+                  {p === "today" ? "Hoy" : p === "week" ? "7 días" : "30 días"}
+                </Link>
               ))}
-            </ul>
-          )}
-        </ReportCard>
-      </section>
+            </nav>
+            <ReportActions period={period} />
+          </div>
+        </header>
 
-      {/* ── Top clientes + Métodos de pago ─────────────────────── */}
-      <section className="grid gap-4 lg:grid-cols-2">
-        <ReportCard
-          title="Top clientes"
-          icon={<Users aria-hidden className="size-4 text-muted-foreground" />}
-        >
-          {topClients.length === 0 ? (
-            <Empty message="Sin clientes activos en este período." />
-          ) : (
-            <RankedBarChart
-              data={topClients.map((c) => ({
-                id: c.id,
-                label: c.name,
-                value: c.total,
-              }))}
-              className="px-2 py-4"
-            />
-          )}
-        </ReportCard>
+        <div
+          aria-hidden
+          className="h-1 w-12 rounded-full bg-primary print:hidden"
+        />
 
-        <ReportCard
-          title="Métodos de pago"
-          icon={
-            <CreditCard aria-hidden className="size-4 text-muted-foreground" />
-          }
+        {/* ── KPI tiles ──────────────────────────────────────────── */}
+        <section
+          aria-label="Indicadores del período"
+          data-tour="report-kpis"
+          className="grid grid-cols-2 gap-4 break-inside-avoid md:grid-cols-3 lg:grid-cols-5"
         >
-          {methodEntries.length === 0 ? (
-            <Empty message="Sin pagos registrados." />
-          ) : (
-            <PaymentMethodsChart
-              data={methodEntries.map(([method, total]) => ({
-                method: method as "cash" | "transfer" | "mixed",
-                total,
-              }))}
-              className="py-4"
-            />
-          )}
-        </ReportCard>
-      </section>
+          <KpiTile
+            delay={0}
+            label="Ventas totales"
+            value={esMXCurrency.format(periodTotal)}
+            icon={<Coins aria-hidden className="size-4" />}
+            subtitle={
+              period === "today" && deltaPct !== null
+                ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(0)}% vs ayer · ${yesterdayCount} ${yesterdayCount === 1 ? "venta" : "ventas"}`
+                : `${periodCount} ${periodCount === 1 ? "venta" : "ventas"} registradas`
+            }
+          />
+          <KpiTile
+            delay={0.04}
+            label="Ticket promedio"
+            value={periodCount > 0 ? esMXCurrency.format(ticketAvg) : "—"}
+            icon={<TrendingUp aria-hidden className="size-4" />}
+            subtitle={
+              periodCount > 0
+                ? `Promedio por venta`
+                : "« datos reales cuando registre ventas »"
+            }
+          />
+          <KpiTile
+            delay={0.08}
+            label="Ventas (count)"
+            value={periodCount.toString()}
+            icon={<ShoppingCart aria-hidden className="size-4" />}
+            subtitle={
+              period === "today" && yesterdayCount > 0
+                ? `ayer: ${yesterdayCount}`
+                : period === "today"
+                  ? "« primer día de operación »"
+                  : `en ${PERIOD_DAYS[period]} días`
+            }
+          />
+          <KpiTile
+            delay={0.12}
+            label="Clientes únicos"
+            value={uniqueClients.toString()}
+            icon={<Users aria-hidden className="size-4" />}
+            subtitle={
+              uniqueClients > 0
+                ? "que compraron"
+                : "« datos reales cuando registre ventas »"
+            }
+          />
+          <KpiTile
+            delay={0.16}
+            label="Ganancias"
+            value={esMXCurrency.format(profitTotal)}
+            icon={<PiggyBank aria-hidden className="size-4" />}
+            subtitle={
+              profitMarginPct !== null
+                ? `Margen ${profitMarginPct.toFixed(0)}% · costo actual`
+                : "« datos reales cuando registre ventas »"
+            }
+          />
+        </section>
+
+        {/* ── Sales trend ───────────────────────────────────────── */}
+        <ChartCard
+          title="Ventas por día"
+          subtitle="Últimos 14 días"
+          total={chartData.reduce((sum, d) => sum + d.total, 0)}
+          tourId="report-chart"
+        >
+          <SalesTrendChart data={chartData} className="px-2 pb-2" />
+        </ChartCard>
+
+        {/* ── Top productos + Stock bajo ─────────────────────────── */}
+        <section className="grid gap-4 lg:grid-cols-2">
+          <ReportCard
+            title="Productos más vendidos"
+            icon={
+              <Package aria-hidden className="size-4 text-muted-foreground" />
+            }
+            tourId="report-top-products"
+          >
+            {topProducts.length === 0 ? (
+              <Empty message="Sin ventas en este período." />
+            ) : (
+              <RankedBarChart
+                data={topProducts.map((p) => ({
+                  id: p.id,
+                  label: p.name,
+                  value: p.revenue,
+                  sublabel: `${p.units} ${p.units === 1 ? "unidad" : "unidades"}`,
+                }))}
+                className="px-2 py-4"
+              />
+            )}
+          </ReportCard>
+
+          <ReportCard
+            title="Stock bajo"
+            icon={<AlertTriangle aria-hidden className="size-4 text-warning" />}
+            tourId="report-stock"
+            badge={
+              lowStockList.length > 0 ? (
+                <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning">
+                  {lowStockList.length}
+                </span>
+              ) : null
+            }
+          >
+            {lowStockList.length === 0 ? (
+              <Empty message="Todo el inventario está sobre el umbral." />
+            ) : (
+              <ul className="flex flex-col">
+                {lowStockList.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 border-t border-border px-4 py-2.5 first:border-t-0 sm:px-6"
+                  >
+                    <span
+                      className={
+                        "grid size-9 shrink-0 place-items-center rounded-md font-mono text-xs font-semibold tabular-nums " +
+                        (p.stock <= 0
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-warning/15 text-warning")
+                      }
+                    >
+                      {p.stock}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {p.name}
+                      </p>
+                      <p className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                        {p.code} · umbral {p.threshold}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </ReportCard>
+        </section>
+
+        {/* ── Top clientes + Métodos de pago ─────────────────────── */}
+        <section className="grid gap-4 lg:grid-cols-2">
+          <ReportCard
+            title="Top clientes"
+            icon={
+              <Users aria-hidden className="size-4 text-muted-foreground" />
+            }
+          >
+            {topClients.length === 0 ? (
+              <Empty message="Sin clientes activos en este período." />
+            ) : (
+              <RankedBarChart
+                data={topClients.map((c) => ({
+                  id: c.id,
+                  label: c.name,
+                  value: c.total,
+                }))}
+                className="px-2 py-4"
+              />
+            )}
+          </ReportCard>
+
+          <ReportCard
+            title="Métodos de pago"
+            icon={
+              <CreditCard
+                aria-hidden
+                className="size-4 text-muted-foreground"
+              />
+            }
+          >
+            {methodEntries.length === 0 ? (
+              <Empty message="Sin pagos registrados." />
+            ) : (
+              <PaymentMethodsChart
+                data={methodEntries.map(([method, total]) => ({
+                  method: method as "cash" | "transfer" | "mixed",
+                  total,
+                }))}
+                className="py-4"
+              />
+            )}
+          </ReportCard>
+        </section>
+      </div>
+
+      <PrintRemount>
+        <ReportPrintView data={reportData} />
+      </PrintRemount>
     </FadeUp>
   );
 }
@@ -313,7 +344,7 @@ function ChartCard({
   tourId?: string;
 }) {
   return (
-    <Card data-tour={tourId}>
+    <Card data-tour={tourId} className="break-inside-avoid">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold tracking-tight">
@@ -352,7 +383,7 @@ function ReportCard({
   tourId?: string;
 }) {
   return (
-    <Card data-tour={tourId}>
+    <Card data-tour={tourId} className="break-inside-avoid">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight">
