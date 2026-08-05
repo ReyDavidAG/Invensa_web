@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import type { Route } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import {
   AlertTriangle,
-  BarChart3,
   Coins,
   CreditCard,
   Package,
   ShoppingCart,
   TrendingUp,
   Users,
-  Wallet,
 } from "lucide-react";
 
-import { BarChart, type BarDatum } from "./bar-chart";
+import { SalesTrendChart, type SalesTrendDatum } from "./sales-trend-chart";
+import { RankedBarChart } from "./ranked-bar-chart";
+import { PaymentMethodsChart } from "./payment-methods-chart";
 import { KpiTile } from "./kpi-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FadeUp } from "@/components/motion/fade-up";
@@ -81,12 +82,6 @@ function isoDay(d: Date): string {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
-
-const PAYMENT_METHOD_LABEL = {
-  cash: "Efectivo",
-  transfer: "Transferencia",
-  mixed: "Mixto",
-} as const;
 
 type SearchParams = Promise<{ period?: string }>;
 
@@ -211,7 +206,7 @@ export default async function ReportsPage({
     const key = isoDay(new Date(s.date_at));
     dayMap.set(key, (dayMap.get(key) ?? 0) + Number(s.total));
   }
-  const chartData: BarDatum[] = [];
+  const chartData: SalesTrendDatum[] = [];
   const cursor = new Date(chart.from);
   while (cursor <= chart.to) {
     const key = isoDay(cursor);
@@ -244,7 +239,6 @@ export default async function ReportsPage({
   const topProducts = [...productAgg.values()]
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5);
-  const topProductsMax = Math.max(...topProducts.map((p) => p.revenue), 1);
 
   // ── Low stock (compare view.stock_on_hand with products.stock_low_threshold) ──
   type LowStockRow = {
@@ -299,7 +293,6 @@ export default async function ReportsPage({
     name: clientNameById.get(id) ?? "Cliente",
     total: clientAgg.get(id) ?? 0,
   }));
-  const topClientsMax = Math.max(...topClients.map((c) => c.total), 1);
 
   // ── Payment methods aggregate ────────────────────────────────────
   const methodAgg = new Map<string, number>();
@@ -308,7 +301,6 @@ export default async function ReportsPage({
     methodAgg.set(m, (methodAgg.get(m) ?? 0) + Number(s.total));
   }
   const methodEntries = [...methodAgg.entries()].sort((a, b) => b[1] - a[1]);
-  const methodTotal = methodEntries.reduce((sum, [, v]) => sum + v, 0);
 
   const buildUrl = (next: Period) => {
     const p = next === "today" ? undefined : next;
@@ -328,7 +320,11 @@ export default async function ReportsPage({
           </p>
         </div>
         {/* Period selector */}
-        <nav aria-label="Período" data-tour="report-period" className="flex flex-wrap items-center gap-2">
+        <nav
+          aria-label="Período"
+          data-tour="report-period"
+          className="flex flex-wrap items-center gap-2"
+        >
           {(["today", "week", "month"] as const).map((p) => (
             <Link
               key={p}
@@ -403,24 +399,14 @@ export default async function ReportsPage({
         />
       </section>
 
-      {/* ── Bar chart ─────────────────────────────────────────── */}
+      {/* ── Sales trend ───────────────────────────────────────── */}
       <ChartCard
         title="Ventas por día"
         subtitle="Últimos 14 días"
         total={chartData.reduce((sum, d) => sum + d.total, 0)}
         tourId="report-chart"
       >
-        <div
-          className="overflow-x-auto"
-          role="region"
-          aria-label="Gráfica con scroll horizontal"
-        >
-          <BarChart
-            data={chartData}
-            height={180}
-            className="min-w-[420px] px-1 pb-7 pt-2"
-          />
-        </div>
+        <SalesTrendChart data={chartData} className="px-2 pb-2" />
       </ChartCard>
 
       {/* ── Top productos + Stock bajo ─────────────────────────── */}
@@ -435,39 +421,15 @@ export default async function ReportsPage({
           {topProducts.length === 0 ? (
             <Empty message="Sin ventas en este período." />
           ) : (
-            <ol className="flex flex-col">
-              {topProducts.map((p, i) => (
-                <li
-                  key={p.id}
-                  className="flex items-center gap-3 border-t border-border px-4 py-2.5 first:border-t-0 sm:px-6"
-                >
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                    {i + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {p.name}
-                    </p>
-                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full bg-primary"
-                        style={{
-                          width: `${(p.revenue / topProductsMax) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="font-mono text-sm font-semibold tabular-nums text-foreground">
-                      {esMXCurrency.format(p.revenue)}
-                    </p>
-                    <p className="font-mono text-[10px] tabular-nums text-muted-foreground">
-                      {p.units} {p.units === 1 ? "unidad" : "unidades"}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <RankedBarChart
+              data={topProducts.map((p) => ({
+                id: p.id,
+                label: p.name,
+                value: p.revenue,
+                sublabel: `${p.units} ${p.units === 1 ? "unidad" : "unidades"}`,
+              }))}
+              className="px-2 py-4"
+            />
           )}
         </ReportCard>
 
@@ -526,32 +488,14 @@ export default async function ReportsPage({
           {topClients.length === 0 ? (
             <Empty message="Sin clientes activos en este período." />
           ) : (
-            <ol className="flex flex-col">
-              {topClients.map((c, i) => (
-                <li
-                  key={c.id}
-                  className="flex items-center gap-3 border-t border-border px-4 py-2.5 first:border-t-0 sm:px-6"
-                >
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                    {i + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {c.name}
-                    </p>
-                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full bg-primary"
-                        style={{ width: `${(c.total / topClientsMax) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                  <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
-                    {esMXCurrency.format(c.total)}
-                  </span>
-                </li>
-              ))}
-            </ol>
+            <RankedBarChart
+              data={topClients.map((c) => ({
+                id: c.id,
+                label: c.name,
+                value: c.total,
+              }))}
+              className="px-2 py-4"
+            />
           )}
         </ReportCard>
 
@@ -564,59 +508,16 @@ export default async function ReportsPage({
           {methodEntries.length === 0 ? (
             <Empty message="Sin pagos registrados." />
           ) : (
-            <ul className="flex flex-col">
-              {methodEntries.map(([m, total]) => {
-                const pct = methodTotal > 0 ? (total / methodTotal) * 100 : 0;
-                return (
-                  <li
-                    key={m}
-                    className="flex items-center gap-3 border-t border-border px-4 py-2.5 first:border-t-0 sm:px-6"
-                  >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-md bg-secondary text-secondary-foreground">
-                      <Wallet aria-hidden className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">
-                        {PAYMENT_METHOD_LABEL[
-                          m as keyof typeof PAYMENT_METHOD_LABEL
-                        ] ?? m}
-                      </p>
-                      <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full bg-primary"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                    <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
-                      {esMXCurrency.format(total)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+            <PaymentMethodsChart
+              data={methodEntries.map(([method, total]) => ({
+                method: method as "cash" | "transfer" | "mixed",
+                total,
+              }))}
+              className="py-4"
+            />
           )}
         </ReportCard>
       </section>
-
-      {/* ── Fiados pendientes (placeholder, fiado disabled) ──────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight">
-            <BarChart3 aria-hidden className="size-4 text-muted-foreground" />
-            Fiados pendientes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-start gap-2 rounded-md border border-dashed border-border bg-muted/30 p-6">
-            <p className="text-sm font-medium text-foreground">Próximamente</p>
-            <p className="text-xs text-muted-foreground">
-              El reporte de fiados se activa cuando se habilite el flujo de
-              ventas a crédito en el POS.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </FadeUp>
   );
 }
