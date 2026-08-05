@@ -11,8 +11,6 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import { ArchiveButton } from "./archive-button";
 import { InventoryMovementButton } from "./inventory-movement-button";
 
-export const dynamic = "force-dynamic";
-
 const esMXCurrency = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",

@@ -16,8 +16,6 @@ export const metadata: Metadata = {
   title: "Cuenta",
 };
 
-export const dynamic = "force-dynamic";
-
 const esMXLongDate = new Intl.DateTimeFormat("es-MX", {
   day: "numeric",
   month: "long",

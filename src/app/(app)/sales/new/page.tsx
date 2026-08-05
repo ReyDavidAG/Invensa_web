@@ -9,8 +9,6 @@ export const metadata: Metadata = {
   title: "Nueva venta",
 };
 
-export const dynamic = "force-dynamic";
-
 type RecentProduct = {
   product_id: string;
   count: number;
