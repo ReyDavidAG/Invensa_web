@@ -14,8 +14,6 @@ export const metadata: Metadata = {
   title: "Clientes",
 };
 
-export const dynamic = "force-dynamic";
-
 const PAGE_SIZE = 20;
 
 const esMXCurrency = new Intl.NumberFormat("es-MX", {

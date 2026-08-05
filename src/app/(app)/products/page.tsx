@@ -17,8 +17,6 @@ export const metadata: Metadata = {
   title: "Productos",
 };
 
-export const dynamic = "force-dynamic";
-
 const PAGE_SIZE = 20;
 
 type SearchParams = Promise<{

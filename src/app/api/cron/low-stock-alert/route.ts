@@ -9,8 +9,6 @@ import { getRecipientIds, getRecipients } from "@/lib/email/recipients";
 import { createNotificationsDedupedAction } from "@/app/actions/notifications";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-
 function isAuthorized(req: NextRequest): boolean {
   // Vercel Cron sends Authorization: Bearer ${CRON_SECRET}
   const expected = process.env.CRON_SECRET;

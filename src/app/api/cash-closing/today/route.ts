@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-
 function todayMexico(): string {
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Mexico_City",

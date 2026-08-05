@@ -8,8 +8,6 @@ import {
 import { getRecipients } from "@/lib/email/recipients";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-
 function isAuthorized(req: NextRequest): boolean {
   const expected = process.env.CRON_SECRET;
   if (!expected) return false;
