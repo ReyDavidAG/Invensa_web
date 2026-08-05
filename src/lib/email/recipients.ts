@@ -1,11 +1,14 @@
 import "server-only";
 
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export type RecipientRole = "admin" | "employee";
 
+// Service role, not the session-scoped client: cron routes call this with no
+// auth.uid() at all, so an RLS-gated `profiles` read would silently come
+// back empty (not an error — that's what made this bug invisible).
 export async function getRecipients(roles: RecipientRole[]): Promise<string[]> {
-  const supabase = await getSupabaseServer();
+  const supabase = await getSupabaseAdmin();
   const { data, error } = await supabase
     .from("profiles")
     .select("email, role")
@@ -19,7 +22,7 @@ export async function getRecipients(roles: RecipientRole[]): Promise<string[]> {
 export async function getRecipientIds(
   roles: RecipientRole[],
 ): Promise<string[]> {
-  const supabase = await getSupabaseServer();
+  const supabase = await getSupabaseAdmin();
   const { data, error } = await supabase
     .from("profiles")
     .select("id, role")

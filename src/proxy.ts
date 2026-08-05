@@ -9,7 +9,9 @@ const PUBLIC_PREFIXES = [
   "/register",
   "/forgot-password",
   "/reset-password",
-  "/auth/confirm",
+  // Exchanges an email-confirmation or password-reset code for a session —
+  // hit while the user is still unauthenticated by definition.
+  "/auth/callback",
 ];
 
 function isPublic(pathname: string): boolean {
@@ -83,9 +85,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Skip static assets and Next internals. webmanifest must be excluded so
-    // the browser's auto-fetch of /manifest.webmanifest isn't redirected to
-    // /login when the user isn't authenticated yet.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest)$).*)",
+    // Skip API routes (they each check their own auth — Bearer token for
+    // /api/cron/*, session for the rest — and must return JSON, never a
+    // redirect. Without this, a sessionless caller like Vercel Cron gets
+    // redirected to /login before the route's own CRON_SECRET check runs).
+    // Also skip static assets and Next internals; webmanifest must stay
+    // excluded so the browser's auto-fetch of /manifest.webmanifest isn't
+    // redirected to /login when the user isn't authenticated yet.
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest)$).*)",
   ],
 };

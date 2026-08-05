@@ -6,7 +6,7 @@ import {
   dailySummaryText,
 } from "@/lib/email/templates/daily-summary";
 import { getRecipients } from "@/lib/email/recipients";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 function isAuthorized(req: NextRequest): boolean {
   const expected = process.env.CRON_SECRET;
@@ -40,7 +40,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const supabase = await getSupabaseServer();
+  // Service role, not the session-scoped client — this is a cron trigger
+  // with no auth.uid(), so an RLS-gated read would silently come back empty.
+  const supabase = await getSupabaseAdmin();
   const date = todayMexico();
   const yesterday = yesterdayMexico();
 
